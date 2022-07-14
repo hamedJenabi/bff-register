@@ -1,0 +1,104 @@
+@import "../../styles/variables";
+.container {
+  height: 70px;
+  display: flex;
+  align-items: center;
+  z-index: 1000;
+  width: 100%;
+  padding: 30px 12px;
+  position: sticky;
+  background-color: rgb(245, 249, 245);
+  transition: transform 500ms;
+  top: 0;
+  box-shadow: none;
+  border-bottom: 1px solid #eaeaea;
+
+  z-index: 100;
+  &.unfix {
+    transform: translateY(0);
+    border-radius: 3px;
+    box-shadow: $boxShadow;
+    border-bottom: none;
+  }
+  &.fix {
+    transform: translateY(15px);
+  }
+  @media (min-width: $breakpointLg) {
+    justify-content: space-between;
+    height: 90px;
+    &.unfix {
+      box-shadow: $boxShadow;
+      border-radius: 3px;
+      border-bottom: none;
+    }
+    &.fix {
+      transform: translateY(25px);
+    }
+  }
+}
+.menuItems {
+  display: flex;
+  width: 100%;
+  @media (min-width: $breakpointMd) {
+  }
+}
+.linkWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  @media (min-width: $breakpointLg) {
+    padding-right: sm;
+    justify-content: space-evenly;
+    padding: 0 $lg;
+  }
+  a {
+    text-align: center;
+    padding: 0 16px;
+    line-height: 40px;
+    font-size: $smallFont;
+  }
+}
+.iconWrapper {
+  display: flex;
+
+  margin: 0;
+  @media (min-width: $breakpointLg) {
+    margin: 0 40px;
+  }
+}
+.title {
+  font-family: "Amatic SC", Poiret One, Roboto, -apple-system,
+    BlinkMacSystemFont, Segoe UI, Roboto, Oxygen, Ubuntu, Cantarell, Fira Sans,
+    Droid Sans, Helvetica Neue, sans-serif;
+  font-size: 32px !important;
+  color: $navy;
+  opacity: 0;
+  width: 350px;
+  padding-top: $xs;
+  @media (min-width: $breakpointLg) {
+    width: 500px;
+    font-size: 55px !important;
+  }
+  &.visibleTitle {
+    opacity: 1;
+  }
+}
+
+.menuItem {
+  font-family: Poiret One, Roboto, -apple-system, BlinkMacSystemFont, Segoe UI,
+    Roboto, Oxygen, Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue,
+    sans-serif;
+  font-size: 22px;
+  padding: 0 $xxs;
+  &:hover {
+    cursor: pointer;
+  }
+}
+.logo {
+  width: 30px;
+  margin-left: 10px;
+  &:hover {
+    cursor: pointer;
+  }
+}

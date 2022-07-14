@@ -1,0 +1,79 @@
+@import "../../styles/variables";
+.container {
+  padding: 0;
+  @media (min-width: 600px) {
+    padding: 0 2rem;
+  }
+}
+
+.main {
+  min-height: 80vh;
+  padding: 1rem 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  @media (min-width: 600px) {
+    padding: 1rem 0;
+  }
+}
+.content {
+  @include fade-in-fast;
+}
+.row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: $sm;
+  border-bottom: turquoise 1px solid;
+  @media (min-width: 600px) {
+    padding: $sm $md;
+    width: 500px;
+  }
+  &:last-child {
+    border-bottom: none;
+  }
+  p {
+    max-width: 250px;
+    word-break: break-word;
+  }
+}
+
+.footer {
+  display: flex;
+  flex: 1;
+  padding: 20px 0;
+  border-top: 1px solid #eaeaea;
+  justify-content: center;
+  align-items: center;
+}
+
+.footer a {
+  padding: 2px 10px;
+}
+
+.title a {
+  color: #0070f3;
+  text-decoration: none;
+}
+.title {
+  margin: $lg 0 !important;
+}
+.button {
+  margin-top: $md;
+  @include button;
+  width: 100% !important;
+  height: 80px !important;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  @media (min-width: 600px) {
+    padding: $xs;
+    width: 380px !important;
+    height: 50px !important;
+  }
+}
+.title a:hover,
+.title a:focus,
+.title a:active {
+  text-decoration: underline;
+}

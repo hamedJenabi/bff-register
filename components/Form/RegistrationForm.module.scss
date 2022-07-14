@@ -1,0 +1,282 @@
+@import "../../styles/variables";
+.container {
+  display: flex;
+  flex-direction: column;
+  @media (min-width: 600px) {
+    // align-items: center;
+    // justify-content: center;
+    box-shadow: $boxShadow;
+    border-radius: 4px;
+    padding: $sm 30px;
+  }
+}
+.input {
+  @include fade-in-fast;
+  @include input;
+  padding: 0 $sm;
+  border: 1px solid $blue;
+  height: 50px;
+  border-radius: 5px;
+  &:focus {
+    outline: none;
+  }
+  &:hover {
+    border: 1px solid rgb(111, 96, 96) !important;
+  }
+
+  @media (min-width: 600px) {
+    height: 60px;
+    width: 420px;
+  }
+}
+
+.cardWrapper {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: $xl;
+  margin-top: $sm;
+  @media (min-width: 600px) {
+    // padding-right: $xl;
+    flex-direction: row;
+  }
+}
+.personalTitle {
+  width: 100%;
+  @media (min-width: 600px) {
+    // align-self: center;
+    padding: $md 0 $sm 0;
+    // width: 95%;
+  }
+}
+.title {
+  width: 100%;
+  border-top: 1px solid #eaeaea;
+  padding: $xs 0;
+  @media (min-width: 600px) {
+    padding: $md 0 $sm 0;
+    align-self: center;
+    margin-top: $md;
+  }
+}
+.card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $xs;
+  margin-bottom: $md;
+  box-shadow: 0 22px 45px 0 rgba(56, 56, 56, 0.11);
+  padding: $md;
+  border-radius: 4px;
+  width: 100%;
+  min-height: 200px;
+  @media (min-width: 600px) {
+    min-height: 240px;
+    margin-bottom: 0;
+    margin-left: $sm;
+    @media (min-width: 800px) {
+      min-width: 300px;
+    }
+  }
+  &:hover {
+    cursor: pointer;
+    transform: scale(1.02);
+    transition: all 400ms;
+  }
+  &.selected {
+    background-color: #8db8b3;
+
+    @include focus();
+    &::after {
+      margin: -10px !important;
+      border-radius: 4px !important;
+    }
+  }
+  &.soldOut {
+    cursor: default !important;
+    background-color: #c3e8e3 !important;
+    border: 2px solid #ec502d;
+    &:hover {
+      cursor: pointer;
+      transform: scale(1);
+      transition: all 400ms;
+    }
+  }
+}
+.earlyInfo {
+  padding: $sm $xs;
+  border: 1px solid #9bcac6;
+  background-color: #f9f9f9;
+  border-radius: 4px;
+  @media (min-width: 600px) {
+    width: 420px;
+    @include bigEntrance;
+  }
+}
+.errorMessage {
+  @include error;
+}
+
+.buttonWrapper {
+  display: flex;
+}
+.button {
+  @include button;
+  @include fade-in-slow;
+  margin: $xl 0;
+  &.disabled {
+    background-color: rgb(218, 200, 200);
+    &:hover {
+      color: $white;
+      border: none;
+      cursor: auto;
+    }
+  }
+  @media (min-width: 600px) {
+    width: 250px !important;
+    height: 50px !important;
+  }
+}
+.radioGroup {
+  width: 100%;
+  padding: $md 0;
+  @include fade-in-fast;
+  display: flex;
+  border: none;
+  flex-direction: column;
+  justify-content: center;
+
+  label {
+    font-family: $Paragraph;
+    display: flex;
+
+    gap: $xs;
+  }
+  gap: $xs;
+  @media (min-width: 600px) {
+    width: 580px;
+  }
+}
+.levelGroup {
+  display: flex;
+  @include fade-in-slow;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  @media (min-width: 700px) {
+    flex-direction: row;
+    flex-wrap: wrap;
+    max-width: 700px;
+  }
+}
+
+.modal {
+  @include modal;
+}
+.paper {
+  border: none;
+  border-radius: 5px;
+  @include fade-in-fast;
+  @include animation;
+  outline: none;
+  background-color: $white;
+  width: 70%;
+  padding: 20px 20px;
+  @media (min-width: 900px) {
+    width: 40%;
+  }
+}
+.infoIcon {
+  font-size: $md;
+  color: $blue;
+  margin-left: $xs;
+  cursor: pointer;
+  &:hover {
+    @include pulse;
+  }
+}
+.radioLabel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.selectWrapper {
+  display: flex;
+  align-items: flex-start;
+  @media (min-width: 700px) {
+    width: 90%;
+  }
+}
+.select {
+  padding: 5px;
+  font-size: 14px;
+  line-height: 1.3;
+  height: 45px;
+  box-sizing: border-box;
+  margin-bottom: $sm;
+  border: 1px solid $blue;
+  box-shadow: 0 1px 0 1px rgba(0, 0, 0, 0.04);
+  border-radius: 5px;
+  -moz-appearance: none;
+  -webkit-appearance: none;
+  appearance: none;
+  background-color: transparent;
+  width: 100%;
+  @media (min-width: 700px) {
+    width: 300px;
+  }
+  &.countrySelect {
+    border: 1px solid $blue;
+
+    height: 50px;
+    padding: 12px;
+    margin-top: $xs;
+    @media (min-width: 600px) {
+      height: 60px;
+      width: 420px;
+    }
+  }
+}
+/* Hide arrow icon in IE browsers */
+.select::-ms-expand {
+  display: none;
+}
+/* Hover style */
+.select:hover {
+  border-color: #888;
+}
+/* Focus style */
+.select:focus {
+  box-shadow: 0 0 1px 3px rgba(59, 153, 252, 0.7);
+  color: #222;
+  outline: none;
+}
+
+/* Support for rtl text, explicit support for Arabic and Hebrew */
+*[dir="rtl"] .select,
+:root:lang(ar) .select,
+:root:lang(iw) .select {
+  background-position: left 0.7em top 50%, 0 0;
+  padding: 0.6em 0.8em 0.5em 1.4em;
+}
+
+/* Disabled styles */
+.select:disabled,
+.select[aria-disabled="true"] {
+  color: graytext;
+}
+
+.select:disabled:hover,
+.select[aria-disabled="true"] {
+  border-color: #aaa;
+}
+.checkboxWrapper {
+  margin-top: $lg;
+  padding-top: $lg;
+  border-top: 1px solid #eaeaea;
+  display: flex;
+  gap: $xxs;
+  label {
+    font-family: $Paragraph;
+    letter-spacing: 1.1px;
+  }
+}

@@ -1,0 +1,141 @@
+@import "../../../styles/variables";
+
+.modal {
+  @include modal;
+}
+.infoIcon {
+  font-size: $md;
+  color: $light;
+  margin-left: 3px;
+  cursor: pointer;
+  &:hover {
+    @include pulse;
+  }
+}
+.input {
+  @include fade-in-fast;
+  @include input;
+  padding: 0 $sm;
+  border: 1px solid $blue;
+  height: 40px;
+  border-radius: 5px;
+  &:focus {
+    outline: none;
+  }
+  &:hover {
+    border: 1px solid rgb(111, 96, 96) !important;
+  }
+
+  @media (min-width: 600px) {
+    height: 40px;
+    width: 250px;
+  }
+}
+.button {
+  @include button;
+  width: 120px !important;
+  height: 50px !important;
+}
+.submit {
+  @include button;
+  width: 120px !important;
+  height: 50px !important;
+  margin-top: $md;
+}
+.backdrop {
+  background-color: rgba(0, 0, 0, 0.5);
+  bottom: 0;
+  left: 0;
+  position: fixed;
+  right: 0;
+  top: 0;
+  z-index: 100000;
+}
+
+.card {
+  background-color: #f4ecec;
+  border-radius: 14px;
+  padding: 0 10px;
+  position: fixed;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  bottom: 0;
+  height: 350px;
+  width: 100%;
+  transform: translateX(0) translateY(100%);
+  transition: transform 500ms;
+  &.visible {
+    transform: translateX(0) translateY(0);
+  }
+
+  @media (min-width: 900px) {
+    left: 50%;
+    width: 435px;
+    height: 300px;
+    transform: translateX(-50%) translateY(0);
+    &.visible {
+      transform: translateX(-50%) translateY(-50%);
+    }
+  }
+
+  @media (min-width: 900px) {
+    top: 40%;
+    max-height: 40%;
+  }
+}
+
+.iconContainer {
+  background-color: transparent;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  &:focus {
+    @include focus();
+
+    &::after {
+      padding: -32px;
+      width: 100%;
+      height: 30px;
+      top: 50%;
+      transform: translateY(-50%) translateX(-50%);
+      left: 50%;
+      border-radius: 4px;
+    }
+  }
+  &:hover {
+    cursor: pointer;
+    transform: scale(1.12);
+    transition: all 400ms;
+    p {
+      color: $navy !important;
+    }
+  }
+}
+.closeIconWrapper {
+  display: flex;
+  justify-content: flex-end;
+}
+.closeIcon {
+  margin-top: 8px;
+  color: rgb(0, 0, 0);
+  &:hover {
+    cursor: pointer;
+    @include pulse;
+  }
+  &:focus {
+    @include focus();
+    &::after {
+      margin: -4px !important;
+      border-radius: 31px !important;
+    }
+  }
+}
+.content {
+  padding: 0 80px;
+  // display: flex;
+  // flex-direction: column;
+  height: 100%;
+  text-align: center;
+}

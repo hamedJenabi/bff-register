@@ -1,0 +1,209 @@
+@import "../../styles/variables";
+
+.container {
+  background-color: rgb(245, 249, 245);
+  padding: 0 $md;
+  @media (min-width: 600px) {
+    padding: 0 $xl;
+  }
+}
+
+.main {
+  min-height: 70vh;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  @media (min-width: 600px) {
+    box-shadow: $boxShadow;
+    border-radius: 5px;
+    flex-direction: row;
+    justify-content: space-between;
+  }
+}
+.canceled {
+  background-color: rgb(196, 54, 52) !important;
+  color: white;
+}
+.sent {
+  background-color: rgb(64, 132, 98) !important;
+  color: white;
+}
+.total {
+  margin: $xs 0;
+  padding: $xs $md;
+  border: 1px solid turquoise;
+  width: 100%;
+  border-radius: 4px;
+  @media (min-width: 600px) {
+    width: 20%;
+  }
+}
+.sideBar {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  height: 50px;
+  margin-bottom: $md;
+  background-color: #40e0d0;
+  overflow: scroll;
+  @media (min-width: 600px) {
+    justify-content: flex-start;
+    margin-bottom: 0;
+    flex-direction: column;
+    border-top-left-radius: 5px;
+    width: 20%;
+    height: 80vh;
+  }
+}
+.sideBarItem {
+  min-width: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgb(124, 195, 216);
+  padding: $sm;
+  &:hover {
+    background-color: #2a7168;
+    color: white;
+    transition: all 400ms;
+    cursor: pointer;
+  }
+  &.active {
+    background-color: #2a7168;
+    color: white;
+  }
+  @media (min-width: 600px) {
+    border: none;
+
+    border-bottom: 1px solid #44968b;
+    padding: $sm $xl;
+  }
+}
+.search {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: $sm;
+  height: 80px;
+  input {
+    padding: 0 $md;
+    height: 60px;
+    width: 190px;
+    @include input;
+    border: 1px solid $blue;
+  }
+}
+.content {
+  @include fade-in-fast;
+  border: 1px solid #dce6e5;
+  border-right: none;
+  width: 100%;
+  overflow: scroll;
+  @media (min-width: 600px) {
+    width: 78%;
+    border-top-right-radius: 5px;
+  }
+}
+.table {
+  font-family: $Paragraph;
+  border-collapse: collapse;
+  width: 100%;
+  thead {
+    display: flex;
+  }
+  td,
+  th {
+    border: 1px solid #dddddd;
+    text-align: center;
+    padding: 8px;
+    min-width: 150px;
+  }
+  tr {
+    &:hover {
+      background-color: turquoise;
+      transition: all 400ms;
+    }
+  }
+  tr:nth-child(even) {
+    background-color: #dddddd;
+    &:hover {
+      background-color: turquoise;
+      transition: all 400ms;
+    }
+  }
+}
+.confirmed {
+  background-color: rgb(37, 146, 99) !important;
+}
+.button {
+  @include button;
+  width: 100% !important;
+}
+.downloadButton {
+  @include button;
+  margin-top: $md;
+  width: 180px !important;
+  height: 50px !important;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.footer {
+  display: flex;
+  flex: 1;
+  padding: 20px 0;
+  border-top: 1px solid #eaeaea;
+  justify-content: center;
+  align-items: center;
+}
+
+.footer a {
+  padding: 2px 10px;
+}
+
+.title a {
+  color: #0070f3;
+  text-decoration: none;
+}
+
+.title a:hover,
+.title a:focus,
+.title a:active {
+  text-decoration: underline;
+}
+
+.title {
+  margin: $lg 0;
+  line-height: 1.15;
+  font-size: 4rem;
+}
+
+.title,
+.description {
+  text-align: center;
+}
+.tickets {
+  width: 100%;
+  border: 1px solid turquoise;
+  @media (min-width: 600px) {
+    margin: 50px;
+  }
+}
+
+.ticketRow {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: $sm 0;
+  border-bottom: 1px solid #dce6e5;
+  width: 100%;
+  &:first-child {
+    background-color: rgb(101, 236, 223);
+  }
+}
+.ticketItem {
+  @media (min-width: 600px) {
+    text-align: center;
+    width: 600px;
+  }
+}
