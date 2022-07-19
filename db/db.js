@@ -85,7 +85,7 @@ export async function insertRegistration(user) {
     level: user.level,
     theme_class: user.themeClass,
     competition: user.competition,
-    competition_role: user.competitionRole,
+    competition_role: user.competition_role,
     competitions: user.competitions.toString(),
     price: user.price,
     terms: user.terms,
@@ -140,7 +140,7 @@ export async function updateUserInfo(user) {
 
     themeClass: user.themeClass,
     competition: user.competition,
-    competitionRole: user.competitionRole,
+    competition_role: user.competition_role,
     competitions: user.competitions,
     price: user.price,
     terms: true,

@@ -25,7 +25,7 @@ export default function User({ user }) {
       role: user.role,
       themeClass: user.themeClass,
       competition: user.competition,
-      competitionRole: user.competitionRole,
+      competition_role: user.competition_role,
       competitions: user.competitions,
       price: user.price,
     },
@@ -187,11 +187,11 @@ export default function User({ user }) {
           </div>
           <div className={styles.row}>
             <p>Competition Role:</p>
-            <p> {user.competitionRole}</p>
+            <p> {user.competition_role}</p>
             <Modal
               user={user}
               handleUser={handleClick}
-              info="competitionRole"
+              info="competition_role"
               form={form}
             />
           </div>

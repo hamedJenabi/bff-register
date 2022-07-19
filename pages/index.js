@@ -31,7 +31,7 @@ export default function Home({ tickets }) {
       role: "",
       themeClass: "",
       competition: "",
-      competitionRole: "",
+      competition_role: "",
       competitions: "",
       terms: false,
     },

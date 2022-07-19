@@ -68,20 +68,13 @@ export const compettionsInfo = [
   },
 ];
 
-export const getPrice = (requestData, saldo, isEarlyBird) => {
-  const initialPrice =
-    requestData.ticket === "partyPass" ? (isEarlyBird ? 50 : 60) : 150;
-  const beginnerVoucher = requestData.level === "Mondriaan_track" ? -30 : 0;
-  const additionalShirt = requestData.shirt === "yes" ? 20 : 0;
-  const additionalThursday =
-    requestData.thursday === "yes" ? (isEarlyBird ? 10 : 15) : 0;
-  const additionalFriday = requestData.exchange === "yes" ? 50 : 0;
-  const totalPrice =
-    initialPrice +
-    beginnerVoucher +
-    additionalShirt +
-    additionalThursday +
-    additionalFriday -
-    saldo;
+export const getPrice = (requestData) => {
+  const initialPrice = requestData.ticket === "partyPass" ? 95 : 195;
+  const competitions =
+    requestData.competition === "yes"
+      ? requestData.competitions?.length * 10
+      : 0;
+  const themeClass = requestData.themeClass === "no" ? 0 : 40;
+  const totalPrice = initialPrice + competitions + themeClass;
   return totalPrice;
 };

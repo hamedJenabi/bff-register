@@ -221,15 +221,15 @@ export default function RegistrationForm({ form, tickets, isClicked }) {
               <FormRadioGroup
                 className={styles.radioGroup}
                 {...form}
-                name="competitionRole"
+                name="competition_role"
               >
                 <label>
-                  <FormRadio {...form} name="competitionRole" value="follow" />
+                  <FormRadio {...form} name="competition_role" value="follow" />
                   <p>Follow</p>
                 </label>
 
                 <label>
-                  <FormRadio {...form} name="competitionRole" value="lead" />
+                  <FormRadio {...form} name="competition_role" value="lead" />
                   <p>Lead</p>
                 </label>
               </FormRadioGroup>

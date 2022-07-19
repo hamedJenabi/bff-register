@@ -100,11 +100,11 @@ export default async function register(req, response) {
     level: req.body.level,
     themeClass: req.body.themeClass,
     competition: req.body.competition,
-    competitionRole: req.body.competitionRole,
+    competition_role: req.body.competition_role,
     competitions: req.body.competitions,
     terms: req.body.terms,
   };
-  console.log("data", requestData);
+  console.log("requestData", requestData);
   const ticketName =
     requestData.ticket === "partyPass"
       ? requestData.ticket
@@ -112,14 +112,10 @@ export default async function register(req, response) {
   const { id: ticketId } = await getTicketByName(ticketName);
   const { capacity } = await isTicketAvailable(ticketId);
   const { waiting_list } = await isTicketAvailable(ticketId);
-  console.log("ticketName", ticketName);
 
-  // const totalPrice = getPrice(
-  //   requestData,
-  //   requestData.donation,
-  //   requestData.isEarlyBird
-  // );
-  const totalPrice = 0;
+  const totalPrice = getPrice(requestData);
+
+  ///////   TODO: GET TOTAL PRICE ///////
   const level = getLevelLabel(requestData.level);
   const ticket = getTicketLabel(requestData.ticket);
   const userswithSameEmail = await getUserByEmailAndName(requestData.email);
@@ -138,7 +134,7 @@ export default async function register(req, response) {
   }
 
   if (capacity > 0 && !isAlreadyRegistered) {
-    await updateTicketCapacity(ticketId);
+    // await updateTicketCapacity(ticketId); TODO - update capacity??
     const user = {
       status: "registered",
       price: totalPrice.toString(),
@@ -146,7 +142,7 @@ export default async function register(req, response) {
     };
 
     const [{ id }] = await insertRegistration(user);
-    template = "d-52a8e8e3cff741c583127915ee291c39";
+    template = "d-a3d0a3b2f11f4c0d8c9008e9db9fa07d";
     // await updateGoogle(user);
 
     response.status(200).json();
@@ -184,7 +180,7 @@ export default async function register(req, response) {
     }
   }
   const msg = {
-    from: "registration@thebluesjoint.dance",
+    from: "registration@bluesfever.eu",
     to: `${requestData.email}`,
     template_id: template,
     dynamic_template_data: {
@@ -194,10 +190,16 @@ export default async function register(req, response) {
       role: `${requestData.role}`,
       level: `${level}`,
       ticket: `${ticket}`,
-      shirt: `${requestData.shirt}`,
-      shirtSize: `${requestData.shirtSize}`,
-      thursday: `${requestData.thursday}`,
-      exchange: `${requestData.exchange}`,
+      themeClass: `${titleCase(requestData.themeClass)}`,
+      competition: requestData.competition === "yes" ? true : false,
+      competitionAnswer:
+        requestData.competition === "later" ? "I will decide later" : "No",
+      competition_role: `${requestData.competition_role}`,
+      competitions: requestData.competitions
+        ? `${requestData.competitions.map((competition) =>
+            titleCase(competition)
+          )}`
+        : "",
       terms: `${requestData.terms}`,
       status: `${requestData.status}`,
       price: `${totalPrice}`,
@@ -211,8 +213,8 @@ export default async function register(req, response) {
   //     return "message";
   //   }
   // };
-  // if (!isSoldOut) {
-  // await sendEmail(msg);
-  // }
+  if (!isSoldOut) {
+    await sendEmail(msg);
+  }
   // await sendEmail(user.status, msg);
 }

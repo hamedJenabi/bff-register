@@ -1,5 +1,4 @@
-import { titleCase, getPrice } from "../../utils/functions";
-import { before } from "../../utils/before";
+import { titleCase } from "../../utils/functions";
 import {
   updateUserInfo,
   removeFromWaitingList,
@@ -31,7 +30,7 @@ const getTicketLabel = (ticket) => {
     return "Party Pass";
   }
   if (ticket === "fullpass") {
-    return "Main Pass";
+    return "Full Pass";
   }
 };
 export default async function edituser(req, response) {
@@ -52,15 +51,10 @@ export default async function edituser(req, response) {
     role: req.body.role ?? "",
     ticket: req.body.ticket ?? "",
     level: req.body.level,
-    volunteer: req.body.volunteer,
-    thursday: req.body.thursday,
-    exchange: req.body.exchange,
-    isEarlyBird: req.body.isEarlyBird,
-    shirt: req.body.shirt,
-    shirtSize: req.body.shirt_size,
-    donation: req.body.donation,
-    facts: req.body.facts,
-    song: req.body.song,
+    theme_class: req.body.theme_class ?? "",
+    competition: req.body.competition ?? "",
+    competition_role: req.body.competition_role ?? "",
+    competitions: req.body.competitions ?? "",
     terms: true,
   };
 
@@ -73,10 +67,7 @@ export default async function edituser(req, response) {
     }
     return { saldo: 0, isEarlyBord: false };
   };
-  const { saldo } = getEarlyBird();
-  const { isEarlyBird } = getEarlyBird();
 
-  const totalPrice = getPrice(requestData, saldo, isEarlyBird);
   /***** GET PRICE AND LEVEL */
   const level = titleCase(requestData.level);
   const ticket = getTicketLabel(requestData.ticket);
@@ -106,9 +97,9 @@ export default async function edituser(req, response) {
         await addToCapacity(ticketId);
       }
       const msg = {
-        from: "registration@thebluesjoint.dance",
+        from: "registration@bluesfever.eu",
         to: `${requestData.email}`,
-        template_id: "d-537f34eefd3f4d7fb5b62455fcb976f1",
+        template_id: "d-eec50fc0f8824f0aa2c66a7196890ed5",
         dynamic_template_data: {
           firstName: `${requestData.first_name}`,
           lastName: `${requestData.last_name}`,
@@ -120,7 +111,8 @@ export default async function edituser(req, response) {
           shirtSize: `${requestData.shirtSize}`,
           terms: `${requestData.terms}`,
           status: `${requestData.status}`,
-          price: `${totalPrice}`,
+          // price: `${totalPrice}`,
+          price: 10,
         },
       };
       await sendEmail(msg);
