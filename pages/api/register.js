@@ -54,39 +54,39 @@ const getTicketLabel = (ticket) => {
 
 //******** prepare GOOGLE SHEET *********/
 
-// const updateGoogle = async (user) => {
-//   const date = new Date().toISOString();
-//   const inputForGoogleSheet = {
-//     status: user.status,
-//     register_date: date,
-//     email: user.email,
-//     First_Name: user.first_name,
-//     Last_Name: user.last_name,
-//     country: user.country,
-//     ticket: user.ticket,
-//     role: user.role,
-//     level: user.level,
-//     brunch: user.brunch,
-//     shirt: user.shirt,
-//     shirt_size: user.shirtSize,
-//     term: user.terms,
-//   };
-//   const doc = new GoogleSpreadsheet(SPREADSHEET_ID);
-//   try {
-//     await doc.useServiceAccountAuth({
-//       client_email: CLIENT_EMAIL,
-//       private_key:
-//         PRIVATE_KEY === undefined
-//           ? console.log("error")
-//           : PRIVATE_KEY.replace(/\\n/gm, "\n"),
-//     });
-//     await doc.loadInfo();
-//     const sheet = doc.sheetsById[SHEET_ID];
-//     const result = await sheet.addRow(inputForGoogleSheet);
-//   } catch (e) {
-//     console.error("Error: ", e);
-//   }
-// };
+const updateGoogle = async (user) => {
+  const date = new Date().toISOString();
+  const inputForGoogleSheet = {
+    status: user.status,
+    register_date: date,
+    email: user.email,
+    First_Name: user.first_name,
+    Last_Name: user.last_name,
+    country: user.country,
+    ticket: user.ticket,
+    role: user.role,
+    level: user.level,
+    price: user.price,
+    themeClass: user.themeClass,
+    competition_role: user.competition_role,
+    competitions: user.competitions?.toString(),
+  };
+  const doc = new GoogleSpreadsheet(SPREADSHEET_ID);
+  try {
+    await doc.useServiceAccountAuth({
+      client_email: CLIENT_EMAIL,
+      private_key:
+        PRIVATE_KEY === undefined
+          ? console.log("error")
+          : PRIVATE_KEY.replace(/\\n/gm, "\n"),
+    });
+    await doc.loadInfo();
+    const sheet = doc.sheetsById[SHEET_ID];
+    const result = await sheet.addRow(inputForGoogleSheet);
+  } catch (e) {
+    console.error("Error: ", e);
+  }
+};
 
 export default async function register(req, response) {
   const requestData = {
@@ -143,7 +143,7 @@ export default async function register(req, response) {
 
     const [{ id }] = await insertRegistration(user);
     template = "d-a3d0a3b2f11f4c0d8c9008e9db9fa07d";
-    // await updateGoogle(user);
+    await updateGoogle(user);
 
     response.status(200).json();
     // send registration email
@@ -168,7 +168,7 @@ export default async function register(req, response) {
       //   requestData,
       // };
       // await updateUserInfo(userWithId);
-      // await updateGoogle(user);
+      await updateGoogle(user);
       response.status(300).json();
 
       // waiting list email
