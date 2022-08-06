@@ -171,7 +171,9 @@ export default function RegistrationForm({ form, tickets, isClicked }) {
             </>
           )}
 
-          <h3 className={styles.title}>Themed Classes on Friday? (€40)</h3>
+          <h3 className={styles.title}>
+            Themed Classes on Friday Afternoon? (€40)
+          </h3>
           <FormRadioGroup
             className={styles.radioGroup}
             {...form}

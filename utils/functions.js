@@ -49,7 +49,7 @@ export const compettionsInfo = [
       "The beginner - intermediate track will assume you already master you Blues basics. You are dancing Blues for about 6 to 12 months. You had weekly classes and joined several socials. You want to improve your technique and vocabulary and be more comfortable in leading & following.",
   },
   {
-    label: "Newcommers MixMatch",
+    label: "Newcomers MixMatch",
     value: "newcomers_mixnmatch",
     detail:
       "So you think you can dance? As an intermediate we expect you to master your fundamental skills and be comfortable in dancing on different Blues styles. You can improvise based on the music and have no trouble with slow or faster rhythms. You already dance one or two years on a frequent base.",

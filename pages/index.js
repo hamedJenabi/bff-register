@@ -44,7 +44,7 @@ export default function Home({ tickets }) {
         errors.lastName = "please write your name";
       }
       if (!values.terms) {
-        errors.terms = "please Accept our terms and conditions";
+        errors.terms = "please accept our terms and conditions";
       }
       if (
         !values.email ||
