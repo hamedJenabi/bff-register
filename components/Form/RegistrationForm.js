@@ -119,7 +119,8 @@ export default function RegistrationForm({ form, tickets, isClicked }) {
             >
               <h3>Full pass</h3>
               <p>6 hours classes</p>
-              <p>All 4 Party</p>
+              <p>All 4 Parties</p>
+              <p>All Talks</p>
             </div>
             <div
               onClick={() => handleTicket(2)}
@@ -128,7 +129,7 @@ export default function RegistrationForm({ form, tickets, isClicked }) {
               })}
             >
               <h3>Party Pass</h3>
-              <p>All 4 Party</p>
+              <p>All 4 Parties</p>
               <p>All Talks</p>
             </div>
           </div>
