@@ -9,7 +9,7 @@ import {
   updateUserInfo,
   // removeRegistration,
 } from "../../db/db";
-import { titleCase, getPrice } from "../../utils/functions";
+import { titleCase, getPrice, levelsToShow } from "../../utils/functions";
 
 const sgMail = require("@sendgrid/mail");
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
@@ -40,6 +40,15 @@ const getLevelLabel = (level) => {
   }
   if (level !== "") {
     return titleCase(level);
+  }
+};
+const getLevelLabelForEmail = (level) => {
+  if (level === "") {
+    return "";
+  }
+  if (level !== "") {
+    const title = levelsToShow?.find((item) => item.value === level)?.label;
+    return titleCase(title);
   }
 };
 
@@ -187,8 +196,8 @@ export default async function register(req, response) {
       firstName: `${requestData.first_name}`,
       lastName: `${requestData.last_name}`,
       country: `${requestData.country}`,
-      role: `${requestData.role}`,
-      level: `${level}`,
+      role: `${titleCase(requestData.role)}`,
+      level: `${getLevelLabelForEmail(requestData.level)}`,
       ticket: `${ticket}`,
       themeClass: `${titleCase(requestData.themeClass)}`,
       competition: requestData.competition === "yes" ? true : false,
