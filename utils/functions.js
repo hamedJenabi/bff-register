@@ -74,7 +74,8 @@ export const getPrice = (requestData) => {
     requestData.competition === "yes"
       ? requestData.competitions?.length * 10
       : 0;
-  const themeClass = requestData.themeClass === "no" ? 0 : 40;
+  const themeClass =
+    requestData.themeClass === "no" || requestData.themeClass === "" ? 0 : 40;
   const totalPrice = initialPrice + competitions + themeClass;
   return totalPrice;
 };
