@@ -9,9 +9,6 @@ import classNames from "classnames";
 import { levelsToShow, titleCase } from "../../utils/functions";
 
 export default function Dashboard({ users, tickets }) {
-  console.log("users", users);
-  console.log("tickets", tickets);
-
   const [nameSearch, setNameSearch] = useState("");
   const [activeSideBar, setActiveSideBar] = useState("all");
   const [capacityShow, setCapacityShow] = useState(false);

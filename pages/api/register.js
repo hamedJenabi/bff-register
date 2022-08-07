@@ -113,7 +113,6 @@ export default async function register(req, response) {
     competitions: req.body.competitions,
     terms: req.body.terms,
   };
-  console.log("requestData", requestData);
   const ticketName =
     requestData.ticket === "partyPass"
       ? requestData.ticket
@@ -142,7 +141,7 @@ export default async function register(req, response) {
     response.status(302).json();
   }
 
-  if (capacity > 0 && !isAlreadyRegistered) {
+  if (!isAlreadyRegistered) {
     // await updateTicketCapacity(ticketId); TODO - update capacity??
     const user = {
       status: "registered",

@@ -24,7 +24,6 @@ const flatProps = {
 
 export default function RegistrationForm({ form, tickets, isClicked }) {
   const dialog = useDialogState();
-  console.log("form in component", form);
   const handleTicket = (ticket) => {
     if (ticket === 1) {
       form.update("ticket", "fullpass");
