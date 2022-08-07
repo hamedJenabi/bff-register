@@ -9,6 +9,17 @@
     border-radius: 4px;
     padding: $sm 30px;
   }
+  input[type="checkbox"] {
+    // -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    background: white;
+    border-radius: 5px;
+    border: 1px solid rgb(0, 0, 0);
+  }
+  input[type="checkbox"]:checked {
+    background: rgb(200, 203, 208);
+  }
 }
 .input {
   @include fade-in-fast;
@@ -156,6 +167,7 @@
     width: 580px;
   }
 }
+
 .levelGroup {
   display: flex;
   @include fade-in-slow;
