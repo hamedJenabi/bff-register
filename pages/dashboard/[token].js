@@ -88,7 +88,11 @@ export default function Dashboard({ users, tickets }) {
     } else if (item === "shirt") {
       setUserToShow(users.filter((user) => user["shirt"] === "yes"));
     } else if (item === "themeClass") {
-      setUserToShow(users.filter((user) => user["theme_class"] !== "no"));
+      setUserToShow(
+        users.filter(
+          (user) => user["theme_class"] !== "no" && user["theme_class"] !== ""
+        )
+      );
     } else if (item === "thursday") {
       setUserToShow(users.filter((user) => user["thursday"] === "yes"));
     } else if (item === "partyPass") {
