@@ -14,7 +14,6 @@ export default function Dashboard({ users, tickets }) {
   const [capacityShow, setCapacityShow] = useState(false);
   const [userToShow, setUserToShow] = useState(users || []);
   const isMobile = useMedia({ maxWidth: "768px" });
-  console.log("users", users);
   const BalanceComponent = () => {
     const getTicketAmount = (level, role) => {
       const registerAmount = users.filter(
@@ -35,7 +34,6 @@ export default function Dashboard({ users, tickets }) {
           user["role"] === role &&
           user["status"] === "confirmed"
       );
-      console.log("registerAmount", registerAmount);
       return {
         registered: registerAmount.length,
         sent: ammount.length,

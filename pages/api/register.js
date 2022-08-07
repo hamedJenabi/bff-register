@@ -129,7 +129,6 @@ export default async function register(req, response) {
   const isGroupDiscount = discounts.some(
     ({ email }) => email === req.body.email
   );
-  console.log("isGroupDiscount", isGroupDiscount);
   const totalPrice = getPrice(requestData, isGroupDiscount);
 
   ///////   TODO: GET TOTAL PRICE ///////
