@@ -98,4 +98,11 @@ export const discounts = [
   { name: "Sarah Stein Lubrano", email: "hei.eleanor.L@gmail.com" },
   { name: "Eleanor Lin", email: "hei.eleanor.L@gmail.com" },
   { name: "Lena Drotleff", email: "katzengoldsound@gmail.com" },
+  { name: "Richard", email: "richardvanos@gmail.com" },
+  { name: "Yvet", email: "yvetdiamanti@gmail.com" },
+  { name: "Ineke", email: "Ineke.vanderhurk@gmail.com" },
+  { name: "renske", email: "r.j.bongers@gmail.com" },
+  { name: "wouter", email: "me@woutervervloet.com" },
+  { name: "Maja", email: "majcor@gmail.com" },
+  { name: "Lotte", email: "Dijkstra.lel@gmail.com" },
 ];
