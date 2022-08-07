@@ -14,9 +14,15 @@ export default function Dashboard({ users, tickets }) {
   const [capacityShow, setCapacityShow] = useState(false);
   const [userToShow, setUserToShow] = useState(users || []);
   const isMobile = useMedia({ maxWidth: "768px" });
-
+  console.log("users", users);
   const BalanceComponent = () => {
     const getTicketAmount = (level, role) => {
+      const registerAmount = users.filter(
+        (user) =>
+          user["level"] === level &&
+          user["role"] === role &&
+          user["status"] === "registered"
+      );
       const ammount = users.filter(
         (user) =>
           user["level"] === level &&
@@ -29,8 +35,12 @@ export default function Dashboard({ users, tickets }) {
           user["role"] === role &&
           user["status"] === "confirmed"
       );
-
-      return { sent: ammount.length, paid: ammountPaid.length };
+      console.log("registerAmount", registerAmount);
+      return {
+        registered: registerAmount.length,
+        sent: ammount.length,
+        paid: ammountPaid.length,
+      };
     };
 
     return (
@@ -44,10 +54,12 @@ export default function Dashboard({ users, tickets }) {
           <div key={lvl.label} className={styles.ticketRow}>
             <p>{lvl.label}</p>
             <p>
+              {getTicketAmount(lvl.value, "follow").registered} -
               {getTicketAmount(lvl.value, "follow").sent} (
               {getTicketAmount(lvl.value, "follow").paid})
             </p>
             <p>
+              {getTicketAmount(lvl.value, "lead").registered} -
               {getTicketAmount(lvl.value, "lead").sent} (
               {getTicketAmount(lvl.value, "lead").paid})
             </p>
