@@ -96,7 +96,7 @@ export default function Home({ tickets }) {
         <meta name="description" content="BLUES FEVER 2022 Registration" />
         <meta
           property="og:image"
-          content="https://www.viennasugarblues.com/wp-content/uploads/2017/07/cropped-2018_VSB_BLANK-Kopie.jpg"
+          content="https://www.bluesfever.eu/wp-content/uploads/2022/08/bff2022.png"
         />
 
         <link rel="icon" href="/icon.png" />
