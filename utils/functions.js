@@ -68,7 +68,7 @@ export const compettionsInfo = [
   },
 ];
 
-export const getPrice = (requestData) => {
+export const getPrice = (requestData, isGroupDiscount) => {
   const initialPrice = requestData.ticket === "partyPass" ? 95 : 195;
   const competitions =
     requestData.competition === "yes"
@@ -77,5 +77,25 @@ export const getPrice = (requestData) => {
   const themeClass =
     requestData.themeClass === "no" || requestData.themeClass === "" ? 0 : 40;
   const totalPrice = initialPrice + competitions + themeClass;
-  return totalPrice;
+  const output = isGroupDiscount
+    ? Math.round((totalPrice / 100) * 90)
+    : totalPrice;
+  return output;
 };
+
+export const discounts = [
+  { name: "Isabelle Mugai", email: "imugai7@gmail.com" },
+  { name: "Shivani Govender", email: "shivani.govender@gmail.com" },
+  { name: "Richard Challans", email: "rchallans@gmail.com" },
+  { name: "Melanie Hargraves", email: "melennium88@hotmail.com" },
+  { name: "Zoë Enstone", email: "zoe.enstone@gmail.com" },
+  { name: "Dalvinder Kular ", email: "dalvinder_kular@hotmail.com" },
+  { name: "Chris Kearns", email: "chris.kearns32@gmail.com" },
+  { name: "Kiran Randhawa Kukar", email: "kiranrkukar@gmail.com" },
+  { name: "Henry Whitfield ", email: "henry@presentmind.org " },
+  { name: "Lola Michels", email: "lola.michels@icloud.com" },
+  { name: "Stephen Atemie", email: "dsatemie@gmail.com" },
+  { name: "Sarah Stein Lubrano", email: "hei.eleanor.L@gmail.com" },
+  { name: "Eleanor Lin", email: "hei.eleanor.L@gmail.com" },
+  { name: "Lena Drotleff", email: "katzengoldsound@gmail.com" },
+];

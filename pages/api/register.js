@@ -9,7 +9,12 @@ import {
   updateUserInfo,
   // removeRegistration,
 } from "../../db/db";
-import { titleCase, getPrice, levelsToShow } from "../../utils/functions";
+import {
+  titleCase,
+  getPrice,
+  levelsToShow,
+  discounts,
+} from "../../utils/functions";
 
 const sgMail = require("@sendgrid/mail");
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
@@ -121,7 +126,11 @@ export default async function register(req, response) {
   const { capacity } = await isTicketAvailable(ticketId);
   const { waiting_list } = await isTicketAvailable(ticketId);
 
-  const totalPrice = getPrice(requestData);
+  const isGroupDiscount = discounts.some(
+    ({ email }) => email === req.body.email
+  );
+  console.log("isGroupDiscount", isGroupDiscount);
+  const totalPrice = getPrice(requestData, isGroupDiscount);
 
   ///////   TODO: GET TOTAL PRICE ///////
   const level = getLevelLabel(requestData.level);
@@ -210,6 +219,7 @@ export default async function register(req, response) {
         : "",
       terms: `${requestData.terms}`,
       status: `${requestData.status}`,
+      isGroupDiscount: isGroupDiscount,
       price: `${totalPrice}`,
     },
   };
