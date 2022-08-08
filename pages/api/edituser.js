@@ -1,4 +1,4 @@
-import { titleCase } from "../../utils/functions";
+import { titleCase, discounts, levelsToShow } from "../../utils/functions";
 import {
   updateUserInfo,
   removeFromWaitingList,
@@ -7,7 +7,15 @@ import {
   getTicketByName,
   addToCapacity,
 } from "../../db/db";
-
+const getLevelLabelForEmail = (level) => {
+  if (level === "") {
+    return "";
+  }
+  if (level !== "") {
+    const title = levelsToShow?.find((item) => item.value === level)?.label;
+    return titleCase(title);
+  }
+};
 const sgMail = require("@sendgrid/mail");
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 //******** Level & Ticket Label *********/
@@ -41,33 +49,45 @@ export default async function edituser(req, response) {
     "waitinglist",
     "canceled",
   ];
+  const time = new Date();
+  const date = new Date().toISOString();
+
   const requestData = {
     status: req.body.status,
     prevStatus: req.body.prevStatus,
+    date: time.toDateString(),
     email: req.body.email,
-    first_name: req.body.first_name,
-    last_name: req.body.last_name,
+    first_name: req.body.firstName,
+    last_name: req.body.lastName,
     country: req.body.country,
     role: req.body.role ?? "",
     ticket: req.body.ticket ?? "",
     level: req.body.level,
-    theme_class: req.body.theme_class ?? "",
-    competition: req.body.competition ?? "",
-    competition_role: req.body.competition_role ?? "",
-    competitions: req.body.competitions ?? "",
-    terms: true,
+    themeClass: req.body.themeClass,
+    competition: req.body.competition,
+    competition_role: req.body.competition_role,
+    competitions: req.body.competitions,
+    terms: req.body.terms,
   };
-
-  const getEarlyBird = () => {
-    if (before.some((user) => user.Email === requestData.email)) {
-      const paidBefore = before.find(
-        (user) => user.Email === requestData.email
-      );
-      return { saldo: paidBefore.Saldo, isEarlyBord: true };
-    }
-    return { saldo: 0, isEarlyBord: false };
+  const isGroupDiscount = discounts.some(
+    ({ email }) => email === req.body.email
+  );
+  const getPrice = (requestData, isGroupDiscount) => {
+    const initialPrice = requestData.ticket === "partyPass" ? 95 : 195;
+    const competitions =
+      requestData.competition === "yes"
+        ? requestData.competitions.split(",")?.length * 10
+        : 0;
+    const themeClass =
+      requestData.themeClass === "no" || requestData.themeClass === "" ? 0 : 40;
+    console.log("here", initialPrice, competitions, themeClass);
+    const totalPrice = initialPrice + competitions + themeClass;
+    const output = isGroupDiscount
+      ? Math.round((totalPrice / 100) * 90)
+      : totalPrice;
+    return output;
   };
-
+  const totalPrice = getPrice(requestData, isGroupDiscount);
   /***** GET PRICE AND LEVEL */
   const level = titleCase(requestData.level);
   const ticket = getTicketLabel(requestData.ticket);
@@ -82,7 +102,7 @@ export default async function edituser(req, response) {
         console.error(error);
       });
   };
-
+  let template = "";
   if (!statusList.includes(req.body.status)) {
     response.status(401).json();
   } else {
@@ -96,23 +116,32 @@ export default async function edituser(req, response) {
         await removeFromWaitingList(ticketId);
         await addToCapacity(ticketId);
       }
+      template = "d-eec50fc0f8824f0aa2c66a7196890ed5";
       const msg = {
         from: "registration@bluesfever.eu",
         to: `${requestData.email}`,
-        template_id: "d-eec50fc0f8824f0aa2c66a7196890ed5",
+        template_id: template,
         dynamic_template_data: {
           firstName: `${requestData.first_name}`,
           lastName: `${requestData.last_name}`,
           country: `${requestData.country}`,
-          role: `${requestData.role}`,
-          level: `${level}`,
+          role: `${titleCase(requestData.role)}`,
+          level: `${getLevelLabelForEmail(requestData.level)}`,
           ticket: `${ticket}`,
-          shirt: `${requestData.shirt}`,
-          shirtSize: `${requestData.shirtSize}`,
+          themeClass: `${titleCase(requestData.themeClass)}`,
+          competition: requestData.competition === "yes" ? true : false,
+          competitionAnswer:
+            requestData.competition === "later" ? "I will decide later" : "No",
+          competition_role: `${requestData.competition_role}`,
+          competitions: requestData.competitions
+            ? `${requestData.competitions
+                .split(",")
+                .map((competition) => titleCase(competition))}`
+            : "",
           terms: `${requestData.terms}`,
           status: `${requestData.status}`,
-          // price: `${totalPrice}`,
-          price: 10,
+          isGroupDiscount: isGroupDiscount,
+          price: `${totalPrice}`,
         },
       };
       await sendEmail(msg);
@@ -129,7 +158,7 @@ export default async function edituser(req, response) {
       const msg = {
         from: "registration@thebluesjoint.dance",
         to: `${requestData.email}`,
-        template_id: "d-52a8e8e3cff741c583127915ee291c39",
+        template_id: "", // waiting list
         dynamic_template_data: {
           firstName: `${requestData.first_name}`,
           lastName: `${requestData.last_name}`,
@@ -165,7 +194,7 @@ export default async function edituser(req, response) {
           price: `${totalPrice}`,
         },
       };
-      await sendEmail(msg);
+      // await sendEmail(msg);
     }
     // and more conditions
     if (req.body.status === "canceled") {
@@ -180,7 +209,7 @@ export default async function edituser(req, response) {
         await removeFromCapacity(ticketId);
       }
     }
-    await updateUserInfo(req.body);
+    await updateUserInfo(req.body, totalPrice);
     response.status(200).json();
   }
 }

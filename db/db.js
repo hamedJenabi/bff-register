@@ -126,13 +126,13 @@ export async function getUserById(id) {
   `;
   return user[0];
 }
-export async function updateUserInfo(user) {
+export async function updateUserInfo(user, totalPrice) {
   const userData = {
     id: user.id,
     status: user.status,
     email: user.email,
-    first_name: user.first_name,
-    last_name: user.last_name,
+    first_name: user.firstName,
+    last_name: user.lastName,
     country: user.country,
     ticket: user.ticket,
     role: user.role,
@@ -142,7 +142,7 @@ export async function updateUserInfo(user) {
     competition: user.competition,
     competition_role: user.competition_role,
     competitions: user.competitions,
-    price: user.price,
+    price: totalPrice,
     terms: true,
   };
 
@@ -157,11 +157,11 @@ export async function updateUserInfo(user) {
     "ticket"  = ${userData.ticket},
     "role" = ${userData.role},
     "level" = ${userData.level},
-    "volunteer" = ${userData.volunteer},
-    "thursday" = ${userData.thursday},
-    "exchange" = ${userData.exchange},
-    "shirt"   = ${userData.shirt},
-    "shirt_size" = ${userData.shirt_size},
+    "theme_class" = ${userData.themeClass},
+    "competition" = ${userData.competition},
+    "competition_role" = ${userData.competition_role},
+    "competitions" = ${userData.competitions},
+    "price" = ${userData.price},
     "terms" = ${userData.terms}
   WHERE id = ${user.id}
   `;
