@@ -14,6 +14,11 @@ export default function Dashboard({ users, tickets }) {
   const [capacityShow, setCapacityShow] = useState(false);
   const [userToShow, setUserToShow] = useState(users || []);
   const isMobile = useMedia({ maxWidth: "768px" });
+
+  const totalAmount = users.reduce((acc, user) => {
+    return acc + parseInt(user.price, 10);
+  }, 0);
+
   const BalanceComponent = () => {
     const getTicketAmount = (level, role) => {
       const registerAmount = users.filter(
@@ -264,7 +269,9 @@ export default function Dashboard({ users, tickets }) {
       />
       <h3 className={styles.title}>Registrations</h3>
       <div className={styles.total}>
-        <p>Total Registrations: {users?.length}</p>
+        <p>
+          Total Registrations: {users?.length} = {totalAmount}
+        </p>
         <p>Selected List: {userToShow?.length}</p>
       </div>
       <main className={styles.main}>
