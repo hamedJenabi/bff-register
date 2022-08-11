@@ -27,6 +27,7 @@ export default function User({ user }) {
       competition: user.competition,
       competition_role: user.competition_role,
       competitions: user.competitions?.toString(),
+      theme_class: user.theme_class || "",
       price: user.price,
       terms: user.terms,
     },
@@ -203,6 +204,16 @@ export default function User({ user }) {
               user={user}
               handleUser={handleClick}
               info="competitions"
+              form={form}
+            />
+          </div>
+          <div className={styles.row}>
+            <p>themeClass:</p>
+            <p> {user.theme_class}</p>
+            <Modal
+              user={user}
+              handleUser={handleClick}
+              info="themeClass"
               form={form}
             />
           </div>
