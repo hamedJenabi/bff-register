@@ -80,8 +80,22 @@ export default async function edituser(req, response) {
         : 0;
     const themeClass =
       requestData.themeClass === "no" || requestData.themeClass === "" ? 0 : 40;
-    console.log("here", initialPrice, competitions, themeClass);
-    const totalPrice = initialPrice + competitions + themeClass;
+    const fullPassdiscount =
+      requestData.ticket === "fullpass" &&
+      requestData.competition === "yes" &&
+      requestData.competitions?.length > 0
+        ? -10
+        : 0;
+    const totalPrice =
+      initialPrice + competitions + themeClass + fullPassdiscount;
+    console.log(
+      "here",
+      totalPrice,
+      fullPassdiscount,
+      initialPrice,
+      competitions,
+      themeClass
+    );
     const output = isGroupDiscount
       ? Math.round((totalPrice / 100) * 90)
       : totalPrice;

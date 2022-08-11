@@ -76,7 +76,14 @@ export const getPrice = (requestData, isGroupDiscount) => {
       : 0;
   const themeClass =
     requestData.themeClass === "no" || requestData.themeClass === "" ? 0 : 40;
-  const totalPrice = initialPrice + competitions + themeClass;
+  const fullPassdiscount =
+    requestData.ticket === "fullpass" &&
+    requestData.competition === "yes" &&
+    requestData.competitions?.length > 0
+      ? -10
+      : 0;
+  const totalPrice =
+    initialPrice + competitions + themeClass + fullPassdiscount;
   const output = isGroupDiscount
     ? Math.round((totalPrice / 100) * 90)
     : totalPrice;
