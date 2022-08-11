@@ -88,14 +88,6 @@ export default async function edituser(req, response) {
         : 0;
     const totalPrice =
       initialPrice + competitions + themeClass + fullPassdiscount;
-    console.log(
-      "here",
-      totalPrice,
-      fullPassdiscount,
-      initialPrice,
-      competitions,
-      themeClass
-    );
     const output = isGroupDiscount
       ? Math.round((totalPrice / 100) * 90)
       : totalPrice;
@@ -121,15 +113,15 @@ export default async function edituser(req, response) {
     response.status(401).json();
   } else {
     if (req.body.status === "email-sent") {
-      if (requestData.prevStatus === "waitinglist") {
-        const ticketName =
-          requestData.ticket === "partyPass"
-            ? requestData.ticket
-            : `${requestData.level}_${requestData.role}`;
-        const { id: ticketId } = await getTicketByName(ticketName);
-        await removeFromWaitingList(ticketId);
-        await addToCapacity(ticketId);
-      }
+      // if (requestData.prevStatus === "waitinglist") {
+      //   const ticketName =
+      //     requestData.ticket === "partyPass"
+      //       ? requestData.ticket
+      //       : `${requestData.level}_${requestData.role}`;
+      //   const { id: ticketId } = await getTicketByName(ticketName);
+      //   await removeFromWaitingList(ticketId);
+      //   await addToCapacity(ticketId);
+      // }
       template = "d-eec50fc0f8824f0aa2c66a7196890ed5";
       const msg = {
         from: "registration@bluesfever.eu",
@@ -160,55 +152,64 @@ export default async function edituser(req, response) {
       };
       await sendEmail(msg);
     }
-    if (req.body.status === "waitinglist") {
-      const ticketName =
-        requestData.ticket === "partyPass"
-          ? requestData.ticket
-          : `${requestData.level}_${requestData.role}`;
-      const { id: ticketId } = await getTicketByName(ticketName);
-      await removeFromCapacity(ticketId);
-      await addToWaitingList(ticketId);
+    // if (req.body.status === "waitinglist") {
+    //   const ticketName =
+    //     requestData.ticket === "partyPass"
+    //       ? requestData.ticket
+    //       : `${requestData.level}_${requestData.role}`;
+    //   const { id: ticketId } = await getTicketByName(ticketName);
+    //   await removeFromCapacity(ticketId);
+    //   await addToWaitingList(ticketId);
 
+    //   const msg = {
+    //     from: "registration@thebluesjoint.dance",
+    //     to: `${requestData.email}`,
+    //     template_id: "", // waiting list
+    //     dynamic_template_data: {
+    //       firstName: `${requestData.first_name}`,
+    //       lastName: `${requestData.last_name}`,
+    //       country: `${requestData.country}`,
+    //       role: `${requestData.role}`,
+    //       level: `${level}`,
+    //       ticket: `${ticket}`,
+    //       shirt: `${requestData.shirt}`,
+    //       shirtSize: `${requestData.shirtSize}`,
+    //       terms: `${requestData.terms}`,
+    //       status: `${requestData.status}`,
+    //       price: `${totalPrice}`,
+    //     },
+    //   };
+    //   await sendEmail(msg);
+    // }
+    if (req.body.status === "confirmed") {
       const msg = {
-        from: "registration@thebluesjoint.dance",
+        from: "registration@bluesfever.eu",
         to: `${requestData.email}`,
-        template_id: "", // waiting list
+        template_id: "d-9a1d3b06c6fb43f69a1ee68b940ebe35",
         dynamic_template_data: {
           firstName: `${requestData.first_name}`,
           lastName: `${requestData.last_name}`,
           country: `${requestData.country}`,
-          role: `${requestData.role}`,
-          level: `${level}`,
+          role: `${titleCase(requestData.role)}`,
+          level: `${getLevelLabelForEmail(requestData.level)}`,
           ticket: `${ticket}`,
-          shirt: `${requestData.shirt}`,
-          shirtSize: `${requestData.shirtSize}`,
+          themeClass: `${titleCase(requestData.themeClass)}`,
+          competition: requestData.competition === "yes" ? true : false,
+          competitionAnswer:
+            requestData.competition === "later" ? "I will decide later" : "No",
+          competition_role: `${requestData.competition_role}`,
+          competitions: requestData.competitions
+            ? `${requestData.competitions
+                .split(",")
+                .map((competition) => titleCase(competition))}`
+            : "",
           terms: `${requestData.terms}`,
           status: `${requestData.status}`,
+          isGroupDiscount: isGroupDiscount,
           price: `${totalPrice}`,
         },
       };
       await sendEmail(msg);
-    }
-    if (req.body.status === "confirmed") {
-      const msg = {
-        from: "registration@thebluesjoint.dance",
-        to: `${requestData.email}`,
-        template_id: "d-e92efc2ec0094393a177a7c20d91d8a3",
-        dynamic_template_data: {
-          firstName: `${requestData.first_name}`,
-          lastName: `${requestData.last_name}`,
-          country: `${requestData.country}`,
-          role: `${requestData.role}`,
-          level: `${level}`,
-          ticket: `${ticket}`,
-          shirt: `${requestData.shirt}`,
-          shirtSize: `${requestData.shirtSize}`,
-          terms: `${requestData.terms}`,
-          status: `${requestData.status}`,
-          price: `${totalPrice}`,
-        },
-      };
-      // await sendEmail(msg);
     }
     // and more conditions
     if (req.body.status === "canceled") {
