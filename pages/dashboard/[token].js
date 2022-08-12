@@ -102,6 +102,8 @@ export default function Dashboard({ users, tickets }) {
       setUserToShow(users.filter((user) => user["ticket"] === "partyPass"));
     } else if (item === "confirmed") {
       setUserToShow(users.filter((user) => user["status"] === "confirmed"));
+    } else if (item === "registered") {
+      setUserToShow(users.filter((user) => user["status"] === "registered"));
     } else {
       setUserToShow(users.filter((user) => user[item] === item));
     }
@@ -283,6 +285,14 @@ export default function Dashboard({ users, tickets }) {
             })}
           >
             <p>All</p>
+          </div>
+          <div
+            onClick={() => handleSideBarClick("registered")}
+            className={classNames(styles.sideBarItem, {
+              [styles.active]: activeSideBar === "registered",
+            })}
+          >
+            <p>registered</p>
           </div>
           <div
             onClick={() => handleSideBarClick("confirmed")}
