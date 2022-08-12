@@ -162,7 +162,9 @@ export default function RegistrationForm({ form, tickets, isClicked }) {
                 {levelsToShow.map(({ label, value, detail }) => (
                   <label key={value}>
                     <FormRadio {...form} name="level" value={value} />
-                    <p>{label}</p>
+                    <p>
+                      {label} {value === "trumpet" ? "(Waiting List)" : ""}
+                    </p>
                     <InfoModal header={label} info={detail} />
                   </label>
                 ))}
