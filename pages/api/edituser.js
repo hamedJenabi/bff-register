@@ -152,35 +152,36 @@ export default async function edituser(req, response) {
       };
       await sendEmail(msg);
     }
-    // if (req.body.status === "waitinglist") {
-    //   const ticketName =
-    //     requestData.ticket === "partyPass"
-    //       ? requestData.ticket
-    //       : `${requestData.level}_${requestData.role}`;
-    //   const { id: ticketId } = await getTicketByName(ticketName);
-    //   await removeFromCapacity(ticketId);
-    //   await addToWaitingList(ticketId);
-
-    //   const msg = {
-    //     from: "registration@thebluesjoint.dance",
-    //     to: `${requestData.email}`,
-    //     template_id: "", // waiting list
-    //     dynamic_template_data: {
-    //       firstName: `${requestData.first_name}`,
-    //       lastName: `${requestData.last_name}`,
-    //       country: `${requestData.country}`,
-    //       role: `${requestData.role}`,
-    //       level: `${level}`,
-    //       ticket: `${ticket}`,
-    //       shirt: `${requestData.shirt}`,
-    //       shirtSize: `${requestData.shirtSize}`,
-    //       terms: `${requestData.terms}`,
-    //       status: `${requestData.status}`,
-    //       price: `${totalPrice}`,
-    //     },
-    //   };
-    //   await sendEmail(msg);
-    // }
+    if (req.body.status === "waitinglist") {
+      const msg = {
+        from: "registration@bluesfever.eu",
+        to: `${requestData.email}`,
+        template_id: "d-47f29cd18c134b89bf5496573737abdc",
+        dynamic_template_data: {
+          firstName: `${requestData.first_name}`,
+          lastName: `${requestData.last_name}`,
+          country: `${requestData.country}`,
+          role: `${titleCase(requestData.role)}`,
+          level: `${getLevelLabelForEmail(requestData.level)}`,
+          ticket: `${ticket}`,
+          themeClass: `${titleCase(requestData.themeClass)}`,
+          competition: requestData.competition === "yes" ? true : false,
+          competitionAnswer:
+            requestData.competition === "later" ? "I will decide later" : "No",
+          competition_role: `${requestData.competition_role}`,
+          competitions: requestData.competitions
+            ? `${requestData.competitions
+                .split(",")
+                .map((competition) => titleCase(competition))}`
+            : "",
+          terms: `${requestData.terms}`,
+          status: `${requestData.status}`,
+          isGroupDiscount: isGroupDiscount,
+          price: `${totalPrice}`,
+        },
+      };
+      await sendEmail(msg);
+    }
     if (req.body.status === "confirmed") {
       const msg = {
         from: "registration@bluesfever.eu",

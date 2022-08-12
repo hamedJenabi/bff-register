@@ -17,7 +17,7 @@ export const levelsToShow = [
       "You have had local classes and maybe one or more international workshops. You can execute the basic movements and steps. You know some variations of basics and you can choose them depending on the style of music.",
   },
   {
-    label: "Trumpet - Intermediate/Advanced",
+    label: "Trumpet - Int/Adv (Waiting List)",
     value: "trumpet",
     detail:
       "You travel internationally to festivals and attended workshops. You have an expanded vocabulary (aesthetic and movements) and have achieved a good musicality. You have a high understanding of partnership in dancing.",
