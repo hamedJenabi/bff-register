@@ -189,7 +189,9 @@
     margin: 50px;
   }
 }
-
+.balanceComponent {
+  overflow-x: scroll;
+}
 .ticketRow {
   display: flex;
   justify-content: space-around;
@@ -199,6 +201,14 @@
   width: 100%;
   &:first-child {
     background-color: rgb(101, 236, 223);
+  }
+  p {
+    min-width: 100px;
+  }
+  @media (min-width: 600px) {
+    p {
+      min-width: 300px;
+    }
   }
 }
 .ticketItem {

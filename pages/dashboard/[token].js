@@ -54,8 +54,8 @@ export default function Dashboard({ users, tickets }) {
           <p>Lead</p>
         </div>
         {levelsToShow.map((lvl) => (
-          <div key={lvl.label} className={styles.ticketRow}>
-            <p>{lvl.label}</p>
+          <div key={lvl.value} className={styles.ticketRow}>
+            <p>{lvl.value}</p>
             <p>
               {getTicketAmount(lvl.value, "follow").registered} -
               {getTicketAmount(lvl.value, "follow").sent} (
