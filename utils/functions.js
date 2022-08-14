@@ -156,5 +156,8 @@ export const discounts = [
   { name: "name", email: "zuzka.lapsanska@gmail.com" },
   { name: "name", email: "foto@martinsandera.com" },
   { name: "name", email: "andulka9@seznam.cz" },
-  { name: "name", email: "mefistov@seznam.cz" },
+  { name: "name", email: "levenskunstenaar@kpnmail.nl" },
+  { name: "name", email: "yoeri.kwak@gmail.com" },
+  { name: "name", email: "giova_naranja@hotmail.com" },
+  { name: "name", email: "julia@conemans.com  " },
 ];
