@@ -63,12 +63,13 @@ export default async function edituser(req, response) {
     role: req.body.role ?? "",
     ticket: req.body.ticket ?? "",
     level: req.body.level,
-    themeClass: req.body.themeClass,
+    theme_class: req.body.theme_class,
     competition: req.body.competition,
     competition_role: req.body.competition_role,
     competitions: req.body.competitions,
     terms: req.body.terms,
   };
+  console.log("requestData", requestData);
   const isGroupDiscount = discounts.some(
     ({ email }) => email === req.body.email
   );
@@ -78,8 +79,10 @@ export default async function edituser(req, response) {
       requestData.competition === "yes"
         ? requestData.competitions.split(",")?.length * 10
         : 0;
-    const themeClass =
-      requestData.themeClass === "no" || requestData.themeClass === "" ? 0 : 40;
+    const theme_class =
+      requestData.theme_class === "no" || requestData.theme_class === ""
+        ? 0
+        : 40;
     const fullPassdiscount =
       requestData.ticket === "fullpass" &&
       requestData.competition === "yes" &&
@@ -87,7 +90,7 @@ export default async function edituser(req, response) {
         ? -10
         : 0;
     const totalPrice =
-      initialPrice + competitions + themeClass + fullPassdiscount;
+      initialPrice + competitions + theme_class + fullPassdiscount;
     const output = isGroupDiscount
       ? Math.round((totalPrice / 100) * 90)
       : totalPrice;
@@ -134,7 +137,7 @@ export default async function edituser(req, response) {
           role: `${titleCase(requestData.role)}`,
           level: `${getLevelLabelForEmail(requestData.level)}`,
           ticket: `${ticket}`,
-          themeClass: `${titleCase(requestData.themeClass)}`,
+          themeClass: `${titleCase(requestData.theme_class)}`,
           competition: requestData.competition === "yes" ? true : false,
           competitionAnswer:
             requestData.competition === "later" ? "I will decide later" : "No",
@@ -164,7 +167,7 @@ export default async function edituser(req, response) {
           role: `${titleCase(requestData.role)}`,
           level: `${getLevelLabelForEmail(requestData.level)}`,
           ticket: `${ticket}`,
-          themeClass: `${titleCase(requestData.themeClass)}`,
+          themeClass: `${titleCase(requestData.theme_class)}`,
           competition: requestData.competition === "yes" ? true : false,
           competitionAnswer:
             requestData.competition === "later" ? "I will decide later" : "No",
@@ -194,7 +197,7 @@ export default async function edituser(req, response) {
           role: `${titleCase(requestData.role)}`,
           level: `${getLevelLabelForEmail(requestData.level)}`,
           ticket: `${ticket}`,
-          themeClass: `${titleCase(requestData.themeClass)}`,
+          themeClass: `${titleCase(requestData.theme_class)}`,
           competition: requestData.competition === "yes" ? true : false,
           competitionAnswer:
             requestData.competition === "later" ? "I will decide later" : "No",

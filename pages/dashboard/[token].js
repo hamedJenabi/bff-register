@@ -90,7 +90,7 @@ export default function Dashboard({ users, tickets }) {
       setUserToShow(users.filter((user) => user.level === item));
     } else if (item === "shirt") {
       setUserToShow(users.filter((user) => user["shirt"] === "yes"));
-    } else if (item === "themeClass") {
+    } else if (item === "theme_class") {
       setUserToShow(
         users.filter(
           (user) => user["theme_class"] !== "no" && user["theme_class"] !== ""
@@ -167,6 +167,7 @@ export default function Dashboard({ users, tickets }) {
   };
   //--------- Table Data
   const renderTableData = () => {
+    console.log(userToShow);
     return userToShow
       .filter((user) =>
         nameSearch
@@ -330,9 +331,9 @@ export default function Dashboard({ users, tickets }) {
             <p>Thursday Party</p>
           </div>
           <div
-            onClick={() => handleSideBarClick("themeClass")}
+            onClick={() => handleSideBarClick("theme_class")}
             className={classNames(styles.sideBarItem, {
-              [styles.active]: activeSideBar === "themeClass",
+              [styles.active]: activeSideBar === "theme_class",
             })}
           >
             <p>Themed Classes</p>

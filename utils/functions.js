@@ -1,5 +1,5 @@
 export const titleCase = (s) =>
-  s.replace(/^_*(.)|_+(.)/g, (s, c, d) =>
+  s?.replace(/^_*(.)|_+(.)/g, (s, c, d) =>
     c ? c.toUpperCase() : " " + d.toUpperCase()
   );
 
@@ -74,8 +74,8 @@ export const getPrice = (requestData, isGroupDiscount) => {
     requestData.competition === "yes"
       ? requestData.competitions?.length * 10
       : 0;
-  const themeClass =
-    requestData.themeClass === "no" || requestData.themeClass === "" ? 0 : 40;
+  const theme_class =
+    requestData.theme_class === "no" || requestData.theme_class === "" ? 0 : 40;
   const fullPassdiscount =
     requestData.ticket === "fullpass" &&
     requestData.competition === "yes" &&
@@ -83,7 +83,7 @@ export const getPrice = (requestData, isGroupDiscount) => {
       ? -10
       : 0;
   const totalPrice =
-    initialPrice + competitions + themeClass + fullPassdiscount;
+    initialPrice + competitions + theme_class + fullPassdiscount;
   const output = isGroupDiscount
     ? Math.round((totalPrice / 100) * 90)
     : totalPrice;

@@ -81,7 +81,7 @@ const updateGoogle = async (user) => {
     role: user.role,
     level: user.level,
     price: user.price,
-    themeClass: user.themeClass,
+    themeClass: user.theme_class,
     competition_role: user.competition_role,
     competitions: user.competitions?.toString(),
   };
@@ -112,7 +112,7 @@ export default async function register(req, response) {
     role: req.body.role ?? "",
     ticket: req.body.ticket ?? "",
     level: req.body.level,
-    themeClass: req.body.themeClass,
+    theme_class: req.body.theme_class,
     competition: req.body.competition,
     competition_role: req.body.competition_role,
     competitions: req.body.competitions,
@@ -206,7 +206,7 @@ export default async function register(req, response) {
       role: `${titleCase(requestData.role)}`,
       level: `${getLevelLabelForEmail(requestData.level)}`,
       ticket: `${ticket}`,
-      themeClass: `${titleCase(requestData.themeClass)}`,
+      themeClass: `${titleCase(requestData.theme_class)}`,
       competition: requestData.competition === "yes" ? true : false,
       competitionAnswer:
         requestData.competition === "later" ? "I will decide later" : "No",

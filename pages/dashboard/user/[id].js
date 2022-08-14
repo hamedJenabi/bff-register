@@ -23,7 +23,7 @@ export default function User({ user }) {
       level: user.level,
       ticket: user.ticket,
       role: user.role,
-      themeClass: user.themeClass || "",
+      theme_class: user.theme_class || "",
       competition: user.competition,
       competition_role: user.competition_role,
       competitions: user.competitions?.toString(),
@@ -208,12 +208,12 @@ export default function User({ user }) {
             />
           </div>
           <div className={styles.row}>
-            <p>themeClass:</p>
+            <p>theme_class:</p>
             <p> {user.theme_class}</p>
             <Modal
               user={user}
               handleUser={handleClick}
-              info="themeClass"
+              info="theme_class"
               form={form}
             />
           </div>

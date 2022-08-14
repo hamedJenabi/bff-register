@@ -178,22 +178,26 @@ export default function RegistrationForm({ form, tickets, isClicked }) {
           <FormRadioGroup
             className={styles.radioGroup}
             {...form}
-            name="themeClass"
+            name="theme_class"
           >
             <label>
               <FormRadio
                 {...form}
-                name="themeClass"
+                name="theme_class"
                 value="build_a_chreography"
               />
               <p>Build a Choreography</p>
             </label>
             <label>
-              <FormRadio {...form} name="themeClass" value="teacher_training" />
+              <FormRadio
+                {...form}
+                name="theme_class"
+                value="teacher_training"
+              />
               <p>Teacher Training</p>
             </label>
             <label>
-              <FormRadio {...form} name="themeClass" value="no" />
+              <FormRadio {...form} name="theme_class" value="no" />
               <p>No</p>
             </label>
           </FormRadioGroup>
