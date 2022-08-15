@@ -14,9 +14,9 @@ export default function Dashboard({ users, tickets }) {
   const [capacityShow, setCapacityShow] = useState(false);
   const [userToShow, setUserToShow] = useState(users || []);
   const isMobile = useMedia({ maxWidth: "768px" });
-
+  console.log(users);
   const totalAmount = users.reduce((acc, user) => {
-    return acc + parseInt(user.price, 10);
+    return acc + (user.status !== "canceled" ? parseInt(user.price, 10) : 0);
   }, 0);
 
   const BalanceComponent = () => {
@@ -169,7 +169,6 @@ export default function Dashboard({ users, tickets }) {
   };
   //--------- Table Data
   const renderTableData = () => {
-    console.log(userToShow);
     return userToShow
       .filter((user) =>
         nameSearch
