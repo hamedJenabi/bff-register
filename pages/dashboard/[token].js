@@ -102,6 +102,8 @@ export default function Dashboard({ users, tickets }) {
       setUserToShow(users.filter((user) => user["ticket"] === "partyPass"));
     } else if (item === "confirmed") {
       setUserToShow(users.filter((user) => user["status"] === "confirmed"));
+    } else if (item === "waitinglist") {
+      setUserToShow(users.filter((user) => user["status"] === "waitinglist"));
     } else if (item === "registered") {
       setUserToShow(users.filter((user) => user["status"] === "registered"));
     } else {
@@ -294,6 +296,14 @@ export default function Dashboard({ users, tickets }) {
             })}
           >
             <p>registered</p>
+          </div>
+          <div
+            onClick={() => handleSideBarClick("waitinglist")}
+            className={classNames(styles.sideBarItem, {
+              [styles.active]: activeSideBar === "waitinglist",
+            })}
+          >
+            <p>waitinglist</p>
           </div>
           <div
             onClick={() => handleSideBarClick("confirmed")}
