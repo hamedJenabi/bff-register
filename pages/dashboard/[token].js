@@ -7,6 +7,17 @@ import styles from "./Dashboard.module.scss";
 import Header from "../../components/Header/Header.js";
 import classNames from "classnames";
 import { levelsToShow, titleCase } from "../../utils/functions";
+import {
+  unstable_Form as Form,
+  unstable_FormMessage as FormMessage,
+  unstable_FormRadioGroup as FormRadioGroup,
+  unstable_FormRadio as FormRadio,
+  unstable_FormInput as FormInput,
+  unstable_FormSubmitButton as FormSubmitButton,
+  unstable_FormCheckbox as FormCheckbox,
+  unstable_FormLabel as FormLabel,
+} from "reakit/Form";
+import { unstable_useFormState as useFormState } from "reakit/Form";
 
 export default function Dashboard({ users, tickets }) {
   const [nameSearch, setNameSearch] = useState("");
@@ -14,11 +25,81 @@ export default function Dashboard({ users, tickets }) {
   const [capacityShow, setCapacityShow] = useState(false);
   const [userToShow, setUserToShow] = useState(users || []);
   const isMobile = useMedia({ maxWidth: "768px" });
-  console.log(users);
   const totalAmount = users.reduce((acc, user) => {
     return acc + (user.status !== "canceled" ? parseInt(user.price, 10) : 0);
   }, 0);
+  const form = useFormState({
+    values: {
+      status: "",
+      users: [],
+    },
 
+    onSubmit: (values) => {
+      setIsClicked(true);
+      const req = {
+        ...form.values,
+      };
+      console.log("req", req);
+      // fetch("/api/register", {
+      //   method: "POST",
+      //   headers: {
+      //     "Content-Type": "application/json",
+      //     "Cache-Control": "no-cache, no-store",
+      //   },
+      //   body: JSON.stringify(req),
+      // })
+      //   .then((response) => {
+      //     if (response.status === 200) {
+      //       localStorage.setItem("accepted", JSON.stringify(form.values));
+      //       Router.push("/accept");
+      //     }
+      //     if (response.status === 300) {
+      //       localStorage.setItem("accepted", JSON.stringify(form.values));
+      //       Router.push("/waitinglist");
+      //     }
+
+      //     if (response.status === 301) {
+      //       Router.push("/soldout");
+      //     }
+      //     if (response.status === 302) {
+      //       Router.push("/alreadyRegistered");
+      //     }
+      //   })
+      //   .catch((error) => console.log(error));
+    },
+  });
+  const [status, setStatus] = useState("");
+  const [usersToChange, setUsersToChange] = useState([]);
+
+  const handleStatusChange = async () => {
+    const idsToChange = form.values.users;
+    let array = [];
+    idsToChange.map((id) => {
+      array.push(users.find((userinfo) => userinfo.id === id));
+    });
+    console.log("array", array);
+    array.map((item) => {
+      const toEdit = { ...item, status: status };
+      fetch("/api/edituser", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Cache-Control": "no-cache, no-store",
+        },
+        body: JSON.stringify(toEdit),
+      })
+        .then((response) => {
+          if (response.status === 200) {
+            alert("DONE");
+            Router.push("/dashboard/fdjhfdskjfhdskjh");
+          }
+          if (response.status === 401) {
+            alert("Please write a valid status");
+          }
+        })
+        .catch((error) => console.log(error));
+    });
+  };
   const BalanceComponent = () => {
     const getTicketAmount = (level, role) => {
       const registerAmount = users.filter(
@@ -195,56 +276,63 @@ export default function Dashboard({ users, tickets }) {
           price,
         }) => {
           return (
-            <tr
-              className={classNames(styles.normal, {
-                [styles.confirmed]: status === "confirmed",
-                [styles.canceled]: status === "canceled",
-                [styles.sent]: status === "email-sent",
-              })}
-              key={id}
-            >
-              <td>{status}</td>
-              <td>{date}</td>
-              <td>
-                <button
-                  className={styles.button}
-                  onClick={() => handleUser(id)}
-                >
-                  Edit
-                </button>
-              </td>
-              <td>{id}</td>
-              <td>{email}</td>
-              <td>{first_name}</td>
-              <td>{last_name}</td>
-              <td>{ticket}</td>
-              <td>{role}</td>
-              <td>{level}</td>
-              <td>{titleCase(theme_class)}</td>
-              <td>{competition}</td>
-              <td>{competition_role}</td>
-              <td>
-                {competitions && (
-                  <div style={{ display: "flex", gap: "10px" }}>
-                    {competitions.split(",").map((comp) => (
-                      <p
-                        style={{
-                          border: "1px solid blue",
-                          padding: "1px 2px",
-                          fontSize: "12px",
-                        }}
-                      >
-                        {titleCase(comp)}
-                      </p>
-                    ))}
-                  </div>
-                )}
-              </td>
+            <label key={id}>
+              <tr
+                className={classNames(styles.normal, {
+                  [styles.confirmed]: status === "confirmed",
+                  [styles.canceled]: status === "canceled",
+                  [styles.sent]: status === "email-sent",
+                })}
+              >
+                <FormCheckbox
+                  style={{ width: "60px" }}
+                  {...form}
+                  name="users"
+                  value={id}
+                />
+                <td>{status}</td>
+                <td>{date}</td>
+                <td>
+                  <button
+                    className={styles.button}
+                    onClick={() => handleUser(id)}
+                  >
+                    Edit
+                  </button>
+                </td>
+                <td>{id}</td>
+                <td>{email}</td>
+                <td>{first_name}</td>
+                <td>{last_name}</td>
+                <td>{ticket}</td>
+                <td>{role}</td>
+                <td>{level}</td>
+                <td>{titleCase(theme_class)}</td>
+                <td>{competition}</td>
+                <td>{competition_role}</td>
+                <td>
+                  {competitions && (
+                    <div style={{ display: "flex", gap: "10px" }}>
+                      {competitions.split(",").map((comp) => (
+                        <p
+                          style={{
+                            border: "1px solid blue",
+                            padding: "1px 2px",
+                            fontSize: "12px",
+                          }}
+                        >
+                          {titleCase(comp)}
+                        </p>
+                      ))}
+                    </div>
+                  )}
+                </td>
 
-              <td>{country}</td>
-              <td>{price}</td>
-              <td>Yes</td>
-            </tr>
+                <td>{country}</td>
+                <td>{price}</td>
+                <td>Yes</td>
+              </tr>
+            </label>
           );
         }
       );
@@ -375,6 +463,24 @@ export default function Dashboard({ users, tickets }) {
         <div className={styles.content}>
           {activeSideBar !== "balance" && (
             <div className={styles.search}>
+              <div>
+                <select
+                  onChange={(e) => setStatus(e.target.value)}
+                  className={styles.select}
+                >
+                  <option>registered</option>
+                  <option>email-sent</option>
+                  <option>waitinglist</option>
+                  <option>confirmed</option>
+                  <option>canceled</option>
+                </select>
+                <button
+                  className={styles.statusButton}
+                  onClick={handleStatusChange}
+                >
+                  Change Status
+                </button>
+              </div>
               <p>Search first name</p>
               <input onChange={(e) => setNameSearch(e.target.value)} />
             </div>

@@ -6,6 +6,17 @@
   @media (min-width: 600px) {
     padding: 0 $xl;
   }
+  input[type="checkbox"] {
+    // -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    background: white;
+    border-radius: 5px;
+    border: 1px solid rgb(0, 0, 0);
+  }
+  input[type="checkbox"]:checked {
+    background: rgb(200, 203, 208);
+  }
 }
 
 .main {
@@ -81,7 +92,7 @@
 }
 .search {
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
   gap: $sm;
   height: 80px;
@@ -133,11 +144,18 @@
   }
 }
 .confirmed {
-  background-color: rgb(37, 146, 99) !important;
+  background-color: rgb(60, 191, 134) !important;
 }
-.button {
+.reminder {
+  background-color: rgb(186, 145, 124) !important;
+}
+.button,
+.statusButton {
   @include button;
   width: 100% !important;
+}
+.statusButton {
+  width: 190px !important;
 }
 .downloadButton {
   @include button;
@@ -215,5 +233,35 @@
   @media (min-width: 600px) {
     text-align: center;
     width: 600px;
+  }
+}
+.select {
+  padding: 5px;
+  margin-right: $sm;
+  font-size: 14px;
+  line-height: 1.3;
+  height: 45px;
+  box-sizing: border-box;
+  border: 1px solid $blue;
+  box-shadow: 0 1px 0 1px rgba(0, 0, 0, 0.04);
+  border-radius: 5px;
+  -moz-appearance: none;
+  -webkit-appearance: none;
+  appearance: none;
+  background-color: transparent;
+  width: 100%;
+  @media (min-width: 700px) {
+    width: 300px;
+  }
+  &.countrySelect {
+    border: 1px solid $blue;
+
+    height: 50px;
+    padding: 12px;
+    margin-top: $xs;
+    @media (min-width: 600px) {
+      height: 60px;
+      width: 420px;
+    }
   }
 }
