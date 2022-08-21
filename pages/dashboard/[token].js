@@ -31,7 +31,13 @@ export default function Dashboard({ users, tickets }) {
         (user) =>
           user["level"] === level &&
           user["role"] === role &&
-          (user["status"] === "email-sent" || user["status"] === "reminder")
+          user["status"] === "email-sent"
+      );
+      const ammountReminder = users.filter(
+        (user) =>
+          user["level"] === level &&
+          user["role"] === role &&
+          user["status"] === "reminder"
       );
       const ammountPaid = users.filter(
         (user) =>
@@ -42,6 +48,7 @@ export default function Dashboard({ users, tickets }) {
       return {
         registered: registerAmount.length,
         sent: ammount.length,
+        reminder: ammountReminder.length,
         paid: ammountPaid.length,
       };
     };
@@ -56,14 +63,16 @@ export default function Dashboard({ users, tickets }) {
         {levelsToShow.map((lvl) => (
           <div key={lvl.value} className={styles.ticketRow}>
             <p>{lvl.value}</p>
-            <p>
-              {getTicketAmount(lvl.value, "follow").registered} -
-              {getTicketAmount(lvl.value, "follow").sent} (
+            <p style={{ border: "1px solid grey" }}>
+              regiter: {getTicketAmount(lvl.value, "follow").registered} - send:
+              {getTicketAmount(lvl.value, "follow").sent} - reminder:
+              {getTicketAmount(lvl.value, "follow").reminder}( confirmed:
               {getTicketAmount(lvl.value, "follow").paid})
             </p>
             <p>
-              {getTicketAmount(lvl.value, "lead").registered} -
-              {getTicketAmount(lvl.value, "lead").sent} (
+              register: {getTicketAmount(lvl.value, "lead").registered} - send:{" "}
+              {getTicketAmount(lvl.value, "lead").sent} - reminder:
+              {getTicketAmount(lvl.value, "lead").reminder} ( confirmed:{" "}
               {getTicketAmount(lvl.value, "lead").paid})
             </p>
           </div>
