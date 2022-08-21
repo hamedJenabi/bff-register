@@ -165,6 +165,7 @@ export default async function edituser(req, response) {
         dynamic_template_data: {
           firstName: `${requestData.first_name}`,
           lastName: `${requestData.last_name}`,
+          date: `${requestData.date}`,
           country: `${requestData.country}`,
           role: `${titleCase(requestData.role)}`,
           level: `${getLevelLabelForEmail(requestData.level)}`,
