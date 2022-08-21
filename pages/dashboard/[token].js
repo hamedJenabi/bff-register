@@ -63,7 +63,7 @@ export default function Dashboard({ users, tickets }) {
         {levelsToShow.map((lvl) => (
           <div key={lvl.value} className={styles.ticketRow}>
             <h4>{lvl.value}</h4>
-            <p style={{ border: "1px solid grey" }}>
+            <p>
               regiter: {getTicketAmount(lvl.value, "follow").registered} - send:
               {getTicketAmount(lvl.value, "follow").sent} - reminder:
               {getTicketAmount(lvl.value, "follow").reminder}( confirmed:
