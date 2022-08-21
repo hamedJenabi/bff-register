@@ -31,7 +31,7 @@ export default function Dashboard({ users, tickets }) {
         (user) =>
           user["level"] === level &&
           user["role"] === role &&
-          user["status"] === "email-sent"
+          (user["status"] === "email-sent" || user["status"] === "reminder")
       );
       const ammountPaid = users.filter(
         (user) =>
