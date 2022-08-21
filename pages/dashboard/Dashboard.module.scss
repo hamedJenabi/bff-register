@@ -133,7 +133,10 @@
   }
 }
 .confirmed {
-  background-color: rgb(37, 146, 99) !important;
+  background-color: rgb(51, 189, 129) !important;
+}
+.reminder {
+  background-color: rgb(221, 159, 94) !important;
 }
 .button {
   @include button;

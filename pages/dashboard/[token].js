@@ -198,6 +198,7 @@ export default function Dashboard({ users, tickets }) {
             <tr
               className={classNames(styles.normal, {
                 [styles.confirmed]: status === "confirmed",
+                [styles.reminder]: status === "reminder",
                 [styles.canceled]: status === "canceled",
                 [styles.sent]: status === "email-sent",
               })}
