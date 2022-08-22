@@ -273,7 +273,7 @@ export default function Dashboard({ users, tickets }) {
       </Head>
       <Header
         isAdmin
-        title="Trippin DASHBOARD"
+        title="BFF DASHBOARD"
         menuItems={[
           {
             title: "LOG OUT ",
