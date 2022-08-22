@@ -163,7 +163,11 @@ export default function RegistrationForm({ form, tickets, isClicked }) {
                   <label key={value}>
                     <FormRadio {...form} name="level" value={value} />
                     <p>
-                      {label} {value === "trumpet" ? "(Waiting List)" : ""}
+                      {label}{" "}
+                      {form.values.role === "follow" &&
+                      (value === "trumpet" || value === "drums")
+                        ? "(Waiting List)"
+                        : ""}
                     </p>
                     <InfoModal header={label} info={detail} />
                   </label>
