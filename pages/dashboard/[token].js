@@ -105,8 +105,8 @@ export default function Dashboard({ users, tickets }) {
           (user) => user["theme_class"] !== "no" && user["theme_class"] !== ""
         )
       );
-    } else if (item === "thursday") {
-      setUserToShow(users.filter((user) => user["thursday"] === "yes"));
+    } else if (item === "email-sent") {
+      setUserToShow(users.filter((user) => user["status"] === "email-sent"));
     } else if (item === "partyPass") {
       setUserToShow(users.filter((user) => user["ticket"] === "partyPass"));
     } else if (item === "confirmed") {
@@ -307,6 +307,14 @@ export default function Dashboard({ users, tickets }) {
             <p>registered</p>
           </div>
           <div
+            onClick={() => handleSideBarClick("email-sent")}
+            className={classNames(styles.sideBarItem, {
+              [styles.active]: activeSideBar === "email-sent",
+            })}
+          >
+            <p>email-sent</p>
+          </div>
+          <div
             onClick={() => handleSideBarClick("waitinglist")}
             className={classNames(styles.sideBarItem, {
               [styles.active]: activeSideBar === "waitinglist",
@@ -341,14 +349,7 @@ export default function Dashboard({ users, tickets }) {
           >
             <p>Partypass</p>
           </div>
-          <div
-            onClick={() => handleSideBarClick("thursday")}
-            className={classNames(styles.sideBarItem, {
-              [styles.active]: activeSideBar === "thursday",
-            })}
-          >
-            <p>Thursday Party</p>
-          </div>
+
           <div
             onClick={() => handleSideBarClick("theme_class")}
             className={classNames(styles.sideBarItem, {
