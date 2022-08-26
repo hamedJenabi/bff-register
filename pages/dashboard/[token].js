@@ -470,6 +470,7 @@ export default function Dashboard({ users, tickets }) {
                 >
                   <option>registered</option>
                   <option>email-sent</option>
+                  <option>reminder</option>
                   <option>waitinglist</option>
                   <option>confirmed</option>
                   <option>canceled</option>
