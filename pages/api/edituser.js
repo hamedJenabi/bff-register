@@ -70,7 +70,6 @@ export default async function edituser(req, response) {
     competitions: req.body.competitions,
     terms: req.body.terms,
   };
-  console.log("requestData", requestData);
   const isGroupDiscount = discounts.some(
     ({ email }) => email === req.body.email
   );
