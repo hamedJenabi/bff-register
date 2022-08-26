@@ -7,7 +7,6 @@
     padding: 0 $xl;
   }
   input[type="checkbox"] {
-    // -webkit-appearance: none;
     width: 18px;
     height: 18px;
     background: white;
@@ -92,7 +91,6 @@
 }
 .search {
   display: flex;
-  // justify-content: space-between;
   align-items: center;
   gap: $lg;
   height: 80px;

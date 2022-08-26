@@ -8,16 +8,7 @@ import styles from "./Dashboard.module.scss";
 import Header from "../../components/Header/Header.js";
 import classNames from "classnames";
 import { levelsToShow, titleCase } from "../../utils/functions";
-import {
-  unstable_Form as Form,
-  unstable_FormMessage as FormMessage,
-  unstable_FormRadioGroup as FormRadioGroup,
-  unstable_FormRadio as FormRadio,
-  unstable_FormInput as FormInput,
-  unstable_FormSubmitButton as FormSubmitButton,
-  unstable_FormCheckbox as FormCheckbox,
-  unstable_FormLabel as FormLabel,
-} from "reakit/Form";
+import { unstable_FormCheckbox as FormCheckbox } from "reakit/Form";
 import { unstable_useFormState as useFormState } from "reakit/Form";
 
 export default function Dashboard({ users, tickets }) {
@@ -272,6 +263,7 @@ export default function Dashboard({ users, tickets }) {
                   [styles.confirmed]: status === "confirmed",
                   [styles.canceled]: status === "canceled",
                   [styles.sent]: status === "email-sent",
+                  [styles.reminder]: status === "reminder",
                 })}
               >
                 <FormCheckbox
