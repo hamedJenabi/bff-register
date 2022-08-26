@@ -95,6 +95,12 @@ export default function Dashboard({ users, tickets }) {
           user["role"] === role &&
           user["status"] === "email-sent"
       );
+      const ammountReminder = users.filter(
+        (user) =>
+          user["level"] === level &&
+          user["role"] === role &&
+          user["status"] === "reminder"
+      );
       const ammountPaid = users.filter(
         (user) =>
           user["level"] === level &&
@@ -104,6 +110,7 @@ export default function Dashboard({ users, tickets }) {
       return {
         registered: registerAmount.length,
         sent: ammount.length,
+        reminder: ammountReminder.length,
         paid: ammountPaid.length,
       };
     };
@@ -117,15 +124,17 @@ export default function Dashboard({ users, tickets }) {
         </div>
         {levelsToShow.map((lvl) => (
           <div key={lvl.value} className={styles.ticketRow}>
-            <p>{lvl.value}</p>
+            <h4>{lvl.value}</h4>
             <p>
-              {getTicketAmount(lvl.value, "follow").registered} -
-              {getTicketAmount(lvl.value, "follow").sent} (
+              regiter: {getTicketAmount(lvl.value, "follow").registered} - send:
+              {getTicketAmount(lvl.value, "follow").sent} - reminder:
+              {getTicketAmount(lvl.value, "follow").reminder}( confirmed:
               {getTicketAmount(lvl.value, "follow").paid})
             </p>
             <p>
-              {getTicketAmount(lvl.value, "lead").registered} -
-              {getTicketAmount(lvl.value, "lead").sent} (
+              register: {getTicketAmount(lvl.value, "lead").registered} - send:{" "}
+              {getTicketAmount(lvl.value, "lead").sent} - reminder:
+              {getTicketAmount(lvl.value, "lead").reminder} ( confirmed:{" "}
               {getTicketAmount(lvl.value, "lead").paid})
             </p>
           </div>
@@ -158,8 +167,8 @@ export default function Dashboard({ users, tickets }) {
           (user) => user["theme_class"] !== "no" && user["theme_class"] !== ""
         )
       );
-    } else if (item === "thursday") {
-      setUserToShow(users.filter((user) => user["thursday"] === "yes"));
+    } else if (item === "email-sent") {
+      setUserToShow(users.filter((user) => user["status"] === "email-sent"));
     } else if (item === "partyPass") {
       setUserToShow(users.filter((user) => user["ticket"] === "partyPass"));
     } else if (item === "confirmed") {
@@ -332,7 +341,7 @@ export default function Dashboard({ users, tickets }) {
       </Head>
       <Header
         isAdmin
-        title="Trippin DASHBOARD"
+        title="BFF DASHBOARD"
         menuItems={[
           {
             title: "LOG OUT ",
@@ -364,6 +373,14 @@ export default function Dashboard({ users, tickets }) {
             })}
           >
             <p>registered</p>
+          </div>
+          <div
+            onClick={() => handleSideBarClick("email-sent")}
+            className={classNames(styles.sideBarItem, {
+              [styles.active]: activeSideBar === "email-sent",
+            })}
+          >
+            <p>email-sent</p>
           </div>
           <div
             onClick={() => handleSideBarClick("waitinglist")}
@@ -400,14 +417,7 @@ export default function Dashboard({ users, tickets }) {
           >
             <p>Partypass</p>
           </div>
-          <div
-            onClick={() => handleSideBarClick("thursday")}
-            className={classNames(styles.sideBarItem, {
-              [styles.active]: activeSideBar === "thursday",
-            })}
-          >
-            <p>Thursday Party</p>
-          </div>
+
           <div
             onClick={() => handleSideBarClick("theme_class")}
             className={classNames(styles.sideBarItem, {

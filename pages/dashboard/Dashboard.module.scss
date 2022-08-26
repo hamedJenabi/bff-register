@@ -36,7 +36,7 @@
   color: white;
 }
 .sent {
-  background-color: rgb(64, 132, 98) !important;
+  background-color: rgb(51, 189, 129) !important;
   color: white;
 }
 .total {
@@ -145,13 +145,12 @@
   }
 }
 .confirmed {
-  background-color: rgb(60, 191, 134) !important;
+  background-color: rgb(64, 132, 98) !important;
 }
 .reminder {
-  background-color: rgb(186, 145, 124) !important;
+  background-color: rgb(221, 159, 94) !important;
 }
-.button,
-.statusButton {
+.button {
   @include button;
   width: 100% !important;
 }
@@ -226,7 +225,10 @@
   }
   @media (min-width: 600px) {
     p {
-      min-width: 300px;
+      min-width: 350px;
+    }
+    h4 {
+      min-width: 150px;
     }
   }
 }

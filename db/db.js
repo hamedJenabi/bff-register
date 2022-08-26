@@ -127,8 +127,11 @@ export async function getUserById(id) {
   return user[0];
 }
 export async function updateUserInfo(user, totalPrice) {
+  const time = new Date();
+
   const userData = {
     id: user.id,
+    date: time.toDateString(),
     status: user.status,
     email: user.email,
     first_name: user.firstName,
@@ -137,7 +140,6 @@ export async function updateUserInfo(user, totalPrice) {
     ticket: user.ticket,
     role: user.role,
     level: user.level,
-
     theme_class: user.theme_class,
     competition: user.competition,
     competition_role: user.competition_role,
@@ -151,6 +153,7 @@ export async function updateUserInfo(user, totalPrice) {
   SET 
     "status" = ${userData.status},
     "email" = ${userData.email},
+    "date" = ${userData.date},
     "first_name"  = ${userData.first_name},
     "last_name" = ${userData.last_name},
     "country" = ${userData.country},

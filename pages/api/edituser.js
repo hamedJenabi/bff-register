@@ -44,6 +44,7 @@ const getTicketLabel = (ticket) => {
 export default async function edituser(req, response) {
   const statusList = [
     "registered",
+    "reminder",
     "email-sent",
     "confirmed",
     "waitinglist",
@@ -69,7 +70,7 @@ export default async function edituser(req, response) {
     competitions: req.body.competitions,
     terms: req.body.terms,
   };
-  console.log("requestData", requestData);
+
   const isGroupDiscount = discounts.some(
     ({ email }) => email === req.body.email
   );
@@ -138,6 +139,38 @@ export default async function edituser(req, response) {
           level: `${getLevelLabelForEmail(requestData.level)}`,
           ticket: `${ticket}`,
           themeClass: `${titleCase(requestData.theme_class)}`,
+          competition: requestData.competition === "yes" ? true : false,
+          competitionAnswer:
+            requestData.competition === "later" ? "I will decide later" : "No",
+          competition_role: `${requestData.competition_role}`,
+          competitions: requestData.competitions
+            ? `${requestData.competitions
+                .split(",")
+                .map((competition) => titleCase(competition))}`
+            : "",
+          terms: `${requestData.terms}`,
+          status: `${requestData.status}`,
+          isGroupDiscount: isGroupDiscount,
+          price: `${totalPrice}`,
+        },
+      };
+      await sendEmail(msg);
+    }
+    if (req.body.status === "reminder") {
+      template = "d-ffa39fe3a7e440ed94d71fac0170f3af";
+      const msg = {
+        from: "registration@bluesfever.eu",
+        to: `${requestData.email}`,
+        template_id: template,
+        dynamic_template_data: {
+          firstName: `${requestData.first_name}`,
+          lastName: `${requestData.last_name}`,
+          date: `${requestData.date}`,
+          country: `${requestData.country}`,
+          role: `${titleCase(requestData.role)}`,
+          level: `${getLevelLabelForEmail(requestData.level)}`,
+          ticket: `${ticket}`,
+          themeClass: `- ${titleCase(requestData.theme_class)}`,
           competition: requestData.competition === "yes" ? true : false,
           competitionAnswer:
             requestData.competition === "later" ? "I will decide later" : "No",
