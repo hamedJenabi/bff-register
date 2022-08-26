@@ -125,7 +125,7 @@ export default function Dashboard({ users, tickets }) {
           <div key={lvl.value} className={styles.ticketRow}>
             <h4>{lvl.value}</h4>
             <p>
-              regiter: {getTicketAmount(lvl.value, "follow").registered} <br />
+              register: {getTicketAmount(lvl.value, "follow").registered} <br />
               send: {getTicketAmount(lvl.value, "follow").sent}
               <br />
               reminder: {getTicketAmount(lvl.value, "follow").reminder}
