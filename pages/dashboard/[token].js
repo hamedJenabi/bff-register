@@ -1,6 +1,7 @@
 import Head from "next/head";
 import useMedia from "use-media";
 import Router from "next/router";
+import { useRouter } from "next/router";
 import { CSVLink, CSVDownload } from "react-csv";
 import React, { useState } from "react";
 import styles from "./Dashboard.module.scss";
@@ -28,6 +29,8 @@ export default function Dashboard({ users, tickets }) {
   const totalAmount = users.reduce((acc, user) => {
     return acc + (user.status !== "canceled" ? parseInt(user.price, 10) : 0);
   }, 0);
+  const router = useRouter();
+
   const form = useFormState({
     values: {
       status: "",
@@ -39,33 +42,6 @@ export default function Dashboard({ users, tickets }) {
       const req = {
         ...form.values,
       };
-      console.log("req", req);
-      // fetch("/api/register", {
-      //   method: "POST",
-      //   headers: {
-      //     "Content-Type": "application/json",
-      //     "Cache-Control": "no-cache, no-store",
-      //   },
-      //   body: JSON.stringify(req),
-      // })
-      //   .then((response) => {
-      //     if (response.status === 200) {
-      //       localStorage.setItem("accepted", JSON.stringify(form.values));
-      //       Router.push("/accept");
-      //     }
-      //     if (response.status === 300) {
-      //       localStorage.setItem("accepted", JSON.stringify(form.values));
-      //       Router.push("/waitinglist");
-      //     }
-
-      //     if (response.status === 301) {
-      //       Router.push("/soldout");
-      //     }
-      //     if (response.status === 302) {
-      //       Router.push("/alreadyRegistered");
-      //     }
-      //   })
-      //   .catch((error) => console.log(error));
     },
   });
   const [status, setStatus] = useState("");
@@ -77,9 +53,14 @@ export default function Dashboard({ users, tickets }) {
     idsToChange.map((id) => {
       array.push(users.find((userinfo) => userinfo.id === id));
     });
-    console.log("array", array);
+
     array.map((item) => {
-      const toEdit = { ...item, status: status };
+      const toEdit = {
+        ...item,
+        firstName: item.first_name,
+        lastName: item.last_name,
+        status: status,
+      };
       fetch("/api/edituser", {
         method: "POST",
         headers: {
@@ -90,8 +71,7 @@ export default function Dashboard({ users, tickets }) {
       })
         .then((response) => {
           if (response.status === 200) {
-            alert("DONE");
-            Router.push("/dashboard/fdjhfdskjfhdskjh");
+            router.reload(window.location.pathname);
           }
           if (response.status === 401) {
             alert("Please write a valid status");
@@ -99,6 +79,7 @@ export default function Dashboard({ users, tickets }) {
         })
         .catch((error) => console.log(error));
     });
+    alert("done");
   };
   const BalanceComponent = () => {
     const getTicketAmount = (level, role) => {

@@ -57,8 +57,8 @@ export default async function edituser(req, response) {
     prevStatus: req.body.prevStatus,
     date: time.toDateString(),
     email: req.body.email,
-    first_name: req.body.firstName,
-    last_name: req.body.lastName,
+    first_name: req.body.first_name,
+    last_name: req.body.last_name,
     country: req.body.country,
     role: req.body.role ?? "",
     ticket: req.body.ticket ?? "",
@@ -228,6 +228,7 @@ export default async function edituser(req, response) {
         await removeFromCapacity(ticketId);
       }
     }
+    console.log("here");
     await updateUserInfo(req.body, totalPrice);
     response.status(200).json();
   }
