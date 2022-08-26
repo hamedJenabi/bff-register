@@ -41,13 +41,6 @@ export default function RegistrationForm({ form, tickets, isClicked }) {
     }
   };
 
-  // const finalPrice = (initialPrice, earlyPrice) => {
-  //   if (isEarlyBird) {
-  //     return Math.max(0, earlyPrice - voucher);
-  //   }
-  //   return initialPrice;
-  // };
-
   return (
     <>
       {!isClicked && (
@@ -165,7 +158,9 @@ export default function RegistrationForm({ form, tickets, isClicked }) {
                     <p>
                       {label}{" "}
                       {form.values.role === "follow" &&
-                      (value === "trumpet" || value === "drums")
+                      (value === "trumpet" ||
+                        value === "drums" ||
+                        value === "guitar")
                         ? "(Waiting List)"
                         : ""}
                     </p>

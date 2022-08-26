@@ -14,7 +14,6 @@ export default function Dashboard({ users, tickets }) {
   const [capacityShow, setCapacityShow] = useState(false);
   const [userToShow, setUserToShow] = useState(users || []);
   const isMobile = useMedia({ maxWidth: "768px" });
-  console.log(users);
   const totalAmount = users.reduce((acc, user) => {
     return acc + (user.status !== "canceled" ? parseInt(user.price, 10) : 0);
   }, 0);
@@ -39,16 +38,24 @@ export default function Dashboard({ users, tickets }) {
           user["role"] === role &&
           user["status"] === "reminder"
       );
+      const ammountWaiting = users.filter(
+        (user) =>
+          user["level"] === level &&
+          user["role"] === role &&
+          user["status"] === "waitinglist"
+      );
       const ammountPaid = users.filter(
         (user) =>
           user["level"] === level &&
           user["role"] === role &&
           user["status"] === "confirmed"
       );
+      console.log("ammountWaiting", ammountWaiting);
       return {
         registered: registerAmount.length,
         sent: ammount.length,
         reminder: ammountReminder.length,
+        waiting: ammountWaiting.length,
         paid: ammountPaid.length,
       };
     };
@@ -64,16 +71,21 @@ export default function Dashboard({ users, tickets }) {
           <div key={lvl.value} className={styles.ticketRow}>
             <h4>{lvl.value}</h4>
             <p>
-              regiter: {getTicketAmount(lvl.value, "follow").registered} - send:
-              {getTicketAmount(lvl.value, "follow").sent} - reminder:
-              {getTicketAmount(lvl.value, "follow").reminder}( confirmed:
-              {getTicketAmount(lvl.value, "follow").paid})
+              regiter: {getTicketAmount(lvl.value, "follow").registered} <br />
+              send: {getTicketAmount(lvl.value, "follow").sent}
+              <br />
+              reminder: {getTicketAmount(lvl.value, "follow").reminder}
+              <br />
+              waitinglist: {getTicketAmount(lvl.value, "follow").waiting}
+              <br />
+              confirmed: {getTicketAmount(lvl.value, "follow").paid}
             </p>
             <p>
-              register: {getTicketAmount(lvl.value, "lead").registered} - send:{" "}
-              {getTicketAmount(lvl.value, "lead").sent} - reminder:
-              {getTicketAmount(lvl.value, "lead").reminder} ( confirmed:{" "}
-              {getTicketAmount(lvl.value, "lead").paid})
+              register: {getTicketAmount(lvl.value, "lead").registered} <br />
+              send: {getTicketAmount(lvl.value, "lead").sent} <br />
+              reminder: {getTicketAmount(lvl.value, "lead").reminder} <br />
+              waitinglist: {getTicketAmount(lvl.value, "lead").waiting} <br />
+              confirmed: {getTicketAmount(lvl.value, "lead").paid}
             </p>
           </div>
         ))}
