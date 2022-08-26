@@ -195,6 +195,7 @@ export default function Dashboard({ users, tickets }) {
   };
   const renderTableHeader = () => {
     const header = [
+      "select",
       "status",
       "date",
       "actions",
@@ -270,64 +271,67 @@ export default function Dashboard({ users, tickets }) {
           price,
         }) => {
           return (
-            <label key={id}>
-              <tr
-                className={classNames(styles.normal, {
-                  [styles.confirmed]: status === "confirmed",
-                  [styles.canceled]: status === "canceled",
-                  [styles.sent]: status === "email-sent",
-                  [styles.reminder]: status === "reminder",
-                })}
-              >
-                <FormCheckbox
-                  style={{ width: "60px" }}
-                  {...form}
-                  name="users"
-                  value={id}
-                />
-                <td>{status}</td>
-                <td>{date}</td>
-                <td>
-                  <button
-                    className={styles.button}
-                    onClick={() => handleUser(id)}
-                  >
-                    Edit
-                  </button>
-                </td>
-                <td>{id}</td>
-                <td>{email}</td>
-                <td>{first_name}</td>
-                <td>{last_name}</td>
-                <td>{ticket}</td>
-                <td>{role}</td>
-                <td>{level}</td>
-                <td>{titleCase(theme_class)}</td>
-                <td>{competition}</td>
-                <td>{competition_role}</td>
-                <td>
-                  {competitions && (
-                    <div style={{ display: "flex", gap: "10px" }}>
-                      {competitions.split(",").map((comp) => (
-                        <p
-                          style={{
-                            border: "1px solid blue",
-                            padding: "1px 2px",
-                            fontSize: "12px",
-                          }}
-                        >
-                          {titleCase(comp)}
-                        </p>
-                      ))}
-                    </div>
-                  )}
-                </td>
+            <tr
+              key={id}
+              className={classNames(styles.normal, {
+                [styles.confirmed]: status === "confirmed",
+                [styles.canceled]: status === "canceled",
+                [styles.sent]: status === "email-sent",
+                [styles.reminder]: status === "reminder",
+              })}
+            >
+              <td>
+                <label>
+                  <FormCheckbox
+                    style={{ width: "60px" }}
+                    {...form}
+                    name="users"
+                    value={id}
+                  />
+                </label>
+              </td>
+              <td>{status}</td>
+              <td>{date}</td>
+              <td>
+                <button
+                  className={styles.button}
+                  onClick={() => handleUser(id)}
+                >
+                  Edit
+                </button>
+              </td>
+              <td>{id}</td>
+              <td>{email}</td>
+              <td>{first_name}</td>
+              <td>{last_name}</td>
+              <td>{ticket}</td>
+              <td>{role}</td>
+              <td>{level}</td>
+              <td>{titleCase(theme_class)}</td>
+              <td>{competition}</td>
+              <td>{competition_role}</td>
+              <td>
+                {competitions && (
+                  <div style={{ display: "flex", gap: "10px" }}>
+                    {competitions.split(",").map((comp) => (
+                      <p
+                        style={{
+                          border: "1px solid blue",
+                          padding: "1px 2px",
+                          fontSize: "12px",
+                        }}
+                      >
+                        {titleCase(comp)}
+                      </p>
+                    ))}
+                  </div>
+                )}
+              </td>
 
-                <td>{country}</td>
-                <td>{price}</td>
-                <td>Yes</td>
-              </tr>
-            </label>
+              <td>{country}</td>
+              <td>{price}</td>
+              <td>Yes</td>
+            </tr>
           );
         }
       );
