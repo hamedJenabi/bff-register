@@ -155,6 +155,7 @@
   width: 100% !important;
 }
 .statusButton {
+  @include button;
   width: 190px !important;
 }
 .downloadButton {
