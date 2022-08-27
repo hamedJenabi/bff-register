@@ -20,6 +20,9 @@ export default function Dashboard({ users, tickets }) {
   const totalAmount = users.reduce((acc, user) => {
     return acc + (user.status !== "canceled" ? parseInt(user.price, 10) : 0);
   }, 0);
+  const totalAmountList = userToShow.reduce((acc, user) => {
+    return acc + (user.status !== "canceled" ? parseInt(user.price, 10) : 0);
+  }, 0);
   const router = useRouter();
 
   const form = useFormState({
@@ -363,7 +366,9 @@ export default function Dashboard({ users, tickets }) {
         <p>
           Total Registrations: {users?.length} = {totalAmount}
         </p>
-        <p>Selected List: {userToShow?.length}</p>
+        <p>
+          Selected List: {userToShow?.length} = {totalAmountList}
+        </p>
       </div>
       <main className={styles.main}>
         <div className={styles.sideBar}>
