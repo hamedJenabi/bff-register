@@ -159,5 +159,9 @@ export const discounts = [
   { name: "name", email: "levenskunstenaar@kpnmail.nl" },
   { name: "name", email: "yoeri.kwak@gmail.com" },
   { name: "name", email: "giova_naranja@hotmail.com" },
-  { name: "name", email: "julia@conemans.com  " },
+  { name: "name", email: "julia@conemans.com" },
+  { name: "Ugnė Žilinskė", email: "petrauskaite.ugne@gmail.com" },
+  { name: "Vaiva Gudaitytė", email: "vaiva.gudaityte.liepa@gmail.com" },
+  { name: "Inesa Plaksij", email: "inesa.plaksij@gmail.com" },
+  { name: "Arūnas Liškūnas", email: "arunas.liskunas@gmail.com" },
 ];
