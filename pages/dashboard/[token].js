@@ -367,7 +367,9 @@ export default function Dashboard({ users, tickets }) {
           Total Registrations: {users?.length} = {totalAmount}
         </p>
         <p>
-          Selected List: {userToShow?.length} = {totalAmountList}
+          Selected List:{" "}
+          {userToShow?.filter((user) => user.status !== "canceled")?.length} =
+          {totalAmountList}
         </p>
       </div>
       <main className={styles.main}>
