@@ -49,6 +49,7 @@ export default async function edituser(req, response) {
     "confirmed",
     "waitinglist",
     "canceled",
+    "out",
   ];
   const time = new Date();
   const date = new Date().toISOString();
@@ -248,7 +249,37 @@ export default async function edituser(req, response) {
       await sendEmail(msg);
     }
     // and more conditions
-    if (req.body.status === "canceled") {
+    if (req.body.status === "out") {
+      const msg = {
+        from: "registration@bluesfever.eu",
+        to: `${requestData.email}`,
+        template_id: "d-792c656cb1a14df6987d0b6867f5295b",
+        dynamic_template_data: {
+          firstName: `${requestData.first_name}`,
+          lastName: `${requestData.last_name}`,
+          country: `${requestData.country}`,
+          role: `${titleCase(requestData.role)}`,
+          level: `${getLevelLabelForEmail(requestData.level)}`,
+          ticket: `${ticket}`,
+          themeClass: `${titleCase(requestData.theme_class)}`,
+          competition: requestData.competition === "yes" ? true : false,
+          competitionAnswer:
+            requestData.competition === "later" ? "I will decide later" : "No",
+          competition_role: `${requestData.competition_role}`,
+          competitions: requestData.competitions
+            ? `${requestData.competitions
+                .split(",")
+                .map((competition) => titleCase(competition))}`
+            : "",
+          terms: `${requestData.terms}`,
+          status: `${requestData.status}`,
+          isGroupDiscount: isGroupDiscount,
+          price: `${totalPrice}`,
+        },
+      };
+      await sendEmail(msg);
+    }
+    if (req.body.status === "cancelled") {
       const ticketName =
         requestData.ticket === "partyPass"
           ? requestData.ticket

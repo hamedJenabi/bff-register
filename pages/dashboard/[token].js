@@ -18,10 +18,20 @@ export default function Dashboard({ users, tickets }) {
   const [userToShow, setUserToShow] = useState(users || []);
   const isMobile = useMedia({ maxWidth: "768px" });
   const totalAmount = users.reduce((acc, user) => {
-    return acc + (user.status !== "canceled" ? parseInt(user.price, 10) : 0);
+    return (
+      acc +
+      (user.status !== "canceled" && user.status !== "out"
+        ? parseInt(user.price, 10)
+        : 0)
+    );
   }, 0);
   const totalAmountList = userToShow.reduce((acc, user) => {
-    return acc + (user.status !== "canceled" ? parseInt(user.price, 10) : 0);
+    return (
+      acc +
+      (user.status !== "canceled" && user.status !== "out"
+        ? parseInt(user.price, 10)
+        : 0)
+    );
   }, 0);
   const router = useRouter();
 
@@ -107,7 +117,6 @@ export default function Dashboard({ users, tickets }) {
           user["role"] === role &&
           user["status"] === "confirmed"
       );
-      console.log("ammountWaiting", ammountWaiting);
       return {
         registered: registerAmount.length,
         sent: ammount.length,
@@ -160,7 +169,9 @@ export default function Dashboard({ users, tickets }) {
     if (item !== "capacity") {
       setCapacityShow(false);
     }
-    if (item === "canceled") {
+    if (item === "out") {
+      setUserToShow(users.filter((user) => user["status"] === "out"));
+    } else if (item === "canceled") {
       setUserToShow(users.filter((user) => user["status"] === "canceled"));
     } else if (item === "all") {
       setUserToShow(users);
@@ -279,6 +290,7 @@ export default function Dashboard({ users, tickets }) {
               className={classNames(styles.normal, {
                 [styles.confirmed]: status === "confirmed",
                 [styles.canceled]: status === "canceled",
+                [styles.out]: status === "out",
                 [styles.sent]: status === "email-sent",
                 [styles.reminder]: status === "reminder",
               })}
@@ -318,6 +330,7 @@ export default function Dashboard({ users, tickets }) {
                   <div style={{ display: "flex", gap: "10px" }}>
                     {competitions.split(",").map((comp) => (
                       <p
+                        key={comp}
                         style={{
                           border: "1px solid blue",
                           padding: "1px 2px",
@@ -368,8 +381,12 @@ export default function Dashboard({ users, tickets }) {
         </p>
         <p>
           Selected List:{" "}
-          {userToShow?.filter((user) => user.status !== "canceled")?.length} =
-          {totalAmountList}
+          {
+            userToShow?.filter(
+              (user) => user.status !== "canceled" && user.status !== "out"
+            )?.length
+          }{" "}
+          ={totalAmountList}
         </p>
       </div>
       <main className={styles.main}>
@@ -481,6 +498,7 @@ export default function Dashboard({ users, tickets }) {
                   <option>waitinglist</option>
                   <option>confirmed</option>
                   <option>canceled</option>
+                  <option>out</option>
                 </select>
                 <button
                   className={styles.statusButton}
