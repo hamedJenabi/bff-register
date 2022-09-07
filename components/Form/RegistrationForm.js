@@ -185,16 +185,16 @@ export default function RegistrationForm({ form, tickets, isClicked }) {
                 name="theme_class"
                 value="build_a_chreography"
               />
-              <p>Build a Choreography</p>
+              <p>Build a Choreography </p>
             </label>
-            <label>
+            {/* <label>
               <FormRadio
                 {...form}
                 name="theme_class"
                 value="teacher_training"
               />
               <p>Teacher Training</p>
-            </label>
+            </label> */}
             <label>
               <FormRadio {...form} name="theme_class" value="no" />
               <p>No</p>
