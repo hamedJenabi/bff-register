@@ -177,6 +177,12 @@ export async function getUserByEmailAndName(email) {
   `;
   return user[0];
 }
+export async function getUserByEmailAndPassword(email, password) {
+  const user = await sql`
+    SELECT * FROM registrations WHERE email = ${email} AND password = ${password}
+  `;
+  return user[0];
+}
 // /* ****** resetpassword****** */
 // export async function resetPassword(password_hash, accountId) {
 //   await sql`
