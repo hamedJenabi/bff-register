@@ -245,7 +245,12 @@ export default function RegistrationForm({ form, tickets, isClicked }) {
           )}
           {form.values.competition === "yes" && (
             <div className={styles.radioGroup}>
-              <h3 className={styles.title}>Choose your contests:</h3>
+              <h3 className={styles.title}>
+                Choose your contests:
+                <span style={{ fontSize: "15px" }}>
+                  <br></br> (€10 per competition)
+                </span>
+              </h3>
               {compettionsInfo.map(({ value, label }) => (
                 <label>
                   <FormCheckbox {...form} name="competitions" value={value} />{" "}
