@@ -1,15 +1,22 @@
-const ADMIN_USER = process.env.ADMIN_USER;
-const HASHED_PASS = process.env.HASHED_PASS;
 import { getUserByEmailAndPassword } from "../../db/db";
-export default async function login(req, response) {
-  const admin = {
-    user_name: req.body.userName,
-    password: req.body.password,
-  };
+const bcrypt = require("bcrypt");
 
-  if (admin.user_name === ADMIN_USER && admin.password === HASHED_PASS) {
+export default async function login(req, response) {
+  const email = req.body.email;
+  const password = req.body.password;
+  const user = await getUserByEmailAndPassword(email, password);
+
+  if (user) {
     response.status(200).json();
   } else {
     response.status(401).json();
   }
 }
+
+// to hash via bcrypt
+// const bcrypt = require("bcrypt");
+// bcrypt.genSalt(10, (err, salt) => {
+//   bcrypt.hash(plaintextPassword, salt, function (err, hash) {
+//     // Store hash in the database
+//   });
+// });

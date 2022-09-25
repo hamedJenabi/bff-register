@@ -268,3 +268,27 @@
     }
   }
 }
+
+.adminSection {
+  margin-top: $lg;
+  display: flex;
+  padding: $xl 100px;
+  flex-direction: column;
+  gap: $xl;
+  @media (min-width: 600px) {
+    align-items: center;
+    box-shadow: $boxShadow;
+    border: 1px solid #1a633d;
+    border-radius: 5px;
+    flex-direction: row;
+    justify-content: space-between;
+  }
+}
+
+.sendButton {
+  @include button;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
