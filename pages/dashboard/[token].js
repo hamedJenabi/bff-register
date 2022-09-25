@@ -187,6 +187,8 @@ export default function Dashboard({ users, tickets }) {
       );
     } else if (item === "email-sent") {
       setUserToShow(users.filter((user) => user["status"] === "email-sent"));
+    } else if (item === "reminder") {
+      setUserToShow(users.filter((user) => user["status"] === "reminder"));
     } else if (item === "partyPass") {
       setUserToShow(users.filter((user) => user["ticket"] === "partyPass"));
     } else if (item === "confirmed") {
@@ -211,6 +213,7 @@ export default function Dashboard({ users, tickets }) {
     const header = [
       "select",
       "status",
+      "price",
       "date",
       "actions",
       "id",
@@ -225,7 +228,6 @@ export default function Dashboard({ users, tickets }) {
       "competition_role",
       "competitions",
       "country",
-      "price",
       "terms",
     ];
     return header.map((key, index) => {
@@ -270,6 +272,7 @@ export default function Dashboard({ users, tickets }) {
         ({
           id,
           status,
+          price,
           date,
           role,
           first_name,
@@ -282,7 +285,6 @@ export default function Dashboard({ users, tickets }) {
           competition_role,
           competitions,
           email,
-          price,
         }) => {
           return (
             <tr
@@ -306,6 +308,7 @@ export default function Dashboard({ users, tickets }) {
                 </label>
               </td>
               <td>{status}</td>
+              <td>{price}</td>
               <td>{date}</td>
               <td>
                 <button
@@ -345,7 +348,6 @@ export default function Dashboard({ users, tickets }) {
               </td>
 
               <td>{country}</td>
-              <td>{price}</td>
               <td>Yes</td>
             </tr>
           );
@@ -414,6 +416,14 @@ export default function Dashboard({ users, tickets }) {
             })}
           >
             <p>email-sent</p>
+          </div>
+          <div
+            onClick={() => handleSideBarClick("reminder")}
+            className={classNames(styles.sideBarItem, {
+              [styles.active]: activeSideBar === "reminder",
+            })}
+          >
+            <p>Reminder</p>
           </div>
           <div
             onClick={() => handleSideBarClick("waitinglist")}

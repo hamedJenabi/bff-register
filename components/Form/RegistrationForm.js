@@ -40,7 +40,13 @@ export default function RegistrationForm({ form, tickets, isClicked }) {
       return ticket["capacity"];
     }
   };
-
+  const disabled = (value) =>
+    (form.values.role === "follow" &&
+      (value === "trumpet" ||
+        value === "drums" ||
+        value === "guitar" ||
+        value === "saxophone")) ||
+    (form.values.role === "lead" && value === "trumpet");
   return (
     <>
       {!isClicked && (
@@ -111,6 +117,7 @@ export default function RegistrationForm({ form, tickets, isClicked }) {
             >
               <h3>Full pass</h3>
               <p>6 hours classes</p>
+              <p>1 free competition</p>
               <p>All 5 Parties</p>
               <p>All Talks</p>
             </div>
@@ -132,6 +139,7 @@ export default function RegistrationForm({ form, tickets, isClicked }) {
                 className={styles.radioGroup}
                 {...form}
                 name="role"
+                onClick={() => form.update("level", "")}
               >
                 <label>
                   <FormRadio {...form} name="role" value="follow" />{" "}
@@ -154,15 +162,14 @@ export default function RegistrationForm({ form, tickets, isClicked }) {
               >
                 {levelsToShow.map(({ label, value, detail }) => (
                   <label key={value}>
-                    <FormRadio {...form} name="level" value={value} />
+                    <FormRadio
+                      disabled={disabled(value)}
+                      {...form}
+                      name="level"
+                      value={value}
+                    />
                     <p>
-                      {label}{" "}
-                      {form.values.role === "follow" &&
-                      (value === "trumpet" ||
-                        value === "drums" ||
-                        value === "guitar")
-                        ? "(Waiting List)"
-                        : ""}
+                      {label} {disabled(value) ? "(Fully Booked)" : ""}
                     </p>
                     <InfoModal header={label} info={detail} />
                   </label>
