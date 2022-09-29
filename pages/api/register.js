@@ -139,7 +139,7 @@ export default async function register(req, response) {
   if (userswithSameEmail) {
     isAlreadyRegistered =
       userswithSameEmail.email + userswithSameEmail.first_name ===
-      requestData.email + requestData.first_name;
+      requestData.email + requestData.first_name + "noob";
   }
   let template = "";
   let isSoldOut = false;
