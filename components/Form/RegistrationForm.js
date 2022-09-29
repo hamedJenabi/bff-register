@@ -46,7 +46,9 @@ export default function RegistrationForm({ form, tickets, isClicked }) {
         value === "drums" ||
         value === "guitar" ||
         value === "saxophone")) ||
-    (form.values.role === "lead" && value === "trumpet");
+    (form.values.role === "lead" &&
+      (value === "trumpet" || value === "guitar" || value === "saxophone"));
+
   return (
     <>
       {!isClicked && (
