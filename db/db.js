@@ -178,6 +178,20 @@ export async function getUserByEmailAndName(email) {
   `;
   return user[0];
 }
+export async function getUserByEmail(email) {
+  const user = await sql`
+    SELECT * FROM registrations WHERE email = ${email} AND status = 'confirmed' 
+  `;
+  return user[0];
+}
+
+export async function setUserPassword(email, password) {
+  await sql`
+   UPDATE registrations
+    SET password = ${password}
+     WHERE email = ${email};
+  `;
+}
 export async function getUserByEmailAndPassword(email, password) {
   const user = await sql`
     SELECT * FROM registrations WHERE email = ${email} AND password = ${password}
