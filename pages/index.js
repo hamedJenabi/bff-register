@@ -29,7 +29,7 @@ export default function Home({ tickets }) {
       ticket: "",
       level: "",
       role: "",
-      theme_class: "",
+      theme_class: "no",
       competition: "",
       competition_role: "",
       competitions: "",

@@ -191,10 +191,11 @@ export default function RegistrationForm({ form, tickets, isClicked }) {
             <label>
               <FormRadio
                 {...form}
+                disabled
                 name="theme_class"
                 value="build_a_chreography"
               />
-              <p>Build a Choreography </p>
+              <p>Build a Choreography (fully booked) </p>
             </label>
             <label>
               <FormRadio
