@@ -16,8 +16,8 @@ export default function User({ user }) {
       id: user.id,
       status: user.status,
       prevStatus: user.status,
-      firstName: user.first_name,
-      lastName: user.last_name,
+      first_name: user.first_name,
+      last_name: user.last_name,
       email: user.email,
       country: user.country,
       level: user.level,
@@ -61,6 +61,7 @@ export default function User({ user }) {
       Router.push("/login/admin");
     }
   }
+  console.log("form", form.values);
   const handleClick = (key) => {
     alert(key);
   };
