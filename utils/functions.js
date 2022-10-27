@@ -69,7 +69,7 @@ export const compettionsInfo = [
 ];
 
 export const getPrice = (requestData, isGroupDiscount) => {
-  const initialPrice = requestData.ticket === "partyPass" ? 95 : 195;
+  const initialPrice = requestData.ticket === "partyPass" ? 110 : 225;
   const competitions =
     requestData.competition === "yes"
       ? requestData.competitions?.length * 10
