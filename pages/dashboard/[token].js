@@ -50,6 +50,29 @@ export default function Dashboard({ users, tickets }) {
   });
   const [status, setStatus] = useState("");
   const [usersToChange, setUsersToChange] = useState([]);
+  const handleSend = async (action) => {
+    const confirmedUsers = users.filter((user) => user.status === "confirmed");
+    let isExecuted = confirm("Are you sure to execute this action?");
+    if (isExecuted) {
+      const path = action === "send" ? "sendLoginEmail" : "sendFinalEmail";
+      confirmedUsers.map((user) => {
+        fetch(`/api/${path}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Cache-Control": "no-cache, no-store",
+          },
+          body: JSON.stringify(user),
+        })
+          .then((response) => {
+            if (response.status === 200) {
+              router.reload(window.location.pathname);
+            }
+          })
+          .catch((error) => console.log(error));
+      });
+    }
+  };
 
   const handleStatusChange = async () => {
     const idsToChange = form.values.users;
@@ -540,6 +563,32 @@ export default function Dashboard({ users, tickets }) {
           )}
         </div>
       </main>
+      <div className={styles.adminSection}>
+        <div>
+          <h4>Send Login Link + info to all: </h4>
+        </div>
+        <div>
+          <button
+            onClick={() => handleSend("login")}
+            className={styles.sendButton}
+          >
+            Send Mail
+          </button>
+        </div>
+      </div>
+      <div className={styles.adminSection}>
+        <div>
+          <h4>Send Final + QR-Code to all: </h4>
+        </div>
+        <div>
+          <button
+            onClick={() => handleSend("final")}
+            className={styles.sendButton}
+          >
+            Send Main
+          </button>
+        </div>
+      </div>
 
       <footer className={styles.footer}>
         <a

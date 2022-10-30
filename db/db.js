@@ -1,6 +1,7 @@
 require("dotenv").config();
 require("../extractHerokuDatabaseEnvVars")();
 // const argon2 = require("argon2");
+const bcrypt = require("bcrypt");
 
 const postgres = require("postgres");
 const sql =
@@ -176,6 +177,34 @@ export async function getUserByEmailAndName(email) {
     SELECT * FROM registrations WHERE email = ${email}
   `;
   return user[0];
+}
+export async function getUserByEmail(email) {
+  const user = await sql`
+    SELECT * FROM registrations WHERE email = ${email} AND status = 'confirmed' 
+  `;
+  return user[0];
+}
+
+export async function setUserPassword(email, password) {
+  await sql`
+   UPDATE registrations
+    SET password = ${password}
+     WHERE email = ${email};
+  `;
+}
+export async function getUserByEmailAndPassword(email, password) {
+  const user = await sql`
+    SELECT * FROM registrations WHERE email = ${email} AND password = ${password}
+  `;
+  if (user?.length > 0) {
+    const hash = user[0].password;
+    bcrypt.compare(password, hash, function (err, result) {
+      if (result) {
+        return user[0];
+      }
+    });
+    return null; // password did not match
+  }
 }
 // /* ****** resetpassword****** */
 // export async function resetPassword(password_hash, accountId) {
