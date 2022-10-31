@@ -42,12 +42,8 @@ export default function RegistrationForm({ form, tickets, isClicked }) {
   };
   const disabled = (value) =>
     (form.values.role === "follow" &&
-      (value === "trumpet" ||
-        value === "drums" ||
-        value === "guitar" ||
-        value === "saxophone")) ||
-    (form.values.role === "lead" &&
-      (value === "trumpet" || value === "guitar" || value === "saxophone"));
+      (value === "drums" || value === "guitar" || value === "saxophone")) ||
+    (form.values.role === "lead" && value === "trumpet");
 
   return (
     <>
