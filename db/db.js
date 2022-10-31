@@ -171,11 +171,25 @@ export async function updateUserInfo(user, totalPrice) {
   return user[0];
 }
 
+export async function getConfirmedUserByEmailAndName(email) {
+  const user = await sql`
+    SELECT * FROM registrations WHERE email = ${email} AND status = 'confirmed'
+  `;
+  return user[0];
+}
 export async function getUserByEmailAndName(email) {
   const user = await sql`
     SELECT * FROM registrations WHERE email = ${email}
   `;
   return user[0];
+}
+export async function setUserLunchById(id, lunch) {
+  console.log("lunch", lunch, id);
+  await sql`
+   UPDATE registrations
+    SET lunch = ${lunch}
+     WHERE id = ${id};
+  `;
 }
 // /* ****** resetpassword****** */
 // export async function resetPassword(password_hash, accountId) {
