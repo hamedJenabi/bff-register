@@ -40,8 +40,10 @@ export default function Home({ tickets }) {
           <div className={styles.title}>
             <h3>Thank you for your registration!</h3>
             <p>
-              You will get a confirmation of your sign up by email. Then give us
-              a little time to process your registration. Thank you.
+              Please note that your registration confirmation e-mail may end up
+              in your junk mail or promotions folder so make sure to check
+              those. You will get a confirmation of your sign up by email. Then
+              give us a little time to process your registration. Thank you.
             </p>
           </div>
           {user &&
