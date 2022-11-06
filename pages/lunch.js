@@ -100,10 +100,6 @@ export default function Home({ tickets, clientID }) {
           href="https://fonts.googleapis.com/css2?family=Amatic+SC&display=swap"
           rel="stylesheet"
         />
-        <script
-          src="https://www.paypal.com/sdk/js?client-id=ATHnis1aCuZejrSRaOrBhp3oqtUNp8AMQpYyUzFk8P-xIKtRufVW8jZS5UwIXnjRIidoxwDWMv8LVqIt&enable-funding=venmo&currency=USD"
-          data-sdk-integration-source="button-factory"
-        ></script>
       </Head>
       <Header
         title="BLUES FEVER 2022"
