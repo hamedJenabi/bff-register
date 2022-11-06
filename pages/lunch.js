@@ -80,8 +80,13 @@ export default function Home({ tickets, clientID }) {
     }
   }, [isClicked]);
   const handleNext = () => {
-    if (!emailRegex.test(form.values.email.trim().toLowerCase())) {
-      alert("Email is not valid");
+    if (
+      !emailRegex.test(form.values.email.trim().toLowerCase()) ||
+      !form.values.firstName ||
+      !form.values.lastName ||
+      !form.values.lunch
+    ) {
+      alert("Your info are not valid");
       return;
     }
     const price = form.values.lunch.length === 1 ? 12.5 : 25;

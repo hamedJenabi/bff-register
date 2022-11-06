@@ -100,7 +100,7 @@ export default function FoodForm({ form, tickets, isClicked }) {
               Which day you wanto to have lunch at the Venue? <br></br>(You can
               choose both days):
               <span style={{ fontSize: "15px" }}>
-                <br></br> (€12.50 per meal)
+                <br></br> (€12.50 per meal - 2 courses with one drink)
               </span>
             </h4>
 
