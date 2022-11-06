@@ -1,7 +1,7 @@
 import Head from "next/head";
 import useMedia from "use-media";
 import Router from "next/router";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { emailRegex } from "../utils/validate";
 import styles from "../styles/Home.module.scss";
@@ -10,19 +10,53 @@ const FoodForm = dynamic(() => import("../components/Form/FoodForm.js"), {
   ssr: false,
 });
 import { unstable_useFormState as useFormState } from "reakit/Form";
+import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
 
-export default function Home({ tickets }) {
+const Paypal = ({ value, clientID, setIsClicked }) => {
+  const initialOptions = {
+    "client-id": clientID,
+    currency: "EUR",
+    components: "buttons,hosted-fields",
+  };
+  return (
+    <PayPalScriptProvider options={initialOptions}>
+      <PayPalButtons
+        createOrder={(data, actions) => {
+          return actions.order.create({
+            purchase_units: [
+              {
+                amount: {
+                  value: value,
+                },
+              },
+            ],
+          });
+        }}
+        onApprove={(data, actions) => {
+          return actions.order.capture().then((details) => {
+            const name = details.payer.name.given_name;
+            setIsClicked(true);
+            console.log("details", isClicked);
+            alert(`Transaction completed by ${name}`);
+          });
+        }}
+      />
+    </PayPalScriptProvider>
+  );
+};
+
+export default function Home({ tickets, clientID }) {
   const isMobile = useMedia({ maxWidth: "768px" });
   const [isClicked, setIsClicked] = useState(false);
+  const [next, setNext] = useState(false);
+  const [priceToPay, setPriceToday] = useState(12.5);
 
   if (typeof window !== "undefined") {
     localStorage.removeItem("accepted");
   }
   const form = useFormState({
     values: {
-      status: "registered",
       firstName: "",
-      lastName: "",
       email: "",
       lunch: "",
       terms: false,
@@ -46,7 +80,6 @@ export default function Home({ tickets }) {
       }
     },
     onSubmit: (values) => {
-      setIsClicked(true);
       const req = {
         ...form.values,
       };
@@ -71,6 +104,16 @@ export default function Home({ tickets }) {
         .catch((error) => console.log(error));
     },
   });
+  useEffect(() => {
+    if (isClicked) {
+      form.submit();
+    }
+  }, [isClicked]);
+  const handleNext = () => {
+    const price = form.values.lunch.length === 1 ? 12.5 : 25;
+    setPriceToday(price);
+    setNext(true);
+  };
   return (
     <div className={styles.container}>
       <Head>
@@ -104,9 +147,27 @@ export default function Home({ tickets }) {
         ]}
       />
       <main className={styles.main}>
-        <FoodForm form={form} tickets={tickets} isClicked={isClicked} />
+        <FoodForm
+          form={form}
+          tickets={tickets}
+          isClicked={isClicked}
+          clientID={clientID}
+        />
+        {!next && (
+          <button className={styles.button} onClick={handleNext}>
+            Submit
+          </button>
+        )}
       </main>
-
+      {next && (
+        <div className={styles.paypal}>
+          <Paypal
+            value={priceToPay}
+            clientID={clientID}
+            setIsClicked={setIsClicked}
+          />
+        </div>
+      )}
       <footer className={styles.footer}>
         <a
           style={{ width: "auto" }}
@@ -123,11 +184,13 @@ export default function Home({ tickets }) {
 
 export async function getServerSideProps() {
   const { getTickets } = await import("../db/db");
+  const clientID = process.env.PAYPAL_CLIENT_ID;
   const tickets = await getTickets();
 
   return {
     props: {
       tickets: tickets,
+      clientID: clientID,
     },
   };
 }
