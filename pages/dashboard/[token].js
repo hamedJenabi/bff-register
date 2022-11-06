@@ -227,6 +227,7 @@ export default function Dashboard({ users, tickets }) {
       "competition",
       "competition_role",
       "competitions",
+      "lunch",
       "country",
       "terms",
     ];
@@ -284,6 +285,7 @@ export default function Dashboard({ users, tickets }) {
           competition,
           competition_role,
           competitions,
+          lunch,
           email,
         }) => {
           return (
@@ -341,6 +343,24 @@ export default function Dashboard({ users, tickets }) {
                         }}
                       >
                         {titleCase(comp)}
+                      </p>
+                    ))}
+                  </div>
+                )}
+              </td>
+              <td>
+                {lunch && (
+                  <div style={{ display: "flex", gap: "10px" }}>
+                    {lunch.split(",").map((lunch) => (
+                      <p
+                        key={lunch}
+                        style={{
+                          border: "1px solid blue",
+                          padding: "1px 2px",
+                          fontSize: "12px",
+                        }}
+                      >
+                        {titleCase(lunch)}
                       </p>
                     ))}
                   </div>
