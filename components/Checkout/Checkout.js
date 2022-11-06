@@ -25,7 +25,6 @@ const Paypal = ({ value, clientID, setIsClicked }) => {
           return actions.order.capture().then((details) => {
             const name = details.payer.name.given_name;
             setIsClicked(true);
-            console.log("details", isClicked);
             alert(`Transaction completed by ${name}`);
           });
         }}
