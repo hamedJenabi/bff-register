@@ -30,6 +30,7 @@ export default function Home({ tickets, clientID }) {
       terms: false,
     },
     onValidate: (values) => {
+      console.log("values", values);
       const errors = {};
       if (!values.firstName) {
         errors.firstName = "please write your name";
@@ -45,6 +46,7 @@ export default function Home({ tickets, clientID }) {
       }
       if (Object.keys(errors).length > 0) {
         throw errors;
+      } else {
       }
     },
     onSubmit: (values) => {
@@ -78,10 +80,15 @@ export default function Home({ tickets, clientID }) {
     }
   }, [isClicked]);
   const handleNext = () => {
+    if (!emailRegex.test(form.values.email.trim().toLowerCase())) {
+      alert("Email is not valid");
+      return;
+    }
     const price = form.values.lunch.length === 1 ? 12.5 : 25;
     setPriceToday(price);
     setNext(true);
   };
+  console.log("form", form);
   return (
     <div className={styles.container}>
       <Head>
