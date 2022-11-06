@@ -19,6 +19,9 @@ const Paypal = ({ value, clientID, setIsClicked }) => {
                 },
               },
             ],
+            application_context: {
+              shipping_preference: "NO_SHIPPING",
+            },
           });
         }}
         onApprove={(data, actions) => {

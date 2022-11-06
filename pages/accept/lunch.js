@@ -18,32 +18,6 @@ export default function Home({ tickets }) {
     user = JSON.parse(localStorage.getItem("accepted"));
   }
 
-  useEffect(() => {
-    const user = localStorage.getItem("lunch");
-    if (!user) {
-      Router.push("/lunch");
-    }
-
-    fetch("/api/lunch", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Cache-Control": "no-cache, no-store",
-      },
-      body: JSON.stringify(user),
-    })
-      .then((response) => {
-        if (response.status === 200) {
-          //           Router.push("/accept/lunch");
-        }
-        if (response.status === 404) {
-          alert("we didnt find you in our database, please contact us");
-          setIsClicked(false);
-        }
-      })
-      .catch((error) => console.log(error));
-  }, []);
-
   return (
     <div className={styles.container}>
       <Head>
@@ -66,30 +40,6 @@ export default function Home({ tickets }) {
         <div className={styles.content}>
           <div className={styles.title}>
             <h3>Thank you for your Purchase!</h3>
-            <p>
-              You will get a confirmation of your sign up by email. Then give us
-              a little time to process your registration. Thank you.
-            </p>
-          </div>
-          {user &&
-            Object.entries(user).map(([key, val], i) => {
-              if (
-                (key === "level" || key === "role") &&
-                user.ticket === "partyPass"
-              ) {
-                return;
-              }
-              return (
-                <div className={styles.row} key={i}>
-                  <p>{key}:</p> <p>{key === "terms" ? "yes" : val}</p>
-                </div>
-              );
-            })}
-          <div
-            onClick={() => localStorage.removeItem("accepted")}
-            className={styles.button}
-          >
-            <Link href="/">Wanna do another Registration?</Link>
           </div>
         </div>
       </main>

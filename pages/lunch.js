@@ -111,27 +111,32 @@ export default function Home({ tickets, clientID }) {
         ]}
       />
       <main className={styles.main}>
-        <FoodForm
-          form={form}
-          tickets={tickets}
-          isClicked={isClicked}
-          clientID={clientID}
-        />
         {!next && (
-          <button className={styles.button} onClick={handleNext}>
-            Submit
-          </button>
+          <>
+            <FoodForm
+              form={form}
+              tickets={tickets}
+              isClicked={isClicked}
+              clientID={clientID}
+            />
+            <button className={styles.button} onClick={handleNext}>
+              Submit
+            </button>
+          </>
+        )}
+        {next && (
+          <>
+            <h4>Please Pay to finish your submition</h4>
+            <div className={styles.paypal}>
+              <Checkout
+                value={priceToPay}
+                clientID={clientID}
+                setIsClicked={setIsClicked}
+              />
+            </div>
+          </>
         )}
       </main>
-      {next && (
-        <div className={styles.paypal}>
-          <Checkout
-            value={priceToPay}
-            clientID={clientID}
-            setIsClicked={setIsClicked}
-          />
-        </div>
-      )}
       <footer className={styles.footer}>
         <a
           style={{ width: "auto" }}

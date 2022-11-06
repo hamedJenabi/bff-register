@@ -21,11 +21,11 @@
 }
 .paypal {
   width: 100%;
+  margin-top: $sm;
   display: flex;
   justify-content: center;
   align-items: center;
-  transform: translateY(-20px);
-  // @include fadeIn;
+  @include fade-in-slow();
 }
 .button {
   @include button;
