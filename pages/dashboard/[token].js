@@ -85,6 +85,39 @@ export default function Dashboard({ users, tickets }) {
     });
     alert("done");
   };
+
+  const handleSendEmail = async () => {
+    const confirmedUsers = users.filter((user) => user.status === "confirmed");
+    console.log("confirmedUsers", confirmedUsers);
+    if (
+      confirm("are you sure you want to send emails to all confirmed users?")
+    ) {
+      console.log("ok");
+
+      confirmedUsers.map((user) => {
+        fetch("/api/mailall", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Cache-Control": "no-cache, no-store",
+          },
+          body: JSON.stringify(user),
+        })
+          .then((response) => {
+            if (response.status === 200) {
+              //               router.reload(window.location.pathname);
+            }
+            if (response.status === 401) {
+              alert("Please write a valid status");
+            }
+          })
+          .catch((error) => console.log(error));
+      });
+    } else {
+      console.log("no");
+    }
+  };
+
   const BalanceComponent = () => {
     const getTicketAmount = (level, role) => {
       const registerAmount = users.filter(
@@ -397,19 +430,24 @@ export default function Dashboard({ users, tickets }) {
         ]}
       />
       <h3 className={styles.title}>Registrations</h3>
-      <div className={styles.total}>
-        <p>
-          Total Registrations: {users?.length} = {totalAmount}
-        </p>
-        <p>
-          Selected List:{" "}
-          {
-            userToShow?.filter(
-              (user) => user.status !== "canceled" && user.status !== "out"
-            )?.length
-          }{" "}
-          ={totalAmountList}
-        </p>
+      <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+        <div className={styles.total}>
+          <p>
+            Total Registrations: {users?.length} = {totalAmount}
+          </p>
+          <p>
+            Selected List:{" "}
+            {
+              userToShow?.filter(
+                (user) => user.status !== "canceled" && user.status !== "out"
+              )?.length
+            }{" "}
+            ={totalAmountList}
+          </p>
+        </div>
+        <button className={styles.statusButton} onClick={handleSendEmail}>
+          Send Email to All confirmed
+        </button>
       </div>
       <main className={styles.main}>
         <div className={styles.sideBar}>
@@ -537,6 +575,7 @@ export default function Dashboard({ users, tickets }) {
                   Change Status
                 </button>
               </div>
+
               <p>Search first name</p>
               <input onChange={(e) => setNameSearch(e.target.value)} />
             </div>

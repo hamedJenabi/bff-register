@@ -30,7 +30,6 @@ export default function Home({ tickets, clientID }) {
       terms: false,
     },
     onValidate: (values) => {
-      console.log("values", values);
       const errors = {};
       if (!values.firstName) {
         errors.firstName = "please write your name";
@@ -65,6 +64,7 @@ export default function Home({ tickets, clientID }) {
           if (response.status === 200) {
             localStorage.setItem("lunch", JSON.stringify(req));
             // Router.push("/accept/lunch?email=" + req.email);
+            setIsClicked(true);
           }
           if (response.status === 404) {
             alert("we didnt find you in our database, please contact us");
@@ -131,21 +131,18 @@ export default function Home({ tickets, clientID }) {
               isClicked={isClicked}
               clientID={clientID}
             />
-            <button className={styles.button} onClick={handleNext}>
-              Submit
-            </button>
           </>
         )}
         {next && (
           <>
-            <h4>Please Pay to finish your submition</h4>
-            <div className={styles.paypal}>
+            <h4>Thanks :) </h4>
+            {/* <div className={styles.paypal}>
               <Checkout
                 value={priceToPay}
                 clientID={clientID}
                 setIsClicked={setIsClicked}
               />
-            </div>
+            </div> */}
           </>
         )}
       </main>

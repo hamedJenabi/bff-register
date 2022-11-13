@@ -9,7 +9,6 @@ import {
   unstable_FormCheckbox as FormCheckbox,
   unstable_FormLabel as FormLabel,
 } from "reakit/Form";
-import SkeletonComponent from "../Skeleton/Skeleton";
 
 import classNames from "classnames";
 
@@ -25,30 +24,6 @@ const flatProps = {
 
 export default function FoodForm({ form, tickets, isClicked }) {
   const dialog = useDialogState();
-  const handleTicket = (ticket) => {
-    if (ticket === 1) {
-      form.update("ticket", "fullpass");
-    } else {
-      form.update("ticket", "partyPass");
-      form.update("role", "");
-      form.update("level", "");
-    }
-  };
-
-  const getTicketCapacity = (ticketName) => {
-    if (ticketName === "partyPass") {
-      const [ticket] = tickets.filter(({ name }) => name === ticketName);
-      return ticket["capacity"];
-    }
-  };
-  const disabled = (value) =>
-    (form.values.role === "follow" &&
-      (value === "trumpet" ||
-        value === "drums" ||
-        value === "guitar" ||
-        value === "saxophone")) ||
-    (form.values.role === "lead" &&
-      (value === "trumpet" || value === "guitar" || value === "saxophone"));
 
   return (
     <>
@@ -100,7 +75,7 @@ export default function FoodForm({ form, tickets, isClicked }) {
               Which day you wanto to have lunch at the Venue? <br></br>(You can
               choose both days):
               <span style={{ fontSize: "15px" }}>
-                <br></br> (€12.50 per meal - 2 courses with one drink)
+                <br></br> (€12.50 per meal - main course + dessert + one drink)
               </span>
             </h4>
 
@@ -115,6 +90,15 @@ export default function FoodForm({ form, tickets, isClicked }) {
           </div>
 
           <FormMessage className={styles.errorMessage} {...form} name="terms" />
+          <FormSubmitButton
+            disabled={isClicked}
+            className={classNames(styles.button, {
+              [styles.disabled]: isClicked,
+            })}
+            {...form}
+          >
+            Submit
+          </FormSubmitButton>
         </Form>
       )}
       {isClicked && (
