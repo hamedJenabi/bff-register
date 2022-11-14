@@ -320,6 +320,8 @@ export default function Dashboard({ users, tickets }) {
       setUserToShow(users.filter((user) => user["status"] === "email-sent"));
     } else if (item === "reminder") {
       setUserToShow(users.filter((user) => user["status"] === "reminder"));
+    } else if (item === "lunch") {
+      setUserToShow(users.filter((user) => user["lunch"]));
     } else if (item === "partyPass") {
       setUserToShow(users.filter((user) => user["ticket"] === "partyPass"));
     } else if (item === "confirmed") {
@@ -612,6 +614,14 @@ export default function Dashboard({ users, tickets }) {
             })}
           >
             <p>Partypass</p>
+          </div>
+          <div
+            onClick={() => handleSideBarClick("lunch")}
+            className={classNames(styles.sideBarItem, {
+              [styles.active]: activeSideBar === "lunch",
+            })}
+          >
+            <p>Lunch</p>
           </div>
 
           <div
