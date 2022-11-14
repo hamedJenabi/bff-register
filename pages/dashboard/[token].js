@@ -7,7 +7,11 @@ import React, { useState } from "react";
 import styles from "./Dashboard.module.scss";
 import Header from "../../components/Header/Header.js";
 import classNames from "classnames";
-import { levelsToShow, titleCase } from "../../utils/functions";
+import {
+  levelsToShow,
+  groupLevelsToShow,
+  titleCase,
+} from "../../utils/functions";
 import { unstable_FormCheckbox as FormCheckbox } from "reakit/Form";
 import { unstable_useFormState as useFormState } from "reakit/Form";
 
@@ -49,6 +53,7 @@ export default function Dashboard({ users, tickets }) {
     },
   });
   const [status, setStatus] = useState("");
+  const [groupLevel, setGroupLevel] = useState("trumpet1");
   const [usersToChange, setUsersToChange] = useState([]);
 
   const handleStatusChange = async () => {
@@ -64,6 +69,41 @@ export default function Dashboard({ users, tickets }) {
         firstName: item.first_name,
         lastName: item.last_name,
         status: status,
+      };
+      fetch("/api/edituser", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Cache-Control": "no-cache, no-store",
+        },
+        body: JSON.stringify(toEdit),
+      })
+        .then((response) => {
+          if (response.status === 200) {
+            router.reload(window.location.pathname);
+          }
+          if (response.status === 401) {
+            alert("Please write a valid status");
+          }
+        })
+        .catch((error) => console.log(error));
+    });
+    alert("done");
+  };
+  const handleGroupChange = async () => {
+    const idsToChange = form.values.users;
+    let array = [];
+    idsToChange.map((id) => {
+      array.push(users.find((userinfo) => userinfo.id === id));
+    });
+
+    array.map((item) => {
+      const toEdit = {
+        ...item,
+        firstName: item.first_name,
+        lastName: item.last_name,
+        isGroupApi: true,
+        level: groupLevel,
       };
       fetch("/api/edituser", {
         method: "POST",
@@ -186,6 +226,64 @@ export default function Dashboard({ users, tickets }) {
               waitinglist: {getTicketAmount(lvl.value, "lead").waiting} <br />
               confirmed: {getTicketAmount(lvl.value, "lead").paid}
             </p>
+          </div>
+        ))}
+      </div>
+    );
+  };
+  const FinalBalanceComponent = () => {
+    const getTicketAmount = (level, role) => {
+      const registerAmount = users.filter(
+        (user) =>
+          user["level"] === level &&
+          user["role"] === role &&
+          user["status"] === "registered"
+      );
+      const ammount = users.filter(
+        (user) =>
+          user["level"] === level &&
+          user["role"] === role &&
+          user["status"] === "email-sent"
+      );
+      const ammountReminder = users.filter(
+        (user) =>
+          user["level"] === level &&
+          user["role"] === role &&
+          user["status"] === "reminder"
+      );
+      const ammountWaiting = users.filter(
+        (user) =>
+          user["level"] === level &&
+          user["role"] === role &&
+          user["status"] === "waitinglist"
+      );
+      const ammountPaid = users.filter(
+        (user) =>
+          user["level"] === level &&
+          user["role"] === role &&
+          user["status"] === "confirmed"
+      );
+      return {
+        registered: registerAmount.length,
+        sent: ammount.length,
+        reminder: ammountReminder.length,
+        waiting: ammountWaiting.length,
+        paid: ammountPaid.length,
+      };
+    };
+
+    return (
+      <div className={styles.balanceComponent}>
+        <div className={styles.ticketRow}>
+          <p>Level</p>
+          <p> Follow</p>
+          <p>Lead</p>
+        </div>
+        {groupLevelsToShow.map((lvl) => (
+          <div key={lvl.value} className={styles.ticketRow}>
+            <h4>{lvl.value}</h4>
+            <p>{getTicketAmount(lvl.value, "follow").paid}</p>
+            <p> {getTicketAmount(lvl.value, "lead").paid}</p>
           </div>
         ))}
       </div>
@@ -445,9 +543,6 @@ export default function Dashboard({ users, tickets }) {
             ={totalAmountList}
           </p>
         </div>
-        <button className={styles.statusButton} onClick={handleSendEmail}>
-          Send Email to All confirmed
-        </button>
       </div>
       <main className={styles.main}>
         <div className={styles.sideBar}>
@@ -551,6 +646,14 @@ export default function Dashboard({ users, tickets }) {
           >
             <p>Balance</p>
           </div>
+          <div
+            onClick={() => handleSideBarClick("lastbalance")}
+            className={classNames(styles.sideBarItem, {
+              [styles.active]: activeSideBar === "lastbalance",
+            })}
+          >
+            <p>Final Balance</p>
+          </div>
         </div>
         <div className={styles.content}>
           {activeSideBar !== "balance" && (
@@ -575,21 +678,41 @@ export default function Dashboard({ users, tickets }) {
                   Change Status
                 </button>
               </div>
+              <div>
+                <select
+                  onChange={(e) => setGroupLevel(e.target.value)}
+                  className={styles.select}
+                >
+                  <option>trumpet1</option>
+                  <option>trumpet2</option>
+                  <option>drums1</option>
+                  <option>drums2</option>
+                </select>
+                <button
+                  className={styles.statusButton}
+                  onClick={handleGroupChange}
+                >
+                  Change Group Name
+                </button>
+              </div>
 
-              <p>Search first name</p>
-              <input onChange={(e) => setNameSearch(e.target.value)} />
+              {/* <p>Search first name</p>
+              <input onChange={(e) => setNameSearch(e.target.value)} /> */}
             </div>
           )}
-          {!capacityShow && activeSideBar !== "balance" && (
-            <table className={styles.table}>
-              <tbody>
-                <tr>{renderTableHeader()}</tr>
-                {renderTableData()}
-              </tbody>
-            </table>
-          )}
+          {!capacityShow &&
+            activeSideBar !== "balance" &&
+            activeSideBar !== "lastbalance" && (
+              <table className={styles.table}>
+                <tbody>
+                  <tr>{renderTableHeader()}</tr>
+                  {renderTableData()}
+                </tbody>
+              </table>
+            )}
           {capacityShow && <TicketsComponent />}
           {activeSideBar === "balance" && <BalanceComponent />}
+          {activeSideBar === "lastbalance" && <FinalBalanceComponent />}
           {activeSideBar !== "balance" && (
             <div className={styles.downloadButton}>
               <CSVLink data={userToShow} filename={"registration-file.csv"}>
@@ -597,6 +720,13 @@ export default function Dashboard({ users, tickets }) {
               </CSVLink>
             </div>
           )}
+          <button
+            style={{ margin: "40px 0" }}
+            className={styles.statusButton}
+            onClick={handleSendEmail}
+          >
+            Send Email to All confirmed
+          </button>
         </div>
       </main>
 

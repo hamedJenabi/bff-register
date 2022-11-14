@@ -35,6 +35,36 @@ export const levelsToShow = [
       "You and Blues have a long story together. You end up going to finals in almost every competition, you practice regularly, and may teach Blues not only in your scene but also internationally.",
   },
 ];
+export const groupLevelsToShow = [
+  {
+    label: "Piano",
+    value: "piano",
+  },
+  {
+    label: "Guitar",
+    value: "guitar",
+  },
+  {
+    label: "Trumpet(1)",
+    value: "trumpet1",
+  },
+  {
+    label: "Trumpet(2)",
+    value: "trumpet2",
+  },
+  {
+    label: "Drums(1)",
+    value: "drums1",
+  },
+  {
+    label: "Drums(2)",
+    value: "drums2",
+  },
+  {
+    label: "Saxophone",
+    value: "saxophone",
+  },
+];
 export const compettionsInfo = [
   {
     label: "Solo Battle",

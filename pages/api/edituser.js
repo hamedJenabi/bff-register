@@ -1,4 +1,9 @@
-import { titleCase, discounts, levelsToShow } from "../../utils/functions";
+import {
+  titleCase,
+  discounts,
+  levelsToShow,
+  groupLevelsToShow,
+} from "../../utils/functions";
 import {
   updateUserInfo,
   removeFromWaitingList,
@@ -13,7 +18,10 @@ const getLevelLabelForEmail = (level) => {
   }
   if (level !== "") {
     const title = levelsToShow?.find((item) => item.value === level)?.label;
-    return titleCase(title);
+    const groupTitle = groupLevelsToShow?.find(
+      (item) => item.value === level
+    )?.label;
+    return titleCase(title) ? titleCase(title) : titleCase(groupTitle);
   }
 };
 const sgMail = require("@sendgrid/mail");
@@ -70,8 +78,10 @@ export default async function edituser(req, response) {
     competition_role: req.body.competition_role,
     competitions: req.body.competitions,
     terms: req.body.terms,
+    isGroupApi: req.body.isGroupApi,
   };
-  console.log("requestData", requestData);
+
+  console.log("requestData", requestData, requestData.isGroupApi);
   const isGroupDiscount = discounts.some(
     ({ email }) => email === req.body.email
   );
@@ -155,7 +165,10 @@ export default async function edituser(req, response) {
           price: `${totalPrice}`,
         },
       };
-      await sendEmail(msg);
+      if (!requestData.isGroupApi) {
+        console.log("email SENTSS");
+        await sendEmail(msg);
+      }
     }
     if (req.body.status === "reminder") {
       template = "d-ffa39fe3a7e440ed94d71fac0170f3af";
@@ -187,7 +200,10 @@ export default async function edituser(req, response) {
           price: `${totalPrice}`,
         },
       };
-      await sendEmail(msg);
+      if (!requestData.isGroupApi) {
+        console.log("email SENTSS");
+        await sendEmail(msg);
+      }
     }
     if (req.body.status === "waitinglist") {
       const msg = {
@@ -217,7 +233,10 @@ export default async function edituser(req, response) {
           price: `${totalPrice}`,
         },
       };
-      await sendEmail(msg);
+      if (!requestData.isGroupApi) {
+        console.log("email SENTSS");
+        await sendEmail(msg);
+      }
     }
     if (req.body.status === "confirmed") {
       const msg = {
@@ -247,7 +266,10 @@ export default async function edituser(req, response) {
           price: `${totalPrice}`,
         },
       };
-      await sendEmail(msg);
+      if (!requestData.isGroupApi) {
+        console.log("email SENTSS");
+        await sendEmail(msg);
+      }
     }
     // and more conditions
     if (req.body.status === "out") {
@@ -278,7 +300,10 @@ export default async function edituser(req, response) {
           price: `${totalPrice}`,
         },
       };
-      await sendEmail(msg);
+      if (!requestData.isGroupApi) {
+        console.log("email senttt");
+        await sendEmail(msg);
+      }
     }
     if (req.body.status === "cancelled") {
       const ticketName =

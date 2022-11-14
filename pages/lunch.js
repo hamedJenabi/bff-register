@@ -67,7 +67,9 @@ export default function Home({ tickets, clientID }) {
             setIsClicked(true);
           }
           if (response.status === 404) {
-            alert("we didnt find you in our database, please contact us");
+            alert(
+              "we didnt find you in our database, please check your email or contact us"
+            );
             setIsClicked(false);
           }
         })

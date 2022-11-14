@@ -1,4 +1,8 @@
-import { titleCase, discounts, levelsToShow } from "../../utils/functions";
+import {
+  titleCase,
+  groupLevelsToShow,
+  levelsToShow,
+} from "../../utils/functions";
 
 const sgMail = require("@sendgrid/mail");
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
@@ -40,7 +44,10 @@ export default async function mailall(req, response) {
     }
     if (level !== "") {
       const title = levelsToShow?.find((item) => item.value === level)?.label;
-      return titleCase(title);
+      const groupTitle = groupLevelsToShow?.find(
+        (item) => item.value === level
+      )?.label;
+      return titleCase(title) ? titleCase(title) : titleCase(groupTitle);
     }
   };
   const getTicketLabel = (ticket) => {
@@ -64,7 +71,7 @@ export default async function mailall(req, response) {
       role: `${titleCase(user.role)}`,
       level: `${getLevelLabelForEmail(user.level)}`,
       ticket: `${ticket}`,
-      themeClass: `${titleCase(user.theme_class)}`,
+      themeClass: `${user.theme_class ? titleCase(user.theme_class) : "No"}`,
       competition: user.competition === "yes" ? true : false,
       competitionAnswer:
         user.competition === "later" ? "I will decide later" : "No",
