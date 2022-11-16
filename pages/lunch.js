@@ -95,7 +95,7 @@ export default function Home({ tickets, clientID }) {
     setPriceToday(price);
     setNext(true);
   };
-  console.log("form", form);
+
   return (
     <div className={styles.container}>
       <Head>

@@ -7,7 +7,7 @@ export default async function lunch(req, response) {
     last_name: req.body.lastName,
     lunch: req.body.lunch.toString(),
   };
-  console.log(requestData);
+
   const userToUpdate = await getConfirmedUserByEmailAndName(requestData.email);
   if (!userToUpdate) {
     response.status(404).json({ message: "User not found" });
@@ -17,6 +17,6 @@ export default async function lunch(req, response) {
     await setUserLunchById(userToUpdate.id, requestData.lunch);
     response.status(200).json({ data: userToUpdate });
   }
-  console.log("userToUpdate", userToUpdate.id);
+
   response.status(200).json();
 }

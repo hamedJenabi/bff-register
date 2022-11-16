@@ -81,7 +81,6 @@ export default async function edituser(req, response) {
     isGroupApi: req.body.isGroupApi,
   };
 
-  console.log("requestData", requestData, requestData.isGroupApi);
   const isGroupDiscount = discounts.some(
     ({ email }) => email === req.body.email
   );

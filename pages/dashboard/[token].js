@@ -128,7 +128,7 @@ export default function Dashboard({ users, tickets }) {
 
   const handleSendEmail = async () => {
     const confirmedUsers = users.filter((user) => user.status === "confirmed");
-    console.log("confirmedUsers", confirmedUsers);
+
     if (
       confirm("are you sure you want to send emails to all confirmed users?")
     ) {

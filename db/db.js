@@ -184,7 +184,6 @@ export async function getUserByEmailAndName(email) {
   return user[0];
 }
 export async function setUserLunchById(id, lunch) {
-  console.log("lunch", lunch, id);
   await sql`
    UPDATE registrations
     SET lunch = ${lunch}

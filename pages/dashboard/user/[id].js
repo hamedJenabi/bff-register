@@ -61,7 +61,7 @@ export default function User({ user }) {
       Router.push("/login/admin");
     }
   }
-  console.log("form", form.values);
+
   const handleClick = (key) => {
     alert(key);
   };
