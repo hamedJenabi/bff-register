@@ -74,9 +74,10 @@ export default function FoodForm({ form, tickets, isClicked }) {
             <h4 className={styles.title}>
               Which day you wanto to have lunch at the Venue? <br></br>(You can
               choose both days):
-              <span style={{ fontSize: "15px" }}>
-                <br></br> (€12.50 per meal - main course + dessert + one drink)
-                <br></br> (There are vegan/vegetarian and gluten-free options)
+              <span style={{ fontSize: "12px" }}>
+                <br></br> Price: €12.50 per meal - main course + dessert + one
+                drink
+                <br></br> There are vegan/vegetarian and gluten-free options
               </span>
             </h4>
 
