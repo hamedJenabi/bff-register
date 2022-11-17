@@ -104,7 +104,11 @@ export default function FoodForm({ form, tickets, isClicked }) {
       )}
       {isClicked && (
         <>
-          <h4>Thank you for your reply. See you in Vienna </h4>
+          <h4 style={{ textAlign: "center" }}>
+            Thank you for your reply. You will pay the amount at the Event :){" "}
+            <br />
+            See you in Vienna{" "}
+          </h4>
         </>
       )}
     </>
