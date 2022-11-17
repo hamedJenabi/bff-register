@@ -55,7 +55,6 @@ export default function Dashboard({ users, tickets }) {
   const [status, setStatus] = useState("");
   const [groupLevel, setGroupLevel] = useState("trumpet1");
   const [usersToChange, setUsersToChange] = useState([]);
-  console.log("form.values.users", form.values.users);
   const handleStatusChange = async () => {
     const idsToChange = form.values.users;
     let array = [];
