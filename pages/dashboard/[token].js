@@ -55,7 +55,7 @@ export default function Dashboard({ users, tickets }) {
   const [status, setStatus] = useState("");
   const [groupLevel, setGroupLevel] = useState("trumpet1");
   const [usersToChange, setUsersToChange] = useState([]);
-
+  console.log("form.values.users", form.values.users);
   const handleStatusChange = async () => {
     const idsToChange = form.values.users;
     let array = [];
@@ -146,6 +146,37 @@ export default function Dashboard({ users, tickets }) {
           .then((response) => {
             if (response.status === 200) {
               //               router.reload(window.location.pathname);
+            }
+            if (response.status === 401) {
+              alert("Please write a valid status");
+            }
+          })
+          .catch((error) => console.log(error));
+      });
+    } else {
+      console.log("no");
+    }
+  };
+  const handleSendOneMail = async () => {
+    const idsToSend = form.values.users;
+    let array = [];
+    idsToSend.map((id) => {
+      array.push(users.find((userinfo) => userinfo.id === id));
+    });
+    if (confirm("are you sure you want to send emails to this user?")) {
+      console.log("ok");
+      array.map((item) => {
+        fetch("/api/mailall", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Cache-Control": "no-cache, no-store",
+          },
+          body: JSON.stringify(item),
+        })
+          .then((response) => {
+            if (response.status === 200) {
+              router.reload(window.location.pathname);
             }
             if (response.status === 401) {
               alert("Please write a valid status");
@@ -668,48 +699,61 @@ export default function Dashboard({ users, tickets }) {
         <div className={styles.content}>
           {activeSideBar !== "balance" && (
             <div className={styles.search}>
-              <div>
-                <select
-                  onChange={(e) => setStatus(e.target.value)}
-                  className={styles.select}
-                >
-                  <option>registered</option>
-                  <option>email-sent</option>
-                  <option>reminder</option>
-                  <option>waitinglist</option>
-                  <option>confirmed</option>
-                  <option>canceled</option>
-                  <option>out</option>
-                </select>
-                <button
-                  className={styles.statusButton}
-                  onClick={handleStatusChange}
-                >
-                  Change Status
-                </button>
-              </div>
-              <div>
-                <select
-                  onChange={(e) => setGroupLevel(e.target.value)}
-                  className={styles.select}
-                >
-                  <option>trumpet1</option>
-                  <option>trumpet2</option>
-                  <option>drums1</option>
-                  <option>drums2</option>
-                </select>
-                <button
-                  className={styles.statusButton}
-                  onClick={handleGroupChange}
-                >
-                  Change Group Name
-                </button>
-              </div>
+              <select
+                onChange={(e) => setStatus(e.target.value)}
+                className={styles.select}
+              >
+                <option>registered</option>
+                <option>email-sent</option>
+                <option>reminder</option>
+                <option>waitinglist</option>
+                <option>confirmed</option>
+                <option>canceled</option>
+                <option>out</option>
+              </select>
+              <button
+                className={styles.statusButton}
+                onClick={handleStatusChange}
+              >
+                Change Status
+              </button>
+
+              {/* <select
+                onChange={(e) => setStatus(e.target.value)}
+                className={styles.select}
+              >
+                <option>registered</option>
+                <option>email-sent</option>
+                <option>reminder</option>
+                <option>waitinglist</option>
+                <option>confirmed</option>
+                <option>canceled</option>
+                <option>out</option>
+              </select> */}
+
+              <select
+                onChange={(e) => setGroupLevel(e.target.value)}
+                className={styles.select}
+              >
+                <option>trumpet1</option>
+                <option>trumpet2</option>
+                <option>drums1</option>
+                <option>drums2</option>
+              </select>
+              <button
+                className={styles.statusButton}
+                onClick={handleGroupChange}
+              >
+                Change Group Name
+              </button>
 
               {/* <p>Search first name</p>
               <input onChange={(e) => setNameSearch(e.target.value)} /> */}
             </div>
           )}
+          <button className={styles.statusButton} onClick={handleSendOneMail}>
+            Send Final email to:
+          </button>
           {!capacityShow &&
             activeSideBar !== "balance" &&
             activeSideBar !== "lastbalance" && (

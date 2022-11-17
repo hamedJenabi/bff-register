@@ -94,17 +94,21 @@
   }
 }
 .search {
+  overflow: scroll;
   display: flex;
+  flex-direction: column;
   align-items: center;
   gap: $sm;
-  height: 80px;
+  // height: 80px;
   padding: $sm;
-  input {
-    padding: 0 $md;
-    height: 60px;
-    width: 160px;
-    @include input;
-    border: 1px solid $blue;
+  // input {
+  //   padding: 0 $md;
+  //   height: 60px;
+  //   @include input;
+  //   border: 1px solid $blue;
+  // }
+  @media (min-width: 600px) {
+    flex-direction: row;
   }
 }
 .content {
@@ -158,7 +162,7 @@
 }
 .statusButton {
   @include button;
-  width: 190px !important;
+  width: 250px !important;
 }
 .downloadButton {
   @include button;
@@ -243,7 +247,6 @@
 }
 .select {
   padding: 5px 15px;
-  margin-right: $sm;
   font-size: 14px;
   line-height: 1.3;
   height: 45px;
@@ -252,13 +255,12 @@
   box-shadow: 0 1px 0 1px rgba(0, 0, 0, 0.04);
   border-radius: 5px;
   background-color: transparent;
-  width: 100%;
+  width: 180px;
   @media (min-width: 700px) {
     width: 200px;
   }
   &.countrySelect {
     border: 1px solid $blue;
-
     height: 50px;
     padding: 12px;
     margin-top: $xs;

@@ -35,6 +35,7 @@ export default async function mailall(req, response) {
     competition: req.body.competition,
     competition_role: req.body.competition_role,
     competitions: req.body.competitions,
+    // lunch: req.body.lunch,
     terms: req.body.terms,
   };
 
