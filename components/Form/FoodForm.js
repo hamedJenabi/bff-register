@@ -76,6 +76,7 @@ export default function FoodForm({ form, tickets, isClicked }) {
               choose both days):
               <span style={{ fontSize: "15px" }}>
                 <br></br> (€12.50 per meal - main course + dessert + one drink)
+                <br></br> (There are Vegan and Vegetarian options)
               </span>
             </h4>
 
