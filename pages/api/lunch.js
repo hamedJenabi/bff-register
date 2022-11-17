@@ -18,5 +18,5 @@ export default async function lunch(req, response) {
     response.status(200).json({ data: userToUpdate });
   }
 
-  response.status(200).json();
+  response.status(401).json();
 }

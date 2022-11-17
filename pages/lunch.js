@@ -62,7 +62,6 @@ export default function Home({ tickets, clientID }) {
       })
         .then((response) => {
           if (response.status === 200) {
-            localStorage.setItem("lunch", JSON.stringify(req));
             // Router.push("/accept/lunch?email=" + req.email);
             setIsClicked(true);
           }
