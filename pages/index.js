@@ -118,7 +118,8 @@ export default function Home({ tickets }) {
         ]}
       />
       <main className={styles.main}>
-        <RegistrationForm form={form} tickets={tickets} isClicked={isClicked} />
+        {/* <RegistrationForm form={form} tickets={tickets} isClicked={isClicked} /> */}
+        <h3>Blues Fever is fully booked :)</h3>
       </main>
 
       <footer className={styles.footer}>
