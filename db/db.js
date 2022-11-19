@@ -190,6 +190,20 @@ export async function setUserLunchById(id, lunch) {
      WHERE id = ${id};
   `;
 }
+export async function setUserCompById(
+  id,
+  competition_role,
+  competitions,
+  to_pay
+) {
+  await sql`
+   UPDATE registrations
+    SET competition_role = ${competition_role},
+    competitions = ${competitions},
+    to_pay = ${to_pay}
+     WHERE id = ${id};
+  `;
+}
 // /* ****** resetpassword****** */
 // export async function resetPassword(password_hash, accountId) {
 //   await sql`
