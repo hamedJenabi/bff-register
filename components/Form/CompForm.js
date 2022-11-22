@@ -77,8 +77,13 @@ export default function CompForm({ form, tickets, isClicked }) {
               name="competition_role"
             >
               <label>
-                <FormRadio {...form} name="competition_role" value="follow" />
-                <p>Follow</p>
+                <FormRadio
+                  {...form}
+                  name="competition_role"
+                  value="follow"
+                  disabled
+                />
+                <p>Follow (Fully Booked)</p>
               </label>
 
               <label>
@@ -91,7 +96,7 @@ export default function CompForm({ form, tickets, isClicked }) {
             <h3 className={styles.title}>
               Choose your contests:
               <span style={{ fontSize: "15px" }}>
-                <br></br> (€10 per competition)
+                <br></br> (€10 per competition - Strictly is fully booked)
               </span>
             </h3>
             {compettionsInfo.map(({ value, label }) => (

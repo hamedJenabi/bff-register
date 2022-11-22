@@ -84,12 +84,12 @@ export const compettionsInfo = [
     detail:
       "So you think you can dance? As an intermediate we expect you to master your fundamental skills and be comfortable in dancing on different Blues styles. You can improvise based on the music and have no trouble with slow or faster rhythms. You already dance one or two years on a frequent base.",
   },
-  {
-    label: "Strictly",
-    value: "strictly",
-    detail:
-      "This level is for those who have been dancing Blues since birth, or at least three years. You have attended many international workshops and maybe even teaching in your local scene. Done competitions and reached the final now and then. There will be no audition but we don’t spare you in this level, so please don’t misjudge your ability, for your sake and for your class mates.",
-  },
+  // {
+  //   label: "Strictly",
+  //   value: "strictly",
+  //   detail:
+  //     "This level is for those who have been dancing Blues since birth, or at least three years. You have attended many international workshops and maybe even teaching in your local scene. Done competitions and reached the final now and then. There will be no audition but we don’t spare you in this level, so please don’t misjudge your ability, for your sake and for your class mates.",
+  // },
   {
     label: "Fever Showcase",
     value: "fever_showcase",
