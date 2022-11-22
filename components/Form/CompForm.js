@@ -96,7 +96,8 @@ export default function CompForm({ form, tickets, isClicked }) {
             <h3 className={styles.title}>
               Choose your contests:
               <span style={{ fontSize: "15px" }}>
-                <br></br> (€10 per competition - Strictly is fully booked)
+                <br></br> (€10 per competition - Strictly & Fever-Showcase are
+                fully booked)
               </span>
             </h3>
             {compettionsInfo.map(({ value, label }) => (

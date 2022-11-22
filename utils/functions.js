@@ -90,12 +90,12 @@ export const compettionsInfo = [
   //   detail:
   //     "This level is for those who have been dancing Blues since birth, or at least three years. You have attended many international workshops and maybe even teaching in your local scene. Done competitions and reached the final now and then. There will be no audition but we don’t spare you in this level, so please don’t misjudge your ability, for your sake and for your class mates.",
   // },
-  {
-    label: "Fever Showcase",
-    value: "fever_showcase",
-    detail:
-      "This level is for those who have been dancing Blues since birth, or at least three years. You have attended many international workshops and maybe even teaching in your local scene. Done competitions and reached the final now and then. There will be no audition but we don’t spare you in this level, so please don’t misjudge your ability, for your sake and for your class mates.",
-  },
+  // {
+  //   label: "Fever Showcase",
+  //   value: "fever_showcase",
+  //   detail:
+  //     "This level is for those who have been dancing Blues since birth, or at least three years. You have attended many international workshops and maybe even teaching in your local scene. Done competitions and reached the final now and then. There will be no audition but we don’t spare you in this level, so please don’t misjudge your ability, for your sake and for your class mates.",
+  // },
 ];
 
 export const getPrice = (requestData, isGroupDiscount) => {
