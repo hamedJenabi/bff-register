@@ -373,24 +373,35 @@ export default function Dashboard({ users, tickets }) {
   const handleUser = (id) => {
     Router.push(`/dashboard/user/${id}`);
   };
+
+  const getToPay = (to_pay, lunch) => {
+    const lunchMoney = lunch?.split(",").length * 12.5 || 0;
+    return Number(to_pay) + lunchMoney;
+  };
+  const usersForCSV = userToShow.map((user) =>
+    user.lunch || user.competition === "later"
+      ? { ...user, to_pay: getToPay(user.to_pay, user.lunch) }
+      : user
+  );
+
   const renderTableHeader = () => {
     const header = [
       "select",
-      "to_pay",
+      "to pay",
       "status",
       "price",
       "date",
       "actions",
       "id",
       "email",
-      "first_name",
-      "last_name",
+      "firstname",
+      "lastname",
       "ticket",
       "role",
       "level",
-      "theme_class",
+      "themed class",
       "competition",
-      "competition_role",
+      "competition role",
       "competitions",
       "lunch",
       "country",
@@ -454,6 +465,10 @@ export default function Dashboard({ users, tickets }) {
           lunch,
           email,
         }) => {
+          const getToPay = (to_pay, lunch) => {
+            const lunchMoney = lunch?.split(",").length * 12.5 || 0;
+            return Number(to_pay) + lunchMoney;
+          };
           return (
             <tr
               key={id}
@@ -475,7 +490,7 @@ export default function Dashboard({ users, tickets }) {
                   />
                 </label>
               </td>
-              <td>{to_pay}</td>
+              <td>{getToPay(to_pay, lunch)}</td>
               <td>{status}</td>
               <td>{price}</td>
               <td>{date}</td>
@@ -772,7 +787,7 @@ export default function Dashboard({ users, tickets }) {
           {activeSideBar === "lastbalance" && <FinalBalanceComponent />}
           {activeSideBar !== "balance" && (
             <div className={styles.downloadButton}>
-              <CSVLink data={userToShow} filename={"registration-file.csv"}>
+              <CSVLink data={usersForCSV} filename={"registration-file.csv"}>
                 Download CSV
               </CSVLink>
             </div>
