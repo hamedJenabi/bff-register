@@ -16,6 +16,7 @@ import { unstable_FormCheckbox as FormCheckbox } from "reakit/Form";
 import { unstable_useFormState as useFormState } from "reakit/Form";
 
 export default function Dashboard({ users, tickets }) {
+  console.log("users", users);
   const [nameSearch, setNameSearch] = useState("");
   const [activeSideBar, setActiveSideBar] = useState("all");
   const [capacityShow, setCapacityShow] = useState(false);
@@ -375,6 +376,7 @@ export default function Dashboard({ users, tickets }) {
   const renderTableHeader = () => {
     const header = [
       "select",
+      "to_pay",
       "status",
       "price",
       "date",
@@ -436,6 +438,7 @@ export default function Dashboard({ users, tickets }) {
         ({
           id,
           status,
+          to_pay,
           price,
           date,
           role,
@@ -472,6 +475,7 @@ export default function Dashboard({ users, tickets }) {
                   />
                 </label>
               </td>
+              <td>{to_pay}</td>
               <td>{status}</td>
               <td>{price}</td>
               <td>{date}</td>
