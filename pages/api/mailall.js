@@ -35,7 +35,7 @@ export default async function mailall(req, response) {
     competition: req.body.competition,
     competition_role: req.body.competition_role,
     competitions: req.body.competitions,
-    // lunch: req.body.lunch,
+    lunch: req.body.lunch,
     terms: req.body.terms,
   };
 
@@ -72,8 +72,12 @@ export default async function mailall(req, response) {
       role: `${titleCase(user.role)}`,
       level: `${getLevelLabelForEmail(user.level)}`,
       ticket: `${ticket}`,
+      lunch: `${requestData.lunch}`,
       themeClass: `${user.theme_class ? titleCase(user.theme_class) : "No"}`,
-      competition: user.competition === "yes" ? true : false,
+      competition:
+        user.competition === "yes" || user.competition === "later"
+          ? true
+          : false,
       competitionAnswer:
         user.competition === "later" ? "I will decide later" : "No",
       competition_role: `${user.competition_role}`,
