@@ -72,7 +72,7 @@ export default async function mailall(req, response) {
       role: `${titleCase(user.role)}`,
       level: `${getLevelLabelForEmail(user.level)}`,
       ticket: `${ticket}`,
-      lunch: `${requestData.lunch}`,
+      lunch: requestData.lunch ? `${requestData.lunch}` : "No",
       themeClass: `${user.theme_class ? titleCase(user.theme_class) : "No"}`,
       competition:
         user.competition === "yes" || user.competition === "later"
