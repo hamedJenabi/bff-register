@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import {
   unstable_Form as Form,
   unstable_FormMessage as FormMessage,
@@ -155,10 +155,9 @@ export default function RegistrationForm({ form, tickets, isClicked }) {
                 </label>
                 <div className={styles.infoTextWrapper}>
                   <p className={styles.infoText}>
-                    You choose{" "}
-                    <span style={{ fontWeight: "bold" }}>"Both Role"</span> if
-                    you will attend some classes as LEAD and some as FOLLOW to
-                    help balance out the ration between the two roles.
+                    You choose <strong>"Both"</strong> role if you will attend
+                    some classes as LEAD and some as FOLLOW to help balance out
+                    the ration between the two roles.
                   </p>
                 </div>
               </FormRadioGroup>
@@ -167,6 +166,24 @@ export default function RegistrationForm({ form, tickets, isClicked }) {
           {form.values.ticket === "fullpass" && (
             <>
               <h3 className={styles.title}>Choose your Level:</h3>
+              <div className={styles.infoTextWrapper}>
+                <div className={styles.infoText}>
+                  Hey folks, There will be <strong>no audition</strong> for
+                  Beginner/Intermediate, Intermediate and Intermediate/Advanced
+                  levels during the weekend, so please read the level
+                  description carefully.{" "}
+                  <a
+                    style={{ color: "blue" }}
+                    target="_blank"
+                    href="https://www.bluesfever.eu/passes-levels/#level"
+                  >
+                    more info here
+                  </a>
+                  <br /> You Advanced people! There will be an audition on
+                  Friday afternoon.
+                </div>
+              </div>
+
               <FormRadioGroup
                 className={styles.radioGroup}
                 {...form}
@@ -176,16 +193,18 @@ export default function RegistrationForm({ form, tickets, isClicked }) {
                   <label key={value}>
                     <FormRadio {...form} name="level" value={value} />
                     <p>{label}</p>
-                    <InfoModal header={label} info={detail} />
+                    {/* <InfoModal header={label} info={detail} /> */}
                   </label>
                 ))}
               </FormRadioGroup>
             </>
           )}
 
-          <h3 className={styles.title}>
-            Themed Classes on Friday Afternoon? (€40)
-          </h3>
+          <h3 className={styles.title}>Themed Classes? (€45)</h3>
+          <p className={styles.infoText}>
+            You can add this classes to your Full-or Partypass. (Happening on
+            Friday afternoon)
+          </p>
           <FormRadioGroup
             className={styles.radioGroup}
             {...form}
@@ -215,6 +234,9 @@ export default function RegistrationForm({ form, tickets, isClicked }) {
           <h3 className={styles.title}>
             Do you want to participate in competitions?
           </h3>
+          <div className={styles.infoTextWrapper}>
+            <p className={styles.infoText}>(€10 per competition)</p>
+          </div>
           <FormRadioGroup
             className={styles.radioGroup}
             {...form}
@@ -231,12 +253,14 @@ export default function RegistrationForm({ form, tickets, isClicked }) {
             <label>
               <FormRadio {...form} name="competition" value="later" />
               <p>I will decide later</p>
+            </label>
+            <div className={styles.infoTextWrapper}>
               <p className={styles.infoText}>
                 You can decide later if you want to participate in the
-                competitions. We will send you an email around October.
-                You will have to pay the competition fee at the
-                door.
-            </label>
+                competitions. We will send you an email around October. You will
+                have to pay the competition fee at the door.
+              </p>
+            </div>
           </FormRadioGroup>
           {form.values.competition === "yes" && (
             <div className={styles.radioGroup}>
@@ -262,7 +286,7 @@ export default function RegistrationForm({ form, tickets, isClicked }) {
             <div className={styles.radioGroup}>
               <h3 className={styles.title}>
                 Choose your contests:
-                <span style={{ fontSize: "15px" }}>
+                <span className={styles.infoText}>
                   <br></br> (€10 per competition)
                 </span>
               </h3>
@@ -276,8 +300,8 @@ export default function RegistrationForm({ form, tickets, isClicked }) {
           )}
           <div className={styles.checkboxWrapper}>
             <FormCheckbox {...form} name="terms" />
-            <FormLabel {...form} name="terms">
-              By accepting this you agree to our{" "}
+            <FormLabel className={styles.infoText} {...form} name="terms">
+              By accepting this, you agree to our{" "}
               <a
                 style={{ color: "blue" }}
                 rel="noreferrer"

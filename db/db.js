@@ -13,61 +13,61 @@ const sql =
 
 export async function getTickets() {
   const tickets = await sql`
-      SELECT id, name, capacity, waiting_list FROM tickets
+      SELECT id, name, capacity, waiting_list FROM tickets_23
       `;
   return tickets;
 }
 export async function updateTicketCapacity(ticketId) {
   await sql`
-    UPDATE tickets
+    UPDATE tickets_23
     SET capacity = capacity - 1
     WHERE id = ${ticketId}
     `;
 }
 export async function updateTicketWaiting(ticketId) {
   await sql`
-    UPDATE tickets
+    UPDATE tickets_23
     SET waiting_list = waiting_list - 1
     WHERE id = ${ticketId}
     `;
 }
 export async function removeFromCapacity(ticketId) {
   await sql`
-    UPDATE tickets
+    UPDATE tickets_23
     SET capacity = capacity + 1
     WHERE id = ${ticketId}
     `;
 }
 export async function addToWaitingList(ticketId) {
   await sql`
-    UPDATE tickets
+    UPDATE tickets_23
     SET waiting_list = waiting_list - 1
     WHERE id = ${ticketId}
     `;
 }
 export async function addToCapacity(ticketId) {
   await sql`
-    UPDATE tickets
+    UPDATE tickets_23
     SET capacity = capacity - 1
     WHERE id = ${ticketId}
     `;
 }
 export async function removeFromWaitingList(ticketId) {
   await sql`
-    UPDATE tickets
+    UPDATE tickets_23
     SET waiting_list = waiting_list + 1
     WHERE id = ${ticketId}
     `;
 }
 export async function getTicketByName(name) {
   const ticket = await sql`
-    SELECT * FROM tickets WHERE name=${name}
+    SELECT * FROM tickets_23 WHERE name=${name}
     `;
   return ticket[0];
 }
 export async function isTicketAvailable(id) {
   const ticket = await sql`
-    SELECT * FROM tickets WHERE id=${id}
+    SELECT * FROM tickets_23 WHERE id=${id}
     `;
   return ticket[0];
 }
@@ -91,7 +91,7 @@ export async function insertRegistration(user) {
     terms: user.terms,
   };
   return sql`
-  INSERT INTO registrations${sql(
+  INSERT INTO registrations_23${sql(
     userData,
     "status",
     "date",
@@ -115,14 +115,14 @@ RETURNING id
 
 export async function getAllUsers() {
   const users = await sql`
-      SELECT * FROM registrations
+      SELECT * FROM registrations_23
     `;
   return users;
 }
 
 export async function getUserById(id) {
   const user = await sql`
-    SELECT * FROM registrations WHERE id = ${id}
+    SELECT * FROM registrations_23 WHERE id = ${id}
   `;
   return user[0];
 }
@@ -149,7 +149,7 @@ export async function updateUserInfo(user, totalPrice) {
   };
 
   await sql`
-  UPDATE registrations
+  UPDATE registrations_23
   SET 
     "status" = ${userData.status},
     "email" = ${userData.email},
@@ -173,19 +173,19 @@ export async function updateUserInfo(user, totalPrice) {
 
 export async function getConfirmedUserByEmailAndName(email) {
   const user = await sql`
-    SELECT * FROM registrations WHERE email = ${email} AND status = 'confirmed'
+    SELECT * FROM registrations_23 WHERE email = ${email} AND status = 'confirmed'
   `;
   return user[0];
 }
 export async function getUserByEmailAndName(email) {
   const user = await sql`
-    SELECT * FROM registrations WHERE email = ${email}
+    SELECT * FROM registrations_23 WHERE email = ${email}
   `;
   return user[0];
 }
 export async function setUserLunchById(id, lunch) {
   await sql`
-   UPDATE registrations
+   UPDATE registrations_23
     SET lunch = ${lunch}
      WHERE id = ${id};
   `;
@@ -197,7 +197,7 @@ export async function setUserCompById(
   to_pay
 ) {
   await sql`
-   UPDATE registrations
+   UPDATE registrations_23
     SET competition_role = ${competition_role},
     competitions = ${competitions},
     to_pay = ${to_pay}

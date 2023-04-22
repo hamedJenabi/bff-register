@@ -23,8 +23,15 @@
 }
 .infoTextWrapper {
   margin-left: $sm;
+  margin-bottom: 0;
+  padding: 0;
   @media (min-width: 600px) {
     margin-left: $md;
+    max-width: 650px;
+    strong {
+      font-weight: bolder;
+      font-size: 16px;
+    }
   }
 }
 .infoText {
@@ -133,7 +140,8 @@
   }
 }
 .errorMessage {
-  @include error;
+  @include infoText;
+  color: red !important;
 }
 
 .buttonWrapper {

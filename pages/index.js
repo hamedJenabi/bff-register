@@ -65,28 +65,34 @@ export default function Home({ tickets }) {
       const req = {
         ...form.values,
       };
-      fetch("/api/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Cache-Control": "no-cache, no-store",
-        },
-        body: JSON.stringify(req),
-      })
-        .then((response) => {
-          if (response.status === 200) {
-            localStorage.setItem("accepted", JSON.stringify(form.values));
-            Router.push("/accept");
-          }
-
-          if (response.status === 301) {
-            Router.push("/soldout");
-          }
-          if (response.status === 302) {
-            Router.push("/alreadyRegistered");
-          }
+      if (form.values.ticket === "partyPass") {
+        // add the payment card
+        // then do the whole thing
+      }
+      if (form.values.ticket === "fullpass") {
+        fetch("/api/register", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Cache-Control": "no-cache, no-store",
+          },
+          body: JSON.stringify(req),
         })
-        .catch((error) => console.log(error));
+          .then((response) => {
+            if (response.status === 200) {
+              localStorage.setItem("accepted", JSON.stringify(form.values));
+              Router.push("/accept");
+            }
+
+            if (response.status === 301) {
+              Router.push("/soldout");
+            }
+            if (response.status === 302) {
+              Router.push("/alreadyRegistered");
+            }
+          })
+          .catch((error) => console.log(error));
+      }
     },
   });
 

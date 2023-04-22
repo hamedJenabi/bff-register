@@ -25,7 +25,8 @@ $Paragraph: Poiret One, Fjalla One, Roboto, -apple-system, BlinkMacSystemFont,
 $headerFont: Roboto, -apple-system, BlinkMacSystemFont, Segoe UI, Oxygen, Ubuntu,
   Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
 @mixin infoText {
-  font-size: 12px;
+  font-size: 13px;
+  line-height: 22px;
   color: black;
   font-family: "Open Sans", Roboto, -apple-system, BlinkMacSystemFont, Segoe UI,
     Oxygen, Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;

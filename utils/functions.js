@@ -5,35 +5,35 @@ export const titleCase = (s) =>
 
 export const levelsToShow = [
   {
-    label: "Piano - Beginner/Intermediate",
-    value: "piano",
+    label: "Beginner/Intermediate",
+    value: "beg/int",
     detail:
       "You have had one or two blues dance classes and are ready to know more about Blues.",
   },
   {
-    label: "Guitar - Intermediate",
-    value: "guitar",
+    label: "Intermediate",
+    value: "int",
     detail:
       "You have had local classes and maybe one or more international workshops. You can execute the basic movements and steps. You know some variations of basics and you can choose them depending on the style of music.",
   },
   {
-    label: "Trumpet - Int/Adv",
-    value: "trumpet",
+    label: "Intermediate/Advanced",
+    value: "int/adv",
     detail:
       "You travel internationally to festivals and attended workshops. You have an expanded vocabulary (aesthetic and movements) and have achieved a good musicality. You have a high understanding of partnership in dancing.",
   },
   {
-    label: "Drums - Advanced",
-    value: "drums",
+    label: "Advanced",
+    value: "adv",
     detail:
       "You consistently demonstrate, describe, and differentiate between a range of styles and movements, while maintaining blues aesthetic. You include some layered movements. You can observe and work out movement execution. You may teach blues at your local scene and do lots of international workshops.",
   },
-  {
-    label: "Saxophone - Advanced+",
-    value: "saxophone",
-    detail:
-      "You and Blues have a long story together. You end up going to finals in almost every competition, you practice regularly, and may teach Blues not only in your scene but also internationally.",
-  },
+  // {
+  //   label: "Saxophone - Advanced+",
+  //   value: "saxophone",
+  //   detail:
+  //     "You and Blues have a long story together. You end up going to finals in almost every competition, you practice regularly, and may teach Blues not only in your scene but also internationally.",
+  // },
 ];
 export const groupLevelsToShow = [
   {
@@ -84,18 +84,18 @@ export const compettionsInfo = [
     detail:
       "So you think you can dance? As an intermediate we expect you to master your fundamental skills and be comfortable in dancing on different Blues styles. You can improvise based on the music and have no trouble with slow or faster rhythms. You already dance one or two years on a frequent base.",
   },
-  // {
-  //   label: "Strictly",
-  //   value: "strictly",
-  //   detail:
-  //     "This level is for those who have been dancing Blues since birth, or at least three years. You have attended many international workshops and maybe even teaching in your local scene. Done competitions and reached the final now and then. There will be no audition but we don’t spare you in this level, so please don’t misjudge your ability, for your sake and for your class mates.",
-  // },
-  // {
-  //   label: "Fever Showcase",
-  //   value: "fever_showcase",
-  //   detail:
-  //     "This level is for those who have been dancing Blues since birth, or at least three years. You have attended many international workshops and maybe even teaching in your local scene. Done competitions and reached the final now and then. There will be no audition but we don’t spare you in this level, so please don’t misjudge your ability, for your sake and for your class mates.",
-  // },
+  {
+    label: "Strictly",
+    value: "strictly",
+    detail:
+      "This level is for those who have been dancing Blues since birth, or at least three years. You have attended many international workshops and maybe even teaching in your local scene. Done competitions and reached the final now and then. There will be no audition but we don’t spare you in this level, so please don’t misjudge your ability, for your sake and for your class mates.",
+  },
+  {
+    label: "Fever Showcase",
+    value: "fever_showcase",
+    detail:
+      "This level is for those who have been dancing Blues since birth, or at least three years. You have attended many international workshops and maybe even teaching in your local scene. Done competitions and reached the final now and then. There will be no audition but we don’t spare you in this level, so please don’t misjudge your ability, for your sake and for your class mates.",
+  },
 ];
 
 export const getPrice = (requestData, isGroupDiscount) => {

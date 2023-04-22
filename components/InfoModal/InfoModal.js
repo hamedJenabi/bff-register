@@ -7,7 +7,7 @@ import {
   DialogBackdrop,
   DialogDisclosure,
 } from "reakit/Dialog";
-const InfoModal = ({ header, info, isEarlyBird }) => {
+const InfoModal = ({ header, info }) => {
   const dialog = useDialogState();
 
   const [show, setShow] = useState(false);
