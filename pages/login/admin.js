@@ -31,10 +31,10 @@ export default function Admin({ tickets }) {
     onValidate: (values) => {
       const errors = {};
       if (!values.userName) {
-        errors.firstName = "please write your username";
+        errors.firstname = "please write your username";
       }
       if (!values.password) {
-        errors.lastName = "please write your password";
+        errors.lastname = "please write your password";
       }
       if (Object.keys(errors).length > 0) {
         throw errors;

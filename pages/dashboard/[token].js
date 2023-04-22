@@ -16,7 +16,6 @@ import { unstable_FormCheckbox as FormCheckbox } from "reakit/Form";
 import { unstable_useFormState as useFormState } from "reakit/Form";
 
 export default function Dashboard({ users, tickets }) {
-  console.log("users", users);
   const [nameSearch, setNameSearch] = useState("");
   const [activeSideBar, setActiveSideBar] = useState("all");
   const [capacityShow, setCapacityShow] = useState(false);
@@ -66,8 +65,8 @@ export default function Dashboard({ users, tickets }) {
     array.map((item) => {
       const toEdit = {
         ...item,
-        firstName: item.first_name,
-        lastName: item.last_name,
+        firstname: item.firstname,
+        lastname: item.lastname,
         status: status,
       };
       fetch("/api/edituser", {
@@ -100,8 +99,8 @@ export default function Dashboard({ users, tickets }) {
     array.map((item) => {
       const toEdit = {
         ...item,
-        firstName: item.first_name,
-        lastName: item.last_name,
+        firstname: item.firstname,
+        lastname: item.lastname,
         isGroupApi: true,
         level: groupLevel,
       };
@@ -441,7 +440,7 @@ export default function Dashboard({ users, tickets }) {
     return userToShow
       .filter((user) =>
         nameSearch
-          ? user.first_name.toUpperCase().includes(nameSearch.toUpperCase())
+          ? user.firstname.toUpperCase().includes(nameSearch.toUpperCase())
           : true
       )
       .sort((a, b) => a.id - b.id)
@@ -453,9 +452,9 @@ export default function Dashboard({ users, tickets }) {
           price,
           date,
           role,
-          first_name,
+          firstname,
           ticket,
-          last_name,
+          lastname,
           country,
           theme_class,
           level,
@@ -504,8 +503,8 @@ export default function Dashboard({ users, tickets }) {
               </td>
               <td>{id}</td>
               <td>{email}</td>
-              <td>{first_name}</td>
-              <td>{last_name}</td>
+              <td>{firstname}</td>
+              <td>{lastname}</td>
               <td>{ticket}</td>
               <td>{role}</td>
               <td>{level}</td>

@@ -74,8 +74,8 @@ const updateGoogle = async (user) => {
     status: user.status,
     register_date: date,
     email: user.email,
-    First_Name: user.first_name,
-    Last_Name: user.last_name,
+    First_Name: user.firstname,
+    Last_Name: user.lastname,
     country: user.country,
     ticket: user.ticket,
     role: user.role,
@@ -106,8 +106,8 @@ export default async function register(req, response) {
   const requestData = {
     date: time.toDateString(),
     email: req.body.email,
-    first_name: req.body.firstName,
-    last_name: req.body.lastName,
+    firstname: req.body.firstname,
+    lastname: req.body.lastname,
     country: req.body.country,
     role: req.body.role ?? "",
     ticket: req.body.ticket ?? "",
@@ -138,8 +138,8 @@ export default async function register(req, response) {
   let isAlreadyRegistered = false;
   if (userswithSameEmail) {
     isAlreadyRegistered =
-      userswithSameEmail.email + userswithSameEmail.first_name ===
-      requestData.email + requestData.first_name + "noob";
+      userswithSameEmail.email + userswithSameEmail.firstname ===
+      requestData.email + requestData.firstname + "noob";
   }
   let template = "";
   let isSoldOut = false;
@@ -200,8 +200,8 @@ export default async function register(req, response) {
     to: `${requestData.email}`,
     template_id: template,
     dynamic_template_data: {
-      firstName: `${requestData.first_name}`,
-      lastName: `${requestData.last_name}`,
+      firstname: `${requestData.firstname}`,
+      lastname: `${requestData.lastname}`,
       country: `${requestData.country}`,
       role: `${titleCase(requestData.role)}`,
       level: `${getLevelLabelForEmail(requestData.level)}`,

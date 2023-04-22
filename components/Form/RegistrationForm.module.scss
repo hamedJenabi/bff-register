@@ -21,6 +21,15 @@
     background: rgb(200, 203, 208);
   }
 }
+.infoTextWrapper {
+  margin-left: $sm;
+  @media (min-width: 600px) {
+    margin-left: $md;
+  }
+}
+.infoText {
+  @include infoText();
+}
 .input {
   @include fade-in-fast;
   @include input;

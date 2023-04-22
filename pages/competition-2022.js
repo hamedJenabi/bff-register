@@ -24,19 +24,19 @@ export default function Home({ tickets, clientID }) {
   }
   const form = useFormState({
     values: {
-      firstName: "",
-      lastName: "",
+      firstname: "",
+      lastname: "",
       email: "",
       competition_role: "",
       competitions: "",
     },
     onValidate: (values) => {
       const errors = {};
-      if (!values.firstName) {
-        errors.firstName = "please write your name";
+      if (!values.firstname) {
+        errors.firstname = "please write your name";
       }
-      if (!values.lastName) {
-        errors.lastName = "please write your name";
+      if (!values.lastname) {
+        errors.lastname = "please write your name";
       }
       if (
         !values.email ||
@@ -84,8 +84,8 @@ export default function Home({ tickets, clientID }) {
   const handleNext = () => {
     if (
       !emailRegex.test(form.values.email.trim().toLowerCase()) ||
-      !form.values.firstName ||
-      !form.values.lastName
+      !form.values.firstname ||
+      !form.values.lastname
     ) {
       alert("Your info are not valid");
       return;

@@ -1,6 +1,7 @@
 import Head from "next/head";
 import useMedia from "use-media";
 import Router from "next/router";
+import { useRouter } from "next/router";
 import React, { useState } from "react";
 import dynamic from "next/dynamic";
 import { emailRegex } from "../utils/validate";
@@ -19,11 +20,13 @@ export default function Home({ tickets }) {
   if (typeof window !== "undefined") {
     localStorage.removeItem("accepted");
   }
+  const router = useRouter();
+
   const form = useFormState({
     values: {
       status: "registered",
-      firstName: "",
-      lastName: "",
+      firstname: "",
+      lastname: "",
       email: "",
       country: "",
       ticket: "",
@@ -35,13 +38,14 @@ export default function Home({ tickets }) {
       competitions: "",
       terms: false,
     },
+
     onValidate: (values) => {
       const errors = {};
-      if (!values.firstName) {
-        errors.firstName = "please write your name";
+      if (!values.firstname) {
+        errors.firstname = "please write your name";
       }
-      if (!values.lastName) {
-        errors.lastName = "please write your name";
+      if (!values.lastname) {
+        errors.lastname = "please write your name";
       }
       if (!values.terms) {
         errors.terms = "please accept our terms and conditions";
@@ -74,10 +78,6 @@ export default function Home({ tickets }) {
             localStorage.setItem("accepted", JSON.stringify(form.values));
             Router.push("/accept");
           }
-          if (response.status === 300) {
-            localStorage.setItem("accepted", JSON.stringify(form.values));
-            Router.push("/waitinglist");
-          }
 
           if (response.status === 301) {
             Router.push("/soldout");
@@ -89,10 +89,11 @@ export default function Home({ tickets }) {
         .catch((error) => console.log(error));
     },
   });
+
   return (
     <div className={styles.container}>
       <Head>
-        <title>Blues Fever 2022</title>
+        <title>Blues Fever 2023</title>
         <meta name="description" content="BLUES FEVER 2022 Registration" />
         <meta
           property="og:image"
@@ -100,7 +101,10 @@ export default function Home({ tickets }) {
         />
 
         <link rel="icon" href="/icon.png" />
-
+        <link
+          href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300&display=swap"
+          rel="stylesheet"
+        ></link>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" />
         <link
@@ -109,7 +113,7 @@ export default function Home({ tickets }) {
         />
       </Head>
       <Header
-        title="BLUES FEVER 2022"
+        title="BLUES FEVER 2023"
         menuItems={[
           {
             title: "Home",
@@ -118,8 +122,15 @@ export default function Home({ tickets }) {
         ]}
       />
       <main className={styles.main}>
-        {/* <RegistrationForm form={form} tickets={tickets} isClicked={isClicked} /> */}
-        <h3>Blues Fever is fully booked :)</h3>
+        {router?.query?.intern === "true" ? (
+          <RegistrationForm
+            form={form}
+            tickets={tickets}
+            isClicked={isClicked}
+          />
+        ) : (
+          <h3>Registration start in July</h3>
+        )}
       </main>
 
       <footer className={styles.footer}>

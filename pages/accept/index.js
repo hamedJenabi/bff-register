@@ -41,9 +41,10 @@ export default function Home({ tickets }) {
             <h3>Thank you for your registration!</h3>
             <p>
               Please note that your registration confirmation e-mail may end up
-              in your junk mail or promotions folder so make sure to check
-              those. You will get a confirmation of your sign up by email. Then
-              give us a little time to process your registration. Thank you.
+              in your <b>junk mail or promotions folder</b> so make sure to
+              check those over the next few days. You will get a confirmation of
+              your sign up by email. Then give us a little time to process your
+              registration. Thank you.
             </p>
           </div>
           {user &&

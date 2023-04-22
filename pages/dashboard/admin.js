@@ -56,8 +56,8 @@ export default function Dashboard({ users, tickets }) {
       "actions",
       "id",
       "email",
-      "first_name",
-      "last_name",
+      "firstname",
+      "lastname",
       "ticket",
       "role",
       "level",
@@ -100,7 +100,7 @@ export default function Dashboard({ users, tickets }) {
     return userToShow
       .filter((user) =>
         nameSearch
-          ? user.first_name.toUpperCase().includes(nameSearch.toUpperCase())
+          ? user.firstname.toUpperCase().includes(nameSearch.toUpperCase())
           : true
       )
       .sort((a, b) => a.id - b.id)
@@ -109,8 +109,8 @@ export default function Dashboard({ users, tickets }) {
           id,
           status,
           role,
-          first_name,
-          last_name,
+          firstname,
+          lastname,
           country,
           level,
           shirt,
@@ -136,8 +136,8 @@ export default function Dashboard({ users, tickets }) {
               </td>
               <td>{id}</td>
               <td>{email}</td>
-              <td>{first_name}</td>
-              <td>{last_name}</td>
+              <td>{firstname}</td>
+              <td>{lastname}</td>
               <td>{ticket}</td>
               <td>{role}</td>
               <td>{level}</td>

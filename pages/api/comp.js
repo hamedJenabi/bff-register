@@ -7,8 +7,8 @@ import {
 export default async function comp(req, response) {
   const requestData = {
     email: req.body.email,
-    first_name: req.body.firstName,
-    last_name: req.body.lastName,
+    firstname: req.body.firstname,
+    lastname: req.body.lastname,
     competition_role: req.body.competition_role.toString(),
     competitions: req.body.competitions.toString(),
   };

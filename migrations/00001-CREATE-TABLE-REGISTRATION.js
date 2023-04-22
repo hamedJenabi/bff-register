@@ -6,16 +6,18 @@ exports.up = async (sql) => {
 			status VARCHAR(255) NOT NULL,
 			role VARCHAR NOT NULL,
 			ticket VARCHAR NOT NULL,
-			first_name VARCHAR (100) NOT NULL, 
-			last_name VARCHAR (100) NOT NULL, 
+			firstname VARCHAR (100) NOT NULL, 
+			lastname VARCHAR (100) NOT NULL, 
 			email VARCHAR NOT NULL, 
 			country VARCHAR NOT NULL, 
 			level VARCHAR,
 			theme_class VARCHAR,
+			lunch VARCHAR (200),
 			competition VARCHAR,
 			competition_role VARCHAR(100),
 			competitions VARCHAR,
 			price VARCHAR (100),
+			to_pay VARCHAR (100),
 			terms boolean
 	)
 	`;

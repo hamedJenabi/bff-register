@@ -35,29 +35,29 @@ export default function CompForm({ form, tickets, isClicked }) {
             required
             {...form}
             label="First Name"
-            defaultValue={form.values.firstName}
+            defaultValue={form.values.firstname}
             className={styles.input}
-            name="firstName"
+            name="firstname"
             placeholder="first name"
           />
           <FormMessage
             className={styles.errorMessage}
             {...form}
-            name="firstName"
+            name="firstname"
           />
           <FormInput
             {...form}
             required
             label="Last Name"
-            defaultValue={form.values.lastName}
+            defaultValue={form.values.lastname}
             className={styles.input}
-            name="lastName"
+            name="lastname"
             placeholder="last name"
           />
           <FormMessage
             className={styles.errorMessage}
             {...form}
-            name="lastName"
+            name="lastname"
           />
           <FormInput
             {...form}

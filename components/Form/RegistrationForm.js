@@ -34,16 +34,16 @@ export default function RegistrationForm({ form, tickets, isClicked }) {
     }
   };
 
-  const getTicketCapacity = (ticketName) => {
-    if (ticketName === "partyPass") {
-      const [ticket] = tickets.filter(({ name }) => name === ticketName);
-      return ticket["capacity"];
-    }
-  };
-  const disabled = (value) =>
-    (form.values.role === "follow" &&
-      (value === "drums" || value === "guitar" || value === "saxophone")) ||
-    (form.values.role === "lead" && value === "trumpet");
+  // const getTicketCapacity = (ticketName) => {
+  //   if (ticketName === "partyPass") {
+  //     const [ticket] = tickets.filter(({ name }) => name === ticketName);
+  //     return ticket["capacity"];
+  //   }
+  // };
+  // const disabled = (value) =>
+  //   (form.values.role === "follow" &&
+  //     (value === "drums" || value === "guitar" || value === "saxophone")) ||
+  //   (form.values.role === "lead" && value === "trumpet");
 
   return (
     <>
@@ -55,29 +55,29 @@ export default function RegistrationForm({ form, tickets, isClicked }) {
             required
             {...form}
             label="First Name"
-            defaultValue={form.values.firstName}
+            defaultValue={form.values.firstname}
             className={styles.input}
-            name="firstName"
+            name="firstname"
             placeholder="first name"
           />
           <FormMessage
             className={styles.errorMessage}
             {...form}
-            name="firstName"
+            name="firstname"
           />
           <FormInput
             {...form}
             required
             label="Last Name"
-            defaultValue={form.values.lastName}
+            defaultValue={form.values.lastname}
             className={styles.input}
-            name="lastName"
+            name="lastname"
             placeholder="last name"
           />
           <FormMessage
             className={styles.errorMessage}
             {...form}
-            name="lastName"
+            name="lastname"
           />
           <FormInput
             {...form}
@@ -147,6 +147,20 @@ export default function RegistrationForm({ form, tickets, isClicked }) {
                   <FormRadio {...form} name="role" value="lead" />
                   <p> Mainly leader</p>
                 </label>
+                <label>
+                  <FormRadio {...form} name="role" value="both" />
+                  <p> Both</p>
+
+                  {/* <InfoModal header="both" info="whatever" /> */}
+                </label>
+                <div className={styles.infoTextWrapper}>
+                  <p className={styles.infoText}>
+                    You choose{" "}
+                    <span style={{ fontWeight: "bold" }}>"Both Role"</span> if
+                    you will attend some classes as LEAD and some as FOLLOW to
+                    help balance out the ration between the two roles.
+                  </p>
+                </div>
               </FormRadioGroup>
             </>
           )}
@@ -160,15 +174,8 @@ export default function RegistrationForm({ form, tickets, isClicked }) {
               >
                 {levelsToShow.map(({ label, value, detail }) => (
                   <label key={value}>
-                    <FormRadio
-                      disabled={disabled(value)}
-                      {...form}
-                      name="level"
-                      value={value}
-                    />
-                    <p>
-                      {label} {disabled(value) ? "(Fully Booked)" : ""}
-                    </p>
+                    <FormRadio {...form} name="level" value={value} />
+                    <p>{label}</p>
                     <InfoModal header={label} info={detail} />
                   </label>
                 ))}
@@ -187,20 +194,18 @@ export default function RegistrationForm({ form, tickets, isClicked }) {
             <label>
               <FormRadio
                 {...form}
-                disabled
                 name="theme_class"
                 value="build_a_chreography"
               />
-              <p>Build a Choreography (fully booked) </p>
+              <p>Build a Choreography </p>
             </label>
             <label>
               <FormRadio
                 {...form}
                 name="theme_class"
                 value="teacher_training"
-                disabled
               />
-              <p>Teacher Training (fully booked)</p>
+              <p>Teacher Training</p>
             </label>
             <label>
               <FormRadio {...form} name="theme_class" value="no" />
@@ -219,7 +224,6 @@ export default function RegistrationForm({ form, tickets, isClicked }) {
               <FormRadio {...form} name="competition" value="yes" />
               <p>Yes</p>
             </label>
-
             <label>
               <FormRadio {...form} name="competition" value="no" />
               <p>No</p>
@@ -227,6 +231,11 @@ export default function RegistrationForm({ form, tickets, isClicked }) {
             <label>
               <FormRadio {...form} name="competition" value="later" />
               <p>I will decide later</p>
+              <p className={styles.infoText}>
+                You can decide later if you want to participate in the
+                competitions. We will send you an email around October.
+                You will have to pay the competition fee at the
+                door.
             </label>
           </FormRadioGroup>
           {form.values.competition === "yes" && (

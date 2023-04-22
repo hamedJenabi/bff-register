@@ -10,29 +10,30 @@
     "heroku-postbuild": "yarn migrate up && yarn build"
   },
   "dependencies": {
-    "@emotion/react": "^11.8.1",
-    "@emotion/styled": "^11.8.1",
-    "@mui/material": "^5.4.3",
-    "@paypal/react-paypal-js": "^7.8.1",
-    "@sendgrid/mail": "^7.6.0",
-    "classnames": "^2.3.1",
-    "dotenv": "^10.0.0",
-    "dotenv-cli": "^4.1.0",
-    "google-spreadsheet": "^3.2.0",
-    "ley": "^0.7.1",
-    "next": "12.0.3",
-    "postgres": "^1.0.2",
+    "@emotion/react": "^11.10.6",
+    "@emotion/styled": "^11.10.6",
+    "@mui/material": "^5.12.1",
+    "@paypal/react-paypal-js": "^7.8.3",
+    "@sendgrid/mail": "^7.7.0",
+    "classnames": "^2.3.2",
+    "dotenv": "^16.0.3",
+    "dotenv-cli": "^7.2.1",
+    "google-spreadsheet": "^3.3.0",
+    "ley": "^0.8.1",
+    "next": "^13.3.1",
+    "postgres": "^3.3.4",
     "postgresql": "^0.0.1",
     "prop-types": "^15.8.1",
-    "react": "17.0.2",
+    "react": "^18.2.0",
     "react-csv": "^2.2.2",
-    "react-dom": "17.0.2",
-    "reakit": "^1.3.10",
-    "sass": "^1.43.4",
-    "use-media": "^1.4.0"
+    "react-dom": "^18.2.0",
+    "reakit": "^1.3.11",
+    "sass": "^1.62.0",
+    "use-media": "^1.4.0",
+    "yarn-upgrade-all": "^0.7.2"
   },
   "devDependencies": {
-    "eslint": "7",
-    "eslint-config-next": "12.0.3"
+    "eslint": "^8.39.0",
+    "eslint-config-next": "^13.3.1"
   }
 }

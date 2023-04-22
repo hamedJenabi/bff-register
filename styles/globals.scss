@@ -16,9 +16,9 @@ h3 {
   font-size: 70px;
   padding: 0;
   margin: 0;
-  font-family: Roboto, "Open Sans", Poiret One, Roboto, -apple-system,
-    BlinkMacSystemFont, Segoe UI, Roboto, Oxygen, Ubuntu, Cantarell, Fira Sans,
-    Droid Sans, Helvetica Neue, sans-serif;
+  font-family: Poiret One, Roboto, "Open Sans", Poiret One, Roboto,
+    -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen, Ubuntu,
+    Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
 }
 h3 {
   font-size: 36px;
@@ -27,18 +27,18 @@ h3 {
   }
 }
 h4 {
-  font-family: Roboto, "Open Sans", Poiret One, Roboto, -apple-system,
-    BlinkMacSystemFont, Segoe UI, Roboto, Oxygen, Ubuntu, Cantarell, Fira Sans,
-    Droid Sans, Helvetica Neue, sans-serif;
+  font-family: Poiret One, Roboto, "Open Sans", Poiret One, Roboto,
+    -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen, Ubuntu,
+    Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
   margin: 0;
   padding: 0;
   letter-spacing: 2px;
   text-transform: uppercase;
 }
 p {
-  font-family: Roboto, "Open Sans", Roboto, -apple-system, BlinkMacSystemFont, Segoe UI,
-    Roboto, Oxygen, Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue,
-    sans-serif;
+  font-family: Poiret One, Roboto, "Open Sans", Roboto, -apple-system,
+    BlinkMacSystemFont, Segoe UI, Roboto, Oxygen, Ubuntu, Cantarell, Fira Sans,
+    Droid Sans, Helvetica Neue, sans-serif;
   font-size: 16px;
   letter-spacing: 1px;
   line-height: 22px;
@@ -53,4 +53,10 @@ a {
 }
 img {
   border-radius: 4px;
+}
+
+input[type="radio"] {
+  width: 18px;
+  height: 18px;
+  margin: 2px 2px 0 0;
 }

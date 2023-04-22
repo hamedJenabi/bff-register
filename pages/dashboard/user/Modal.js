@@ -54,7 +54,7 @@ const Modal = ({ user, handleUser, info, form }) => {
               />
               <FormSubmitButton
                 className={styles.submit}
-                // onClick={() => handleUser(user.first_name)}
+                // onClick={() => handleUser(user.firstname)}
                 {...form}
               >
                 Submit

@@ -3,8 +3,8 @@ import { getConfirmedUserByEmailAndName, setUserLunchById } from "../../db/db";
 export default async function lunch(req, response) {
   const requestData = {
     email: req.body.email,
-    first_name: req.body.firstName,
-    last_name: req.body.lastName,
+    firstname: req.body.firstname,
+    lastname: req.body.lastname,
     lunch: req.body.lunch.toString(),
   };
   const userToUpdate = await getConfirmedUserByEmailAndName(requestData.email);

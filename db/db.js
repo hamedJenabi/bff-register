@@ -77,8 +77,8 @@ export async function insertRegistration(user) {
     status: user.status,
     date: user.date,
     email: user.email,
-    first_name: user.first_name,
-    last_name: user.last_name,
+    firstname: user.firstname,
+    lastname: user.lastname,
     country: user.country,
     ticket: user.ticket,
     role: user.role,
@@ -96,8 +96,8 @@ export async function insertRegistration(user) {
     "status",
     "date",
     "email",
-    "first_name",
-    "last_name",
+    "firstname",
+    "lastname",
     "country",
     "ticket",
     "role",
@@ -134,8 +134,8 @@ export async function updateUserInfo(user, totalPrice) {
     date: time.toDateString(),
     status: user.status,
     email: user.email,
-    first_name: user.first_name,
-    last_name: user.last_name,
+    firstname: user.firstname,
+    lastname: user.lastname,
     country: user.country,
     ticket: user.ticket,
     role: user.role,
@@ -154,8 +154,8 @@ export async function updateUserInfo(user, totalPrice) {
     "status" = ${userData.status},
     "email" = ${userData.email},
     "date" = ${userData.date},
-    "first_name"  = ${userData.first_name},
-    "last_name" = ${userData.last_name},
+    "firstname"  = ${userData.firstname},
+    "lastname" = ${userData.lastname},
     "country" = ${userData.country},
     "ticket"  = ${userData.ticket},
     "role" = ${userData.role},
@@ -409,8 +409,8 @@ export async function setUserCompById(
 //   const userWithHashedPassword = {
 //     email: user.email,
 //     password_hash: user.password_hash,
-//     first_name: user.first_name,
-//     last_name: user.last_name,
+//     firstname: user.firstname,
+//     lastname: user.lastname,
 //     role: user.role,
 //     year_of_birth: user.year_of_birth,
 //     phone: user.phone,
@@ -429,8 +429,8 @@ export async function setUserCompById(
 //     userWithHashedPassword,
 //     "email",
 //     "password_hash",
-//     "first_name",
-//     "last_name",
+//     "firstname",
+//     "lastname",
 //     "year_of_birth",
 //     "phone",
 //     "gender",
@@ -677,8 +677,8 @@ export async function setUserCompById(
 // //   return sql`
 // //   UPDATE accounts
 // //   SET role = 'BOTH',
-// //     first_name = ${user.firstName},
-// //     last_name = ${user.lastName},
+// //     firstname = ${user.firstname},
+// //     lastname = ${user.lastname},
 // //     year_of_birth = ${user.yearOfBirth},
 // //     phone = ${user.phone},
 // //     gender = ${user.gender},
@@ -705,7 +705,7 @@ export async function setUserCompById(
 
 // export async function getPotentialMatchesByMenteeId(menteeAccId) {
 //   const matches = await sql`
-//  SELECT accounts.first_name, accounts.last_name, accounts.email, accounts.city, accounts.phone, accounts.website, accounts.position, accounts.company, match_suggestions.compatibility, mentors.id,  mentors.mentee_capacity, accounts.id AS account_id
+//  SELECT accounts.firstname, accounts.lastname, accounts.email, accounts.city, accounts.phone, accounts.website, accounts.position, accounts.company, match_suggestions.compatibility, mentors.id,  mentors.mentee_capacity, accounts.id AS account_id
 //  FROM
 //  accounts,
 //  mentees,
@@ -750,7 +750,7 @@ export async function setUserCompById(
 
 // export async function getNameAndEmailByMenteeId(menteeId) {
 //   const mentee = await sql`
-//   SELECT accounts.first_name, accounts.last_name, accounts.email
+//   SELECT accounts.firstname, accounts.lastname, accounts.email
 //   FROM
 //   accounts,
 //   mentees
@@ -762,7 +762,7 @@ export async function setUserCompById(
 // }
 // export async function getNameAndEmailByMentorId(mentorId) {
 //   const mentor = await sql`
-//   SELECT accounts.first_name, accounts.last_name, accounts.email
+//   SELECT accounts.firstname, accounts.lastname, accounts.email
 //   FROM
 //   accounts,
 //   mentors
@@ -775,7 +775,7 @@ export async function setUserCompById(
 
 // export async function getMatchesByMenteeId(menteeId) {
 //   const matches = await sql`
-//   SELECT accounts.id, accounts.first_name, accounts.last_name, accounts.email, accounts.position, accounts.company, accounts.city, accounts.country, accounts.phone, accounts.website, mentors.id AS mentor_id
+//   SELECT accounts.id, accounts.firstname, accounts.lastname, accounts.email, accounts.position, accounts.company, accounts.city, accounts.country, accounts.phone, accounts.website, mentors.id AS mentor_id
 //   FROM accounts, match, mentors
 //   WHERE match.mentee_id = ${menteeId} AND
 //   mentors.id = match.mentor_id AND
@@ -786,7 +786,7 @@ export async function setUserCompById(
 
 // export async function getMatchesByMentorId(mentorId) {
 //   const matches = await sql`
-//   SELECT  accounts.id, accounts.first_name, accounts.last_name, accounts.email, accounts.position, accounts.company, accounts.city, accounts.country, accounts.phone, accounts.website, mentees.id AS mentee_id
+//   SELECT  accounts.id, accounts.firstname, accounts.lastname, accounts.email, accounts.position, accounts.company, accounts.city, accounts.country, accounts.phone, accounts.website, mentees.id AS mentee_id
 //   FROM accounts, match, mentees
 //   WHERE match.mentor_id = ${mentorId} AND
 //   accounts.id = mentees.account_id AND
@@ -807,7 +807,7 @@ export async function setUserCompById(
 
 // export async function selectMenteesForFeedbackEmailOneMonth() {
 //   const mentees = await sql`
-//   SELECT mentees.id AS mentee_id, accounts.email, accounts.first_name, match.match_timestamp
+//   SELECT mentees.id AS mentee_id, accounts.email, accounts.firstname, match.match_timestamp
 //   FROM
 //   accounts,
 //   match,
@@ -826,7 +826,7 @@ export async function setUserCompById(
 
 // export async function selectMentorsForFeedbackEmailOneMonth() {
 //   const mentors = await sql`
-//   SELECT mentors.id AS mentor_id, accounts.email, accounts.first_name, match.match_timestamp
+//   SELECT mentors.id AS mentor_id, accounts.email, accounts.firstname, match.match_timestamp
 //   FROM
 //   accounts,
 //   match,
@@ -854,7 +854,7 @@ export async function setUserCompById(
 
 // export async function selectMenteesForFeedbackEmailThreeMonths() {
 //   const mentees = await sql`
-//   SELECT mentees.id AS mentee_id, accounts.email, accounts.first_name, match.match_timestamp
+//   SELECT mentees.id AS mentee_id, accounts.email, accounts.firstname, match.match_timestamp
 //   FROM
 //   accounts,
 //   match,
@@ -874,7 +874,7 @@ export async function setUserCompById(
 
 // export async function selectMentorsForFeedbackEmailThreeMonths() {
 //   const mentors = await sql`
-//   SELECT mentors.id AS mentor_id, accounts.email, accounts.first_name, match.match_timestamp
+//   SELECT mentors.id AS mentor_id, accounts.email, accounts.firstname, match.match_timestamp
 //   FROM
 //   accounts,
 //   match,
@@ -904,7 +904,7 @@ export async function setUserCompById(
 
 // export async function selectMenteesForFeedbackEmailSixMonths() {
 //   const mentees = await sql`
-//   SELECT mentees.id AS mentee_id, accounts.email, accounts.first_name, match.match_timestamp
+//   SELECT mentees.id AS mentee_id, accounts.email, accounts.firstname, match.match_timestamp
 //   FROM
 //   accounts,
 //   match,
@@ -925,7 +925,7 @@ export async function setUserCompById(
 
 // export async function selectMentorsForFeedbackEmailSixMonths() {
 //   const mentors = await sql`
-//   SELECT mentors.id AS mentor_id, accounts.email, accounts.first_name, match.match_timestamp
+//   SELECT mentors.id AS mentor_id, accounts.email, accounts.firstname, match.match_timestamp
 //   FROM
 //   accounts,
 //   match,
@@ -957,7 +957,7 @@ export async function setUserCompById(
 
 // export async function selectUsersForFeedbackEmailTenMonths() {
 //   const mentors = await sql`
-//   SELECT mentors.id AS mentor_id, accounts.email, accounts.first_name, match.match_timestamp
+//   SELECT mentors.id AS mentor_id, accounts.email, accounts.firstname, match.match_timestamp
 //   FROM
 //   accounts,
 //   match,
@@ -975,7 +975,7 @@ export async function setUserCompById(
 //   `;
 
 //   const mentees = await sql`
-//   SELECT mentees.id AS mentee_id, accounts.email, accounts.first_name, match.match_timestamp
+//   SELECT mentees.id AS mentee_id, accounts.email, accounts.firstname, match.match_timestamp
 //   FROM
 //   accounts,
 //   match,
@@ -1008,7 +1008,7 @@ export async function setUserCompById(
 
 // export async function selectUsersForFeedbackEmailElevenMonths() {
 //   const mentors = await sql`
-//   SELECT mentors.id AS mentor_id, accounts.email, accounts.first_name, match.match_timestamp
+//   SELECT mentors.id AS mentor_id, accounts.email, accounts.firstname, match.match_timestamp
 //   FROM
 //   accounts,
 //   match,
@@ -1027,7 +1027,7 @@ export async function setUserCompById(
 //   `;
 
 //   const mentees = await sql`
-//   SELECT mentees.id AS mentee_id, accounts.email, accounts.first_name, match.match_timestamp
+//   SELECT mentees.id AS mentee_id, accounts.email, accounts.firstname, match.match_timestamp
 //   FROM
 //   accounts,
 //   match,

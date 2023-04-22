@@ -16,8 +16,8 @@ export default function User({ user }) {
       id: user.id,
       status: user.status,
       prevStatus: user.status,
-      first_name: user.first_name,
-      last_name: user.last_name,
+      firstname: user.firstname,
+      lastname: user.lastname,
       email: user.email,
       country: user.country,
       level: user.level,
@@ -109,21 +109,21 @@ export default function User({ user }) {
           </div>
           <div className={styles.row}>
             <p>First Name:</p>
-            <p>{user.first_name}</p>
+            <p>{user.firstname}</p>
             <Modal
               user={user}
               handleUser={handleClick}
-              info="first_name"
+              info="firstname"
               form={form}
             />
           </div>
           <div className={styles.row}>
             <p>Last Name:</p>
-            <p>{user.last_name}</p>
+            <p>{user.lastname}</p>
             <Modal
               user={user}
               handleUser={handleClick}
-              info="last_name"
+              info="lastname"
               form={form}
             />
           </div>
