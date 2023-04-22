@@ -98,7 +98,7 @@ export default function Home({ tickets, clientID }) {
   return (
     <div className={styles.container}>
       <Head>
-        <title>Blues Fever 2022</title>
+        <title>Blues Fever 2023</title>
         <meta name="description" content="BLUES FEVER 2022 Registration" />
         <meta
           property="og:image"
