@@ -12,10 +12,12 @@ const RegistrationForm = dynamic(
   { ssr: false }
 );
 import { unstable_useFormState as useFormState } from "reakit/Form";
+import Payment from "../components/Checkout/Payment";
 
 export default function Home({ tickets }) {
   const isMobile = useMedia({ maxWidth: "768px" });
   const [isClicked, setIsClicked] = useState(false);
+  const [isPayment, setIsPayment] = useState(false);
 
   if (typeof window !== "undefined") {
     localStorage.removeItem("accepted");
@@ -61,15 +63,17 @@ export default function Home({ tickets }) {
       }
     },
     onSubmit: (values) => {
-      setIsClicked(true);
       const req = {
         ...form.values,
       };
       if (form.values.ticket === "partyPass") {
+        setIsPayment(true);
         // add the payment card
         // then do the whole thing
       }
       if (form.values.ticket === "fullpass") {
+        setIsClicked(true);
+
         fetch("/api/register", {
           method: "POST",
           headers: {
@@ -128,13 +132,19 @@ export default function Home({ tickets }) {
         ]}
       />
       <main className={styles.main}>
-        {router?.query?.intern === "true" ? (
-          <RegistrationForm
-            form={form}
-            tickets={tickets}
-            isClicked={isClicked}
-          />
-        ) : (
+        {router?.query?.intern === "true" && (
+          <>
+            {!isPayment && (
+              <RegistrationForm
+                form={form}
+                tickets={tickets}
+                isClicked={isClicked}
+              />
+            )}
+            {isPayment && <Payment form={form} />}
+          </>
+        )}
+        {router?.query?.intern !== "true" && (
           <h3>Registration start in July</h3>
         )}
       </main>
