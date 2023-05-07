@@ -99,99 +99,114 @@ export const compettionsInfo = [
 ];
 
 export const getPrice = (requestData, isGroupDiscount) => {
-  const initialPrice = requestData.ticket === "partyPass" ? 110 : 225;
+  const initialPrice = requestData.ticket === "partyPass" ? 115 : 225;
   const competitions =
     requestData.competition === "yes"
       ? requestData.competitions?.length * 10
       : 0;
   const theme_class =
-    requestData.theme_class === "no" || requestData.theme_class === "" ? 0 : 40;
+    requestData.theme_class === "no" || requestData.theme_class === "" ? 0 : 45;
   const fullPassdiscount =
     requestData.ticket === "fullpass" &&
     requestData.competition === "yes" &&
     requestData.competitions?.length > 0
       ? -10
       : 0;
+  const donationAmount = requestData.donation_amount
+    ? parseInt(requestData.donation_amount)
+    : 0;
+
+  console.log("donationAmount", donationAmount);
+  const lunchMoney = requestData.lunch?.length * 12.5 || 0;
   const totalPrice =
-    initialPrice + competitions + theme_class + fullPassdiscount;
+    initialPrice +
+    donationAmount +
+    competitions +
+    theme_class +
+    lunchMoney +
+    fullPassdiscount;
   const output = isGroupDiscount
     ? Math.round((totalPrice / 100) * 90)
     : totalPrice;
+  console.log("priceee", output);
   return output;
 };
 
 export const discounts = [
   { name: "test", email: "hamed.jenabi@gmail.com" },
-  { name: "Isabelle Mugai", email: "imugai7@gmail.com" },
-  { name: "Shivani Govender", email: "shivani.govender@gmail.com" },
-  { name: "Richard Challans", email: "rchallans@gmail.com" },
-  { name: "Melanie Hargraves", email: "melennium88@hotmail.com" },
-  { name: "Zoë Enstone", email: "zoe.enstone@gmail.com" },
-  { name: "Dalvinder Kular ", email: "dalvinder_kular@hotmail.com" },
-  { name: "Chris Kearns", email: "chris.kearns32@gmail.com" },
-  { name: "Kiran Randhawa Kukar", email: "kiranrkukar@gmail.com" },
-  { name: "Henry Whitfield ", email: "henry@presentmind.org" },
-  { name: "Lola Michels", email: "lola.michels@icloud.com" },
-  { name: "Stephen Atemie", email: "dsatemie@gmail.com" },
-  { name: "Sarah Stein Lubrano", email: "hei.eleanor.L@gmail.com" },
-  { name: "Eleanor Lin", email: "hei.eleanor.L@gmail.com" },
-  { name: "Lena Drotleff", email: "katzengoldsound@gmail.com" },
-  { name: "Richard", email: "richardvanos@gmail.com" },
-  { name: "Yvet", email: "yvetdiamanti@gmail.com" },
-  { name: "Ineke", email: "Ineke.vanderhurk@gmail.com" },
-  { name: "renske", email: "r.j.bongers@gmail.com" },
-  { name: "wouter", email: "me@woutervervloet.com" },
-  { name: "Maja", email: "majcor@gmail.com" },
-  { name: "Lotte", email: "Dijkstra.lel@gmail.com" },
-  { name: "Karolina Ufa", email: "karolinaufa@op.pl" },
-  { name: "Radosław Kita", email: "kita.radoslaw@gmail.com" },
-  { name: "Sylwia Mazanek", email: "sylwia-mazanek@wp.pl" },
-  { name: "Katarzyna Kośka", email: "Kaskakoska@vp.pl" },
-  { name: "Jacek Turula", email: "jaturul@gmail.com" },
-  { name: "Alicja Broda", email: "abrodaa@gmail.com" },
-  { name: "Marta Maria Świetlik", email: "martamariaklara@gmail.com" },
-  { name: "Tomasz Błaszczyk", email: "tombla7@gmail.com" },
-  { name: "Katarzyna Kamińska", email: "wojniak@gmail.com" },
-  { name: "Mateusz Kamiński", email: "kaminski569@gmail.com" },
-  { name: "Paweł Kruszyna", email: "jolbulek@gmail.com" },
-  { name: "Piotr Cygoń", email: "cygon@gmail.com" },
-  { name: "Ilya Idamkin", email: "ilya.idamkin@gmail.com" },
-  { name: "name", email: "anastasiageorgiou80@hotmail.com" },
-  { name: "name", email: "carlo.nigra1981@gmail.com" },
-  { name: "name", email: "fr.ronco@gmail.com" },
-  { name: "name", email: "ilbrucato@gmail.com" },
-  { name: "name", email: "luisa.gnavi@gmail.com" },
-  { name: "name", email: "sarahnicolucci@hotmail.com" },
-  { name: "name", email: "giuliacomello@gmail.com" },
-  { name: "name", email: "fab.caselli@gmail.com" },
-  { name: "name", email: "ccravero0@gmail.com" },
-  { name: "name", email: "lorypas80@gmail.com" },
-  { name: "name", email: "gianlucaferraradoc@gmail.com" },
-  { name: "name", email: "giraffastrisce@gmail.com" },
-  { name: "name", email: "korec.tomas@gmail.com" },
-  { name: "name", email: "solcova.hedvika@gmail.com" },
-  { name: "name", email: "adamthecamper@gmail.com" },
-  { name: "name", email: "sona.valuchova@gmail.com" },
-  { name: "name", email: "andrea.jannova@centrum.cz" },
-  { name: "name", email: "vaclav.strnad@seznam.cz" },
-  { name: "name", email: "monika.maksimowicz@gmail.com" },
-  { name: "name", email: "lukybara@gmail.com" },
-  { name: "name", email: "kamila.musilova@gmail.com" },
-  { name: "name", email: "kubo.novak@gmail.com" },
-  { name: "name", email: "evca.neduchalova@centrum.cz" },
-  { name: "name", email: "pavla.adamcikova@gmail.com" },
-  { name: "name", email: "monikawikarska@gmail.com" },
-  { name: "name", email: "natalia.vodislavska@gmail.com" },
-  { name: "name", email: "janacova.veronika@gmail.com" },
-  { name: "name", email: "zuzka.lapsanska@gmail.com" },
-  { name: "name", email: "foto@martinsandera.com" },
-  { name: "name", email: "andulka9@seznam.cz" },
-  { name: "name", email: "levenskunstenaar@kpnmail.nl" },
-  { name: "name", email: "yoeri.kwak@gmail.com" },
-  { name: "name", email: "giova_naranja@hotmail.com" },
-  { name: "name", email: "julia@conemans.com" },
-  { name: "Ugnė Žilinskė", email: "petrauskaite.ugne@gmail.com" },
-  { name: "Vaiva Gudaitytė", email: "vaiva.gudaityte.liepa@gmail.com" },
-  { name: "Inesa Plaksij", email: "inesa.plaksij@gmail.com" },
-  { name: "Arūnas Liškūnas", email: "arunas.liskunas@gmail.com" },
+  //   { name: "Isabelle Mugai", email: "imugai7@gmail.com" },
+  //   { name: "Shivani Govender", email: "shivani.govender@gmail.com" },
+  //   { name: "Richard Challans", email: "rchallans@gmail.com" },
+  //   { name: "Melanie Hargraves", email: "melennium88@hotmail.com" },
+  //   { name: "Zoë Enstone", email: "zoe.enstone@gmail.com" },
+  //   { name: "Dalvinder Kular ", email: "dalvinder_kular@hotmail.com" },
+  //   { name: "Chris Kearns", email: "chris.kearns32@gmail.com" },
+  //   { name: "Kiran Randhawa Kukar", email: "kiranrkukar@gmail.com" },
+  //   { name: "Henry Whitfield ", email: "henry@presentmind.org" },
+  //   { name: "Lola Michels", email: "lola.michels@icloud.com" },
+  //   { name: "Stephen Atemie", email: "dsatemie@gmail.com" },
+  //   { name: "Sarah Stein Lubrano", email: "hei.eleanor.L@gmail.com" },
+  //   { name: "Eleanor Lin", email: "hei.eleanor.L@gmail.com" },
+  //   { name: "Lena Drotleff", email: "katzengoldsound@gmail.com" },
+  //   { name: "Richard", email: "richardvanos@gmail.com" },
+  //   { name: "Yvet", email: "yvetdiamanti@gmail.com" },
+  //   { name: "Ineke", email: "Ineke.vanderhurk@gmail.com" },
+  //   { name: "renske", email: "r.j.bongers@gmail.com" },
+  //   { name: "wouter", email: "me@woutervervloet.com" },
+  //   { name: "Maja", email: "majcor@gmail.com" },
+  //   { name: "Lotte", email: "Dijkstra.lel@gmail.com" },
+  //   { name: "Karolina Ufa", email: "karolinaufa@op.pl" },
+  //   { name: "Radosław Kita", email: "kita.radoslaw@gmail.com" },
+  //   { name: "Sylwia Mazanek", email: "sylwia-mazanek@wp.pl" },
+  //   { name: "Katarzyna Kośka", email: "Kaskakoska@vp.pl" },
+  //   { name: "Jacek Turula", email: "jaturul@gmail.com" },
+  //   { name: "Alicja Broda", email: "abrodaa@gmail.com" },
+  //   { name: "Marta Maria Świetlik", email: "martamariaklara@gmail.com" },
+  //   { name: "Tomasz Błaszczyk", email: "tombla7@gmail.com" },
+  //   { name: "Katarzyna Kamińska", email: "wojniak@gmail.com" },
+  //   { name: "Mateusz Kamiński", email: "kaminski569@gmail.com" },
+  //   { name: "Paweł Kruszyna", email: "jolbulek@gmail.com" },
+  //   { name: "Piotr Cygoń", email: "cygon@gmail.com" },
+  //   { name: "Ilya Idamkin", email: "ilya.idamkin@gmail.com" },
+  //   { name: "name", email: "anastasiageorgiou80@hotmail.com" },
+  //   { name: "name", email: "carlo.nigra1981@gmail.com" },
+  //   { name: "name", email: "fr.ronco@gmail.com" },
+  //   { name: "name", email: "ilbrucato@gmail.com" },
+  //   { name: "name", email: "luisa.gnavi@gmail.com" },
+  //   { name: "name", email: "sarahnicolucci@hotmail.com" },
+  //   { name: "name", email: "giuliacomello@gmail.com" },
+  //   { name: "name", email: "fab.caselli@gmail.com" },
+  //   { name: "name", email: "ccravero0@gmail.com" },
+  //   { name: "name", email: "lorypas80@gmail.com" },
+  //   { name: "name", email: "gianlucaferraradoc@gmail.com" },
+  //   { name: "name", email: "giraffastrisce@gmail.com" },
+  //   { name: "name", email: "korec.tomas@gmail.com" },
+  //   { name: "name", email: "solcova.hedvika@gmail.com" },
+  //   { name: "name", email: "adamthecamper@gmail.com" },
+  //   { name: "name", email: "sona.valuchova@gmail.com" },
+  //   { name: "name", email: "andrea.jannova@centrum.cz" },
+  //   { name: "name", email: "vaclav.strnad@seznam.cz" },
+  //   { name: "name", email: "monika.maksimowicz@gmail.com" },
+  //   { name: "name", email: "lukybara@gmail.com" },
+  //   { name: "name", email: "kamila.musilova@gmail.com" },
+  //   { name: "name", email: "kubo.novak@gmail.com" },
+  //   { name: "name", email: "evca.neduchalova@centrum.cz" },
+  //   { name: "name", email: "pavla.adamcikova@gmail.com" },
+  //   { name: "name", email: "monikawikarska@gmail.com" },
+  //   { name: "name", email: "natalia.vodislavska@gmail.com" },
+  //   { name: "name", email: "janacova.veronika@gmail.com" },
+  //   { name: "name", email: "zuzka.lapsanska@gmail.com" },
+  //   { name: "name", email: "foto@martinsandera.com" },
+  //   { name: "name", email: "andulka9@seznam.cz" },
+  //   { name: "name", email: "levenskunstenaar@kpnmail.nl" },
+  //   { name: "name", email: "yoeri.kwak@gmail.com" },
+  //   { name: "name", email: "giova_naranja@hotmail.com" },
+  //   { name: "name", email: "julia@conemans.com" },
+  //   { name: "Ugnė Žilinskė", email: "petrauskaite.ugne@gmail.com" },
+  //   { name: "Vaiva Gudaitytė", email: "vaiva.gudaityte.liepa@gmail.com" },
+  //   { name: "Inesa Plaksij", email: "inesa.plaksij@gmail.com" },
+  //   { name: "Arūnas Liškūnas", email: "arunas.liskunas@gmail.com" },
 ];
+
+export const isGroupDiscount = (email) =>
+  discounts.some(({ mail }) => mail === email);

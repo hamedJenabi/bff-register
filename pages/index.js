@@ -11,6 +11,7 @@ const RegistrationForm = dynamic(
   () => import("../components/Form/RegistrationForm.js"),
   { ssr: false }
 );
+import { getPrice, isGroupDiscount } from "../utils/functions";
 import { unstable_useFormState as useFormState } from "reakit/Form";
 
 export default function Home({ tickets }) {
@@ -36,6 +37,9 @@ export default function Home({ tickets }) {
       competition: "",
       competition_role: "",
       competitions: "",
+      donation: "",
+      donation_amount: 0,
+      lunch: "",
       terms: false,
     },
 
@@ -62,8 +66,12 @@ export default function Home({ tickets }) {
     },
     onSubmit: (values) => {
       setIsClicked(true);
+      const isDiscount = isGroupDiscount(values.email);
+      const totalPrice = getPrice(values, isDiscount); //
+      console.log("index", totalPrice);
       const req = {
         ...form.values,
+        totalPrice,
       };
       if (form.values.ticket === "partyPass") {
         // add the payment card
@@ -95,7 +103,7 @@ export default function Home({ tickets }) {
       }
     },
   });
-
+  console.log("form", form.values);
   return (
     <div className={styles.container}>
       <Head>

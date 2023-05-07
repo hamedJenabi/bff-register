@@ -3,6 +3,7 @@ import {
   discounts,
   levelsToShow,
   groupLevelsToShow,
+  getPrice,
 } from "../../utils/functions";
 import {
   updateUserInfo,
@@ -84,29 +85,29 @@ export default async function edituser(req, response) {
   const isGroupDiscount = discounts.some(
     ({ email }) => email === req.body.email
   );
-  const getPrice = (requestData, isGroupDiscount) => {
-    const initialPrice = requestData.ticket === "partyPass" ? 110 : 225;
-    const competitions =
-      requestData.competition === "yes"
-        ? requestData.competitions.split(",")?.length * 10
-        : 0;
-    const theme_class =
-      requestData.theme_class === "no" || requestData.theme_class === ""
-        ? 0
-        : 40;
-    const fullPassdiscount =
-      requestData.ticket === "fullpass" &&
-      requestData.competition === "yes" &&
-      requestData.competitions?.length > 0
-        ? -10
-        : 0;
-    const totalPrice =
-      initialPrice + competitions + theme_class + fullPassdiscount;
-    const output = isGroupDiscount
-      ? Math.round((totalPrice / 100) * 90)
-      : totalPrice;
-    return output;
-  };
+  // const getPrice = (requestData, isGroupDiscount) => {
+  //   const initialPrice = requestData.ticket === "partyPass" ? 110 : 225;
+  //   const competitions =
+  //     requestData.competition === "yes"
+  //       ? requestData.competitions.split(",")?.length * 10
+  //       : 0;
+  //   const theme_class =
+  //     requestData.theme_class === "no" || requestData.theme_class === ""
+  //       ? 0
+  //       : 40;
+  //   const fullPassdiscount =
+  //     requestData.ticket === "fullpass" &&
+  //     requestData.competition === "yes" &&
+  //     requestData.competitions?.length > 0
+  //       ? -10
+  //       : 0;
+  //   const totalPrice =
+  //     initialPrice + competitions + theme_class + fullPassdiscount;
+  //   const output = isGroupDiscount
+  //     ? Math.round((totalPrice / 100) * 90)
+  //     : totalPrice;
+  //   return output;
+  // };
   const totalPrice = getPrice(requestData, isGroupDiscount);
   /***** GET PRICE AND LEVEL */
   const level = titleCase(requestData.level);

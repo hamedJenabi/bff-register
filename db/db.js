@@ -87,9 +87,12 @@ export async function insertRegistration(user) {
     competition: user.competition,
     competition_role: user.competition_role,
     competitions: user.competitions.toString(),
+    lunch: user.lunch,
+    donation: user.donation_amount,
     price: user.price,
     terms: user.terms,
   };
+  console.log("userData", userData);
   return sql`
   INSERT INTO registrations_23${sql(
     userData,
@@ -107,6 +110,8 @@ export async function insertRegistration(user) {
     "competition_role",
     "competitions",
     "price",
+    "lunch",
+    "donation",
     "terms"
   )}
 RETURNING id

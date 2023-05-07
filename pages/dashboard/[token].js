@@ -386,7 +386,6 @@ export default function Dashboard({ users, tickets }) {
   const renderTableHeader = () => {
     const header = [
       "select",
-      "to pay",
       "status",
       "price",
       "date",
@@ -402,6 +401,7 @@ export default function Dashboard({ users, tickets }) {
       "competition",
       "competition role",
       "competitions",
+      "donation",
       "lunch",
       "country",
       "terms",
@@ -436,6 +436,7 @@ export default function Dashboard({ users, tickets }) {
     );
   };
   //--------- Table Data
+  console.log("userToShow", userToShow);
   const renderTableData = () => {
     return userToShow
       .filter((user) =>
@@ -448,7 +449,6 @@ export default function Dashboard({ users, tickets }) {
         ({
           id,
           status,
-          to_pay,
           price,
           date,
           role,
@@ -462,12 +462,13 @@ export default function Dashboard({ users, tickets }) {
           competition_role,
           competitions,
           lunch,
+          donation,
           email,
         }) => {
-          const getToPay = (to_pay, lunch) => {
-            const lunchMoney = lunch?.split(",").length * 12.5 || 0;
-            return Number(to_pay) + lunchMoney;
-          };
+          // const getToPay = (to_pay, lunch) => {
+          //   const lunchMoney = lunch?.split(",").length * 12.5 || 0;
+          //   return Number(to_pay) + lunchMoney;
+          // };
           return (
             <tr
               key={id}
@@ -489,7 +490,7 @@ export default function Dashboard({ users, tickets }) {
                   />
                 </label>
               </td>
-              <td>{getToPay(to_pay, lunch)}</td>
+              {/* <td>{getToPay(to_pay, lunch)}</td> */}
               <td>{status}</td>
               <td>{price}</td>
               <td>{date}</td>
@@ -529,6 +530,7 @@ export default function Dashboard({ users, tickets }) {
                   </div>
                 )}
               </td>
+              <td>{donation}</td>
               <td>
                 {lunch && (
                   <div style={{ display: "flex", gap: "10px" }}>

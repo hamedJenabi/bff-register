@@ -116,8 +116,11 @@ export default async function register(req, response) {
     competition: req.body.competition,
     competition_role: req.body.competition_role,
     competitions: req.body.competitions,
+    donation_amount: req.body.donation_amount,
+    lunch: req.body.lunch,
     terms: req.body.terms,
   };
+  console.log("requestData", requestData);
   const ticketName =
     requestData.ticket === "partyPass"
       ? requestData.ticket
@@ -220,6 +223,8 @@ export default async function register(req, response) {
       status: `${requestData.status}`,
       isGroupDiscount: isGroupDiscount,
       price: `${totalPrice}`,
+      donation: `${requestData.donation_amount}`,
+      lunch: `${requestData.lunch}`,
     },
   };
   // const generageMessage = () => {
@@ -231,7 +236,7 @@ export default async function register(req, response) {
   //   }
   // };
   if (!isSoldOut) {
-    await sendEmail(msg);
+    // await sendEmail(msg);
   }
   // await sendEmail(user.status, msg);
 }

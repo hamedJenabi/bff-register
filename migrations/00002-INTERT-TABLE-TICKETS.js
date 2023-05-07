@@ -1,16 +1,16 @@
 exports.up = async (sql) => {
   await sql`
 	  INSERT INTO tickets_23 (name,capacity,waiting_list) VALUES   									
-			  ('one_lead',20,50),
-			  ('one_follow',20,50),
-			  ('tow_lead',20,50),
-			  ('tow_follow',20,50),
-			  ('three_lead',40,50),
-			  ('three_follow',40,50),
-			  ('four_lead',40,50),
-			  ('four_follow',40,50),
-			  ('five_lead',20,50),
-			  ('five_follow',20,50),
+			  ('beg/int_lead',20,50),
+			  ('beg/int_follow',20,50),
+			  ('int_lead',20,50),
+			  ('int_follow',20,50),
+			  ('int/adv_lead',40,50),
+			  ('int/adv_follow',40,50),
+			  ('adv_lead',40,50),
+			  ('adv_follow',40,50),
+			  ('adv+_lead',20,50),
+			  ('adv+_follow',20,50),
 			  ('partyPass',200,200)
 	  `;
 };

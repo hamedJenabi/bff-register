@@ -18,9 +18,6 @@ import { levelsToShow, compettionsInfo } from "../../utils/functions";
 import styles from "./RegistrationForm.module.scss";
 import countries from "../../utils/countries";
 import { useDialogState } from "reakit/Dialog";
-const flatProps = {
-  options: countries.map((option) => option.title),
-};
 
 export default function RegistrationForm({ form, tickets, isClicked }) {
   const dialog = useDialogState();
@@ -292,10 +289,70 @@ export default function RegistrationForm({ form, tickets, isClicked }) {
               </h3>
               {compettionsInfo.map(({ value, label }) => (
                 <label>
-                  <FormCheckbox {...form} name="competitions" value={value} />{" "}
+                  <FormCheckbox
+                    {...form}
+                    name="competitions"
+                    key={label}
+                    value={value}
+                  />{" "}
                   {label}
                 </label>
               ))}
+            </div>
+          )}
+          <div className={styles.radioGroup}>
+            <h4 className={styles.title}>
+              Which day you wanto to have lunch at the Venue? <br />
+              (You can choose both days):
+            </h4>
+            <p className={styles.infoText}>
+              Price: €12.50 per meal - main course + dessert + one drink. <br />
+              There are vegan/vegetarian and gluten-free options
+            </p>
+
+            <label>
+              <FormCheckbox {...form} name="lunch" value="saturday" /> Saturday
+              Lunch
+            </label>
+            <label>
+              <FormCheckbox {...form} name="lunch" value="sunday" /> Sunday
+              Lunch
+            </label>
+          </div>
+          <h4 className={styles.title}>
+            Do you want to donate to the Blues Fever Scholarship and discount
+            Fund?
+          </h4>
+          <div className={styles.infoTextWrapper}>
+            <p className={styles.infoText}>
+              By donating you will help us to make Blues Fever more accessible
+              to everyone. You can donate any amount you want.
+            </p>
+          </div>
+          <FormRadioGroup
+            className={styles.radioGroup}
+            {...form}
+            name="donation"
+          >
+            <label>
+              <FormRadio {...form} name="donation" value="yes" />
+              <p>Yes</p>
+            </label>
+            <label>
+              <FormRadio {...form} name="donation" value="no" />
+              <p>No</p>
+            </label>
+          </FormRadioGroup>
+          {form.values.donation === "yes" && (
+            <div className={styles.radioGroup}>
+              <h4 className={styles.title}>How much do you want to donate?</h4>
+              <FormInput
+                className={styles.input}
+                {...form}
+                name="donation_amount"
+                type="number"
+                placeholder="€"
+              />
             </div>
           )}
           <div className={styles.checkboxWrapper}>

@@ -18,6 +18,7 @@ exports.up = async (sql) => {
 			competitions VARCHAR,
 			price VARCHAR (100),
 			to_pay VARCHAR (100),
+			donation VARCHAR (100),
 			terms boolean
 	)
 	`;

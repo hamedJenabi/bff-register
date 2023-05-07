@@ -61,12 +61,12 @@ export default function Home({ tickets }) {
                 </div>
               );
             })}
-          <div
+          {/* <div
             onClick={() => localStorage.removeItem("accepted")}
             className={styles.button}
           >
             <Link href="/">Wanna do another Registration?</Link>
-          </div>
+          </div> */}
         </div>
       </main>
 
