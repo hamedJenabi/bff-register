@@ -39,6 +39,9 @@ export default function Home({ tickets }) {
         <div className={styles.content}>
           <div className={styles.title}>
             <h3>Thank you for your registration!</h3>
+            <br />
+            <br />
+
             <p>
               Please note that your registration confirmation e-mail may end up
               in your <b>junk mail or promotions folder</b> so make sure to
@@ -47,7 +50,7 @@ export default function Home({ tickets }) {
               registration. Thank you.
             </p>
           </div>
-          {user &&
+          {/* {user &&
             Object.entries(user).map(([key, val], i) => {
               if (
                 (key === "level" || key === "role") &&
@@ -60,7 +63,7 @@ export default function Home({ tickets }) {
                   <p>{key}:</p> <p>{key === "terms" ? "yes" : val}</p>
                 </div>
               );
-            })}
+            })} */}
           {/* <div
             onClick={() => localStorage.removeItem("accepted")}
             className={styles.button}

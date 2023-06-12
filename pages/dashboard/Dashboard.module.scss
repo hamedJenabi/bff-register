@@ -163,6 +163,10 @@
 .statusButton {
   @include button;
   width: 250px !important;
+  &.disable {
+    color: white;
+    background-color: rgb(196, 54, 52) !important;
+  }
 }
 .downloadButton {
   @include button;

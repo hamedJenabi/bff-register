@@ -750,7 +750,7 @@ export default function Dashboard({ users, tickets }) {
                 <option>out</option>
               </select> */}
 
-              <select
+              {/* <select
                 onChange={(e) => setGroupLevel(e.target.value)}
                 className={styles.select}
               >
@@ -764,7 +764,7 @@ export default function Dashboard({ users, tickets }) {
                 onClick={handleGroupChange}
               >
                 Change Group Name
-              </button>
+              </button> */}
 
               {/* <p>Search first name</p>
               <input onChange={(e) => setNameSearch(e.target.value)} /> */}
@@ -795,8 +795,11 @@ export default function Dashboard({ users, tickets }) {
           )}
           <button
             style={{ margin: "40px 0" }}
-            className={styles.statusButton}
+            className={classNames(styles.statusButton, {
+              [styles.disable]: true,
+            })}
             onClick={handleSendEmail}
+            disabled
           >
             Send Email to All confirmed
           </button>
