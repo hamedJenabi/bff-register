@@ -110,6 +110,8 @@ export default function RegistrationForm({ form, tickets, isClicked }) {
                 [styles.selected]: form.values.ticket === "fullpass",
               })}
             >
+              {/* PUT PRICE HERE */}
+              {/* 4 plus pre party */}
               <h3>Full pass</h3>
               <p>6 hours classes</p>
               <p>1 free competition</p>
@@ -176,8 +178,8 @@ export default function RegistrationForm({ form, tickets, isClicked }) {
                   >
                     more info here
                   </a>
-                  <br /> You Advanced people! There will be an audition on
-                  Friday afternoon.
+                  <br /> You <strong>Advanced people! </strong>There will be an
+                  audition on Friday afternoon.
                 </div>
               </div>
 

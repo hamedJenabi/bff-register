@@ -143,7 +143,7 @@ export default function Home({ tickets }) {
             isClicked={isClicked}
           />
         ) : (
-          <h3>Registration start in July</h3>
+          <h3>Registration start in August</h3>
         )}
       </main>
 
