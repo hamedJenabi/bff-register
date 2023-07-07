@@ -68,7 +68,7 @@ export default function Home({ tickets }) {
       setIsClicked(true);
       const isDiscount = isGroupDiscount(values.email);
       const totalPrice = getPrice(values, isDiscount); //
-      console.log("index", totalPrice);
+
       const req = {
         ...form.values,
         totalPrice,
@@ -103,7 +103,6 @@ export default function Home({ tickets }) {
       }
     },
   });
-  console.log("form", form.values);
   return (
     <div className={styles.container}>
       <Head>

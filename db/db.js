@@ -92,7 +92,7 @@ export async function insertRegistration(user) {
     price: user.price,
     terms: user.terms,
   };
-  console.log("userData", userData);
+
   return sql`
   INSERT INTO registrations_23${sql(
     userData,

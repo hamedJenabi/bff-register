@@ -53,7 +53,7 @@ export default function Home({ tickets, clientID }) {
       const req = {
         ...form.values,
       };
-      console.log("req", req);
+
       fetch("/api/comp", {
         method: "POST",
         headers: {

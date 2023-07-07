@@ -116,7 +116,6 @@ export const getPrice = (requestData, isGroupDiscount) => {
     ? parseInt(requestData.donation_amount)
     : 0;
 
-  console.log("donationAmount", donationAmount);
   const lunchMoney = requestData.lunch?.length * 12.5 || 0;
   const totalPrice =
     initialPrice +
@@ -128,7 +127,7 @@ export const getPrice = (requestData, isGroupDiscount) => {
   const output = isGroupDiscount
     ? Math.round((totalPrice / 100) * 90)
     : totalPrice;
-  console.log("priceee", output);
+
   return output;
 };
 

@@ -23,9 +23,7 @@ export default async function comp(req, response) {
       ? req.body.competitions.length * 10 - 10
       : req.body.competitions.length * 10;
 
-  console.log("req.body.competitions", userToUpdate);
   if (userToUpdate) {
-    console.log("requestData", requestData);
     await setUserCompById(
       userToUpdate.id,
       requestData.competition_role,

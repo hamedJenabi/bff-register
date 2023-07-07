@@ -120,7 +120,7 @@ export default async function register(req, response) {
     lunch: req.body.lunch,
     terms: req.body.terms,
   };
-  console.log("requestData", requestData);
+
   const ticketName =
     requestData.ticket === "partyPass"
       ? requestData.ticket
