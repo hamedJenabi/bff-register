@@ -308,7 +308,7 @@ export default function RegistrationForm({ form, tickets, isClicked }) {
               (You can choose both days):
             </h4>
             <p className={styles.infoText}>
-              Price: €12.50 per meal - main course + dessert + one drink. <br />
+              Price: €15 per meal - main course + dessert + one drink. <br />
               There are vegan/vegetarian and gluten-free options
             </p>
 

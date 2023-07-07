@@ -116,7 +116,7 @@ export const getPrice = (requestData, isGroupDiscount) => {
     ? parseInt(requestData.donation_amount)
     : 0;
 
-  const lunchMoney = requestData.lunch?.length * 12.5 || 0;
+  const lunchMoney = requestData.lunch?.length * 15 || 0;
   const totalPrice =
     initialPrice +
     donationAmount +
@@ -132,7 +132,7 @@ export const getPrice = (requestData, isGroupDiscount) => {
 };
 
 export const discounts = [
-  { name: "test", email: "hamed.jenabi@gmail.com" },
+  { name: "test", email: "hamed.jenabi@gmail.comx" },
   //   { name: "Isabelle Mugai", email: "imugai7@gmail.com" },
   //   { name: "Shivani Govender", email: "shivani.govender@gmail.com" },
   //   { name: "Richard Challans", email: "rchallans@gmail.com" },
