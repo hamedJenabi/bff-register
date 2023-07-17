@@ -25,24 +25,20 @@ export default function RegistrationForm({ form, isClicked }) {
   const handleTicket = (ticket) => {
     if (ticket === 1) {
       form.update("ticket", "fullpass");
+    } else if (ticket === 3) {
+      form.update("ticket", "parentPass");
     } else {
       form.update("ticket", "partyPass");
       form.update("role", "");
       form.update("level", "");
     }
   };
-
-  // const getTicketCapacity = (ticketName) => {
-  //   if (ticketName === "partyPass") {
-  //     const [ticket] = tickets.filter(({ name }) => name === ticketName);
-  //     return ticket["capacity"];
-  //   }
-  // };
-  // const disabled = (value) =>
-  //   (form.values.role === "follow" &&
-  //     (value === "drums" || value === "guitar" || value === "saxophone")) ||
-  //   (form.values.role === "lead" && value === "trumpet");
-
+  const isRoleNeeded =
+    form.values.competitions?.includes("strictly") ||
+    form.values.competitions?.includes("newcomers_mixnmatch") ||
+    form.values.competitions?.includes("open_mixnmatch");
+  const isFullPass =
+    form.values.ticket === "fullpass" || form.values.ticket === "parentPass";
   return (
     <>
       {!isClicked && (
@@ -111,14 +107,14 @@ export default function RegistrationForm({ form, isClicked }) {
                 [styles.selected]: form.values.ticket === "fullpass",
               })}
             >
-              {/* PUT PRICE HERE */}
               {/* 4 plus pre party */}
               <h3>Full pass</h3>
-              <p>6 hours classes</p>
+              <p>6+ hours classes</p>
               <p>1 free competition</p>
               <p>All 5 Parties</p>
-              <p>All Talks</p>
+              <p>€225</p>
             </div>
+
             <div
               onClick={() => handleTicket(2)}
               className={classNames(styles.card, {
@@ -127,10 +123,24 @@ export default function RegistrationForm({ form, isClicked }) {
             >
               <h3>Party Pass</h3>
               <p>All 5 Parties</p>
-              <p>All Talks</p>
+              <p>€115</p>
+            </div>
+            <div
+              onClick={() => handleTicket(3)}
+              className={classNames(styles.card, {
+                [styles.selected]: form.values.ticket === "parentPass",
+              })}
+            >
+              <h3>Parent Pass</h3>
+              <p className={styles.infoText}>
+                Two dancers sharing a child-care
+              </p>
+              <p>6+ hours classes</p>
+              <p>All 5 Parties</p>
+              <p>€115</p>
             </div>
           </div>
-          {form.values.ticket === "fullpass" && (
+          {isFullPass && (
             <>
               <h3 className={styles.title}>Choose your dance role:</h3>
               <FormRadioGroup
@@ -163,7 +173,7 @@ export default function RegistrationForm({ form, isClicked }) {
               </FormRadioGroup>
             </>
           )}
-          {form.values.ticket === "fullpass" && (
+          {isFullPass && (
             <>
               <h3 className={styles.title}>Choose your Level:</h3>
               <div className={styles.infoTextWrapper}>
@@ -191,7 +201,7 @@ export default function RegistrationForm({ form, isClicked }) {
               >
                 {levelsToShow.map(({ label, value, detail }) => {
                   if (
-                    value === "invitational" &&
+                    value === "adv+" &&
                     router.query.level !== "invitational"
                   ) {
                     return null;
@@ -243,9 +253,7 @@ export default function RegistrationForm({ form, isClicked }) {
           <h3 className={styles.title}>
             Do you want to participate in competitions?
           </h3>
-          <div className={styles.infoTextWrapper}>
-            <p className={styles.infoText}>(€10 per competition)</p>
-          </div>
+          <div className={styles.infoTextWrapper}></div>
           <FormRadioGroup
             className={styles.radioGroup}
             {...form}
@@ -271,7 +279,30 @@ export default function RegistrationForm({ form, isClicked }) {
               </p>
             </div>
           </FormRadioGroup>
+
           {form.values.competition === "yes" && (
+            <div className={styles.radioGroup}>
+              <h3 className={styles.title}>
+                Choose your contests:
+                <span className={styles.infoText}>
+                  <br></br> (€10 per competition - one free comp for Full Pass
+                  Holders)
+                </span>
+              </h3>
+              {compettionsInfo.map(({ value, label }) => (
+                <label>
+                  <FormCheckbox
+                    {...form}
+                    name="competitions"
+                    key={label}
+                    value={value}
+                  />{" "}
+                  {label}
+                </label>
+              ))}
+            </div>
+          )}
+          {form.values.competition === "yes" && isRoleNeeded && (
             <div className={styles.radioGroup}>
               <h3 className={styles.title}>Your role in the competition:</h3>
               <FormRadioGroup
@@ -289,27 +320,6 @@ export default function RegistrationForm({ form, isClicked }) {
                   <p>Lead</p>
                 </label>
               </FormRadioGroup>
-            </div>
-          )}
-          {form.values.competition === "yes" && (
-            <div className={styles.radioGroup}>
-              <h3 className={styles.title}>
-                Choose your contests:
-                <span className={styles.infoText}>
-                  <br></br> (€10 per competition)
-                </span>
-              </h3>
-              {compettionsInfo.map(({ value, label }) => (
-                <label>
-                  <FormCheckbox
-                    {...form}
-                    name="competitions"
-                    key={label}
-                    value={value}
-                  />{" "}
-                  {label}
-                </label>
-              ))}
             </div>
           )}
           <div className={styles.radioGroup}>

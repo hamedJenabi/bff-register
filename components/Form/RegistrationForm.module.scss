@@ -97,6 +97,7 @@
   }
 }
 .card {
+  border: 1px solid transparent;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -117,13 +118,15 @@
   }
   &:hover {
     cursor: pointer;
-    transform: scale(1.02);
+    // transform: scale(1.02);
+    border: 1px solid grey;
     transition: all 400ms;
   }
   &.selected {
-    background-color: #8db8b3;
+    // background-color: #8db8b3;
+    border: 1px solid grey;
 
-    @include focus();
+    // @include focus();
     &::after {
       margin: -10px !important;
       border-radius: 4px !important;
@@ -138,6 +141,9 @@
       transform: scale(1);
       transition: all 400ms;
     }
+  }
+  p:last-child {
+    margin-top: auto;
   }
 }
 .earlyInfo {

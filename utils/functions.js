@@ -30,7 +30,7 @@ export const levelsToShow = [
   },
   {
     label: "Invitational",
-    value: "invitational",
+    value: "adv+",
     detail:
       "You and Blues have a long story together. You end up going to finals in almost every competition, you practice regularly, and may teach Blues not only in your scene but also internationally.",
   },
@@ -99,7 +99,10 @@ export const compettionsInfo = [
 ];
 
 export const getPrice = (requestData, isGroupDiscount) => {
-  const initialPrice = requestData.ticket === "partyPass" ? 115 : 225;
+  const initialPrice =
+    requestData.ticket === "partyPass" || requestData.ticket === "parentPass"
+      ? 115
+      : 225;
   const competitions =
     requestData.competition === "yes"
       ? requestData.competitions?.length * 10
@@ -132,7 +135,7 @@ export const getPrice = (requestData, isGroupDiscount) => {
 };
 
 export const discounts = [
-  { name: "test", email: "hamed.jenabi@gmail.comx" },
+  { name: "test", email: "hamed.jenabi@gmail.com" },
   //   { name: "Isabelle Mugai", email: "imugai7@gmail.com" },
   //   { name: "Shivani Govender", email: "shivani.govender@gmail.com" },
   //   { name: "Richard Challans", email: "rchallans@gmail.com" },

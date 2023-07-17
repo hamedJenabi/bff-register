@@ -1,5 +1,5 @@
 import Head from "next/head";
-import useMedia from "use-media";
+
 import Router from "next/router";
 import { useRouter } from "next/router";
 import React, { useState } from "react";
@@ -15,7 +15,6 @@ import { getPrice, isGroupDiscount } from "../utils/functions";
 import { unstable_useFormState as useFormState } from "reakit/Form";
 
 export default function Home({ tickets }) {
-  const isMobile = useMedia({ maxWidth: "768px" });
   const [isClicked, setIsClicked] = useState(false);
 
   if (typeof window !== "undefined") {
@@ -38,7 +37,7 @@ export default function Home({ tickets }) {
       competition_role: "",
       competitions: "",
       donation: "",
-      donation_amount: 0,
+      donation_amount: "",
       lunch: "",
       terms: false,
     },

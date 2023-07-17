@@ -19,12 +19,6 @@ import {
 const sgMail = require("@sendgrid/mail");
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
-/**** GOOGLE SHEET STUFF ******/
-
-const SPREADSHEET_ID = process.env.REACT_APP_SPREADSHEET_ID;
-const SHEET_ID = process.env.REACT_APP_SHEET_ID;
-const CLIENT_EMAIL = process.env.REACT_APP_GOOGLE_CLIENT_EMAIL;
-const PRIVATE_KEY = process.env.REACT_APP_GOOGLE_SERVICE_PRIVATE_KEY;
 const time = new Date();
 
 //******** Send Email *********/
@@ -68,40 +62,6 @@ const getTicketLabel = (ticket) => {
 
 //******** prepare GOOGLE SHEET *********/
 
-const updateGoogle = async (user) => {
-  const date = new Date().toISOString();
-  const inputForGoogleSheet = {
-    status: user.status,
-    register_date: date,
-    email: user.email,
-    First_Name: user.firstname,
-    Last_Name: user.lastname,
-    country: user.country,
-    ticket: user.ticket,
-    role: user.role,
-    level: user.level,
-    price: user.price,
-    themeClass: user.theme_class,
-    competition_role: user.competition_role,
-    competitions: user.competitions?.toString(),
-  };
-  const doc = new GoogleSpreadsheet(SPREADSHEET_ID);
-  try {
-    await doc.useServiceAccountAuth({
-      client_email: CLIENT_EMAIL,
-      private_key:
-        PRIVATE_KEY === undefined
-          ? console.log("error")
-          : PRIVATE_KEY.replace(/\\n/gm, "\n"),
-    });
-    await doc.loadInfo();
-    const sheet = doc.sheetsById[SHEET_ID];
-    const result = await sheet.addRow(inputForGoogleSheet);
-  } catch (e) {
-    console.error("Error: ", e);
-  }
-};
-
 export default async function register(req, response) {
   const requestData = {
     date: time.toDateString(),
@@ -125,9 +85,10 @@ export default async function register(req, response) {
     requestData.ticket === "partyPass"
       ? requestData.ticket
       : `${requestData.level}_${requestData.role}`;
-  const { id: ticketId } = await getTicketByName(ticketName);
-  const { capacity } = await isTicketAvailable(ticketId);
-  const { waiting_list } = await isTicketAvailable(ticketId);
+  console.log("ticketName", ticketName);
+  // const { id: ticketId } = await getTicketByName(ticketName);
+  // const { capacity } = await isTicketAvailable(ticketId);
+  // const { waiting_list } = await isTicketAvailable(ticketId);
 
   const isGroupDiscount = discounts.some(
     ({ email }) => email === req.body.email
@@ -142,7 +103,7 @@ export default async function register(req, response) {
   if (userswithSameEmail) {
     isAlreadyRegistered =
       userswithSameEmail.email + userswithSameEmail.firstname ===
-      requestData.email + requestData.firstname + "noob";
+      requestData.email + requestData.firstname;
   }
   let template = "";
   let isSoldOut = false;
@@ -162,42 +123,42 @@ export default async function register(req, response) {
 
     const [{ id }] = await insertRegistration(user);
     template = "d-a3d0a3b2f11f4c0d8c9008e9db9fa07d";
-    await updateGoogle(user);
+    // await updateGoogle(user);
 
     response.status(200).json();
     // send registration email
   }
 
-  if (capacity <= 0 && !isAlreadyRegistered) {
-    // 200 -> registered
-    // 300 -> waiting list
-    // 301 -> sold out
-    if (waiting_list > 0) {
-      await updateTicketWaiting(ticketId);
-      const user = {
-        status: "waitinglist",
-        price: totalPrice.toString(),
-        ...requestData,
-      };
-      template = "d-52a8e8e3cff741c583127915ee291c39";
-      const [{ id }] = await insertRegistration(user);
-      // const userWithId = {
-      //   id,
-      //   status: "waitinglist",
-      //   requestData,
-      // };
-      // await updateUserInfo(userWithId);
-      await updateGoogle(user);
-      response.status(300).json();
+  // if (capacity <= 0 && !isAlreadyRegistered) {
+  //   // 200 -> registered
+  //   // 300 -> waiting list
+  //   // 301 -> sold out
+  //   if (waiting_list > 0) {
+  //     await updateTicketWaiting(ticketId);
+  //     const user = {
+  //       status: "waitinglist",
+  //       price: totalPrice.toString(),
+  //       ...requestData,
+  //     };
+  //     template = "d-52a8e8e3cff741c583127915ee291c39";
+  //     const [{ id }] = await insertRegistration(user);
+  //     // const userWithId = {
+  //     //   id,
+  //     //   status: "waitinglist",
+  //     //   requestData,
+  //     // };
+  //     // await updateUserInfo(userWithId);
+  //     // await updateGoogle(user);
+  //     response.status(300).json();
 
-      // waiting list email
-    }
-    if (waiting_list <= 0 && !isAlreadyRegistered) {
-      isSoldOut = true;
-      // send sold out email
-      response.status(301).json();
-    }
-  }
+  //     // waiting list email
+  //   }
+  //   if (waiting_list <= 0 && !isAlreadyRegistered) {
+  //     isSoldOut = true;
+  //     // send sold out email
+  //     response.status(301).json();
+  //   }
+  // }
   const msg = {
     from: "registration@bluesfever.eu",
     to: `${requestData.email}`,
