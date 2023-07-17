@@ -28,12 +28,12 @@ export const levelsToShow = [
     detail:
       "You consistently demonstrate, describe, and differentiate between a range of styles and movements, while maintaining blues aesthetic. You include some layered movements. You can observe and work out movement execution. You may teach blues at your local scene and do lots of international workshops.",
   },
-  // {
-  //   label: "Saxophone - Advanced+",
-  //   value: "saxophone",
-  //   detail:
-  //     "You and Blues have a long story together. You end up going to finals in almost every competition, you practice regularly, and may teach Blues not only in your scene but also internationally.",
-  // },
+  {
+    label: "Invitational",
+    value: "invitational",
+    detail:
+      "You and Blues have a long story together. You end up going to finals in almost every competition, you practice regularly, and may teach Blues not only in your scene but also internationally.",
+  },
 ];
 export const groupLevelsToShow = [
   {

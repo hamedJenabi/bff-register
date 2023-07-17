@@ -10,7 +10,7 @@ import {
   unstable_FormLabel as FormLabel,
 } from "reakit/Form";
 import SkeletonComponent from "../Skeleton/Skeleton";
-
+import { useRouter } from "next/router";
 import classNames from "classnames";
 
 import InfoModal from "../InfoModal/InfoModal";
@@ -19,7 +19,8 @@ import styles from "./RegistrationForm.module.scss";
 import countries from "../../utils/countries";
 import { useDialogState } from "reakit/Dialog";
 
-export default function RegistrationForm({ form, tickets, isClicked }) {
+export default function RegistrationForm({ form, isClicked }) {
+  const router = useRouter();
   const dialog = useDialogState();
   const handleTicket = (ticket) => {
     if (ticket === 1) {
@@ -188,13 +189,22 @@ export default function RegistrationForm({ form, tickets, isClicked }) {
                 {...form}
                 name="level"
               >
-                {levelsToShow.map(({ label, value, detail }) => (
-                  <label key={value}>
-                    <FormRadio {...form} name="level" value={value} />
-                    <p>{label}</p>
-                    {/* <InfoModal header={label} info={detail} /> */}
-                  </label>
-                ))}
+                {levelsToShow.map(({ label, value, detail }) => {
+                  if (
+                    value === "invitational" &&
+                    router.query.level !== "invitational"
+                  ) {
+                    return null;
+                  }
+
+                  return (
+                    <label key={value}>
+                      <FormRadio {...form} name="level" value={value} />
+                      <p>{label}</p>
+                      {/* <InfoModal header={label} info={detail} /> */}
+                    </label>
+                  );
+                })}
               </FormRadioGroup>
             </>
           )}
