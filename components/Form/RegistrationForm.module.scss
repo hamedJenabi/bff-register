@@ -195,6 +195,9 @@
     display: flex;
 
     gap: $xs;
+    &:hover {
+      cursor: pointer;
+    }
   }
   gap: $xs;
   @media (min-width: 600px) {
