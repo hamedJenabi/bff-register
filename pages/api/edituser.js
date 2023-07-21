@@ -73,6 +73,7 @@ export default async function edituser(req, response) {
     country: req.body.country,
     role: req.body.role ?? "",
     ticket: req.body.ticket ?? "",
+    parent_partner: req.body.parent_partner ?? "",
     level: req.body.level,
     theme_class: req.body.theme_class,
     competition: req.body.competition,
@@ -149,6 +150,7 @@ export default async function edituser(req, response) {
           role: `${titleCase(requestData.role)}`,
           level: `${getLevelLabelForEmail(requestData.level)}`,
           ticket: `${ticket}`,
+          parent_partner: `${requestData.parent_partner}`,
           themeClass: `${titleCase(requestData.theme_class)}`,
           competition: requestData.competition === "yes" ? true : false,
           competitionAnswer:
@@ -184,6 +186,7 @@ export default async function edituser(req, response) {
           role: `${titleCase(requestData.role)}`,
           level: `${getLevelLabelForEmail(requestData.level)}`,
           ticket: `${ticket}`,
+          parent_partner: `${requestData.parent_partner}`,
           themeClass: `- ${titleCase(requestData.theme_class)}`,
           competition: requestData.competition === "yes" ? true : false,
           competitionAnswer:
@@ -217,6 +220,7 @@ export default async function edituser(req, response) {
           role: `${titleCase(requestData.role)}`,
           level: `${getLevelLabelForEmail(requestData.level)}`,
           ticket: `${ticket}`,
+          parent_partner: `${requestData.parent_partner}`,
           themeClass: `${titleCase(requestData.theme_class)}`,
           competition: requestData.competition === "yes" ? true : false,
           competitionAnswer:
@@ -250,6 +254,7 @@ export default async function edituser(req, response) {
           role: `${titleCase(requestData.role)}`,
           level: `${getLevelLabelForEmail(requestData.level)}`,
           ticket: `${ticket}`,
+          parent_partner: `${requestData.parent_partner}`,
           themeClass: `${titleCase(requestData.theme_class)}`,
           competition: requestData.competition === "yes" ? true : false,
           competitionAnswer:
@@ -284,6 +289,7 @@ export default async function edituser(req, response) {
           role: `${titleCase(requestData.role)}`,
           level: `${getLevelLabelForEmail(requestData.level)}`,
           ticket: `${ticket}`,
+          parent_partner: `${requestData.parent_partner}`,
           themeClass: `${titleCase(requestData.theme_class)}`,
           competition: requestData.competition === "yes" ? true : false,
           competitionAnswer:

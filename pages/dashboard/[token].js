@@ -395,6 +395,7 @@ export default function Dashboard({ users, tickets }) {
       "firstname",
       "lastname",
       "ticket",
+      "parent_partner",
       "role",
       "level",
       "themed class",
@@ -454,6 +455,7 @@ export default function Dashboard({ users, tickets }) {
           role,
           firstname,
           ticket,
+          parent_partner,
           lastname,
           country,
           theme_class,
@@ -507,6 +509,7 @@ export default function Dashboard({ users, tickets }) {
               <td>{firstname}</td>
               <td>{lastname}</td>
               <td>{ticket}</td>
+              <td>{parent_partner}</td>
               <td>{role}</td>
               <td>{level}</td>
               <td>{titleCase(theme_class)}</td>

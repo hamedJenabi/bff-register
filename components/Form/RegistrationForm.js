@@ -39,6 +39,7 @@ export default function RegistrationForm({ form, isClicked }) {
     form.values.competitions?.includes("open_mixnmatch");
   const isFullPass =
     form.values.ticket === "fullpass" || form.values.ticket === "parentPass";
+
   return (
     <>
       {!isClicked && (
@@ -140,6 +141,18 @@ export default function RegistrationForm({ form, isClicked }) {
               <p>€115</p>
             </div>
           </div>
+          {form.values.ticket === "parentPass" && (
+            <div className={styles.radioGroup}>
+              <h4 className={styles.title}>
+                Who is your parent partner? (full name)
+              </h4>
+              <FormInput
+                className={styles.input}
+                {...form}
+                name="parent_partner"
+              />
+            </div>
+          )}
           {isFullPass && (
             <>
               <h3 className={styles.title}>Choose your dance role:</h3>

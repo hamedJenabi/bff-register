@@ -30,6 +30,7 @@ export default function Home({ tickets }) {
       email: "",
       country: "",
       ticket: "",
+      parent_partner: "",
       level: "",
       role: "",
       theme_class: "no",
