@@ -58,6 +58,9 @@ const getTicketLabel = (ticket) => {
   if (ticket === "fullpass") {
     return "Full Pass";
   }
+  if (ticket === "parentPass") {
+    return "Parent Pass";
+  }
 };
 
 //******** prepare GOOGLE SHEET *********/
@@ -199,7 +202,7 @@ export default async function register(req, response) {
   //   }
   // };
   if (!isSoldOut) {
-    // await sendEmail(msg);
+    await sendEmail(msg);
   }
   // await sendEmail(user.status, msg);
 }
