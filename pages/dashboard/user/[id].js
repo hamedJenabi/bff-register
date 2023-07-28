@@ -68,8 +68,8 @@ export default function User({ user }) {
   return (
     <div className={styles.container}>
       <Head>
-        <title>BLUES FEVER 2022</title>
-        <meta name="description" content="BLUES FEVER 2022 Registration" />
+        <title>BLUES FEVER 2023</title>
+        <meta name="description" content="BLUES FEVER 2023 Registration" />
         <link rel="icon" href="/icon.png" />
 
         <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -80,7 +80,7 @@ export default function User({ user }) {
         />
       </Head>
       <Header
-        title="BLUES FEVER 2022"
+        title="BLUES FEVER 2023"
         menuItems={[{ title: "Home", link: "https://thebluesjoint.dance" }]}
       />
       <main className={styles.main}>
