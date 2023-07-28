@@ -49,6 +49,9 @@ const getTicketLabel = (ticket) => {
   if (ticket === "fullpass") {
     return "Full Pass";
   }
+  if (ticket === "parentPass") {
+    return "Parent Pass";
+  }
 };
 export default async function edituser(req, response) {
   const statusList = [
