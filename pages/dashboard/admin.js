@@ -153,7 +153,7 @@ export default function Dashboard({ users, tickets }) {
   return (
     <div className={styles.container}>
       <Head>
-        <title>BLUES FEVER 2022</title>
+        <title>BLUES FEVER 2023</title>
         <link rel="icon" href="/icon.png" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" />
