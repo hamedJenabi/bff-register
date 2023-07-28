@@ -17,16 +17,24 @@ export const levelsToShow = [
       "You have had local classes and maybe one or more international workshops. You can execute the basic movements and steps. You know some variations of basics and you can choose them depending on the style of music.",
   },
   {
-    label: "Intermediate/Advanced",
-    value: "int/adv",
-    detail:
-      "You travel internationally to festivals and attended workshops. You have an expanded vocabulary (aesthetic and movements) and have achieved a good musicality. You have a high understanding of partnership in dancing.",
-  },
-  {
-    label: "Advanced",
-    value: "adv",
+    label: "Struttin' (Advanced and above)",
+    value: "struttin",
     detail:
       "You consistently demonstrate, describe, and differentiate between a range of styles and movements, while maintaining blues aesthetic. You include some layered movements. You can observe and work out movement execution. You may teach blues at your local scene and do lots of international workshops.",
+  },
+  {
+    label: "Chicago Triple (Advanced and above)",
+    value: "chicago_triple",
+    detail:
+      "You consistently demonstrate, describe, and differentiate between a range of styles and movements, while maintaining blues aesthetic. You include some layered movements. You can observe and work out movement execution. You may teach blues at your local scene and do lots of international workshops.",
+  },
+  {
+    label: "Texas Shuffle (Advanced and above)",
+    value: "texas_shuffle",
+  },
+  {
+    label: "Stide & Strut - Ballroomin' (Advanced and above)",
+    value: "stride_strut",
   },
   {
     label: "Invitational",

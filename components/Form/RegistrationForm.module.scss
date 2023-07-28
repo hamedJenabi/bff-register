@@ -3,14 +3,11 @@
   display: flex;
   flex-direction: column;
   @media (min-width: 600px) {
-    // align-items: center;
-    // justify-content: center;
     box-shadow: $boxShadow;
     border-radius: 4px;
     padding: $sm 30px;
   }
   input[type="checkbox"] {
-    // -webkit-appearance: none;
     width: 18px;
     height: 18px;
     background: white;
@@ -108,6 +105,9 @@
   border-radius: 4px;
   width: 100%;
   min-height: 200px;
+  transform: translateY(0);
+  transition: all 400ms;
+
   @media (min-width: 600px) {
     min-height: 240px;
     margin-bottom: 0;
@@ -118,13 +118,13 @@
   }
   &:hover {
     cursor: pointer;
-    // transform: scale(1.02);
     border: 1px solid grey;
     transition: all 400ms;
   }
   &.selected {
-    // background-color: #8db8b3;
     border: 1px solid grey;
+    transform: translateY(-6px);
+    transition: all 400ms;
 
     // @include focus();
     &::after {

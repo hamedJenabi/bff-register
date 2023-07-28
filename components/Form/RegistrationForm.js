@@ -39,7 +39,10 @@ export default function RegistrationForm({ form, isClicked }) {
     form.values.competitions?.includes("open_mixnmatch");
   const isFullPass =
     form.values.ticket === "fullpass" || form.values.ticket === "parentPass";
-
+  const noTeacher =
+    form.values.level === "int" ||
+    form.values.level === "beg/int" ||
+    form.values.level === "struttin";
   return (
     <>
       {!isClicked && (
@@ -191,10 +194,8 @@ export default function RegistrationForm({ form, isClicked }) {
               <h3 className={styles.title}>Choose your Level:</h3>
               <div className={styles.infoTextWrapper}>
                 <div className={styles.infoText}>
-                  Hey folks, There will be <strong>no audition</strong> for
-                  Beginner/Intermediate, Intermediate and Intermediate/Advanced
-                  levels during the weekend, so please read the level
-                  description carefully.{" "}
+                  Hey folks, There will be <strong>no audition</strong>,so
+                  please read the level description carefully.{" "}
                   <a
                     style={{ color: "blue" }}
                     target="_blank"
@@ -202,8 +203,9 @@ export default function RegistrationForm({ form, isClicked }) {
                   >
                     more info here
                   </a>
-                  <br /> You <strong>Advanced people! </strong>There will be an
-                  audition on Friday afternoon.
+                  <br />
+                  *** Please consider that <strong>Idiom Tracks</strong> are for
+                  Advanced and above. ****
                 </div>
               </div>
 
@@ -219,11 +221,10 @@ export default function RegistrationForm({ form, isClicked }) {
                   ) {
                     return null;
                   }
-
                   return (
                     <label key={value}>
                       <FormRadio {...form} name="level" value={value} />
-                      <p>{label}</p>
+                      <p style={{ fontSize: "14px" }}>{label}</p>
                       {/* <InfoModal header={label} info={detail} /> */}
                     </label>
                   );
@@ -242,14 +243,14 @@ export default function RegistrationForm({ form, isClicked }) {
             {...form}
             name="theme_class"
           >
-            <label>
+            {/* <label>
               <FormRadio
                 {...form}
                 name="theme_class"
                 value="build_a_chreography"
               />
               <p>Build a Choreography </p>
-            </label>
+            </label> */}
             <label>
               <FormRadio
                 {...form}
@@ -342,7 +343,14 @@ export default function RegistrationForm({ form, isClicked }) {
             </h4>
             <p className={styles.infoText}>
               Price: €15 per meal - main course + dessert + one drink. <br />
-              There are vegan/vegetarian and gluten-free options
+              There are vegan/vegetarian and gluten-free options-{" "}
+              <a
+                style={{ color: "blue" }}
+                target="_blank"
+                href="https://www.bluesfever.eu/passes-levels/#schedule"
+              >
+                Schedule here
+              </a>
             </p>
 
             <label>
