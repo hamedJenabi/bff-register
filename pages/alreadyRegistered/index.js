@@ -37,7 +37,7 @@ export default function Home({ tickets }) {
       <main className={styles.main}>
         <div className={styles.content}>
           <div className={styles.title}>
-            <h3>You are already registered for VSB 2022!</h3>
+            <h3>You are already registered for BFF 2023!</h3>
             <p>Check you email for more information.</p>
           </div>
         </div>
