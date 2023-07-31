@@ -82,6 +82,8 @@ export default async function edituser(req, response) {
     competition: req.body.competition,
     competition_role: req.body.competition_role,
     competitions: req.body.competitions,
+    lunch: req.body.lunch,
+    donation_amount: req.body.donation_amount,
     terms: req.body.terms,
     isGroupApi: req.body.isGroupApi,
   };
