@@ -33,7 +33,7 @@ export const levelsToShow = [
     value: "texas_shuffle",
   },
   {
-    label: "Stide & Strut - Ballroomin' (Advanced and above)",
+    label: "Stride & Strut - Ballroomin' (Advanced and above)",
     value: "stride_strut",
   },
   {
