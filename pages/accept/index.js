@@ -44,7 +44,7 @@ export default function Home({ tickets }) {
 
             <p>
               Please note that your registration confirmation e-mail may end up
-              in your <b>junk mail or promotions folder</b> so make sure to
+              in your <b>junk mail or promotions folder</b> , so make sure to
               check those over the next few days. You will get a confirmation of
               your sign up by email. Then give us a little time to process your
               registration. Thank you.

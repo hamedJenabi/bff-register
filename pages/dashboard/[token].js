@@ -773,9 +773,10 @@ export default function Dashboard({ users, tickets }) {
               <input onChange={(e) => setNameSearch(e.target.value)} /> */}
             </div>
           )}
-          <button className={styles.statusButton} onClick={handleSendOneMail}>
+
+          {/* <button className={styles.statusButton} onClick={handleSendOneMail}>
             Send Final email to:
-          </button>
+          </button> */}
           {!capacityShow &&
             activeSideBar !== "balance" &&
             activeSideBar !== "lastbalance" && (
