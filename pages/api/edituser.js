@@ -65,7 +65,7 @@ export default async function edituser(req, response) {
   ];
   const time = new Date();
   const date = new Date().toISOString();
-
+  console.log('req.body',req.body)
   const requestData = {
     status: req.body.status,
     prevStatus: req.body.prevStatus,
@@ -86,6 +86,7 @@ export default async function edituser(req, response) {
     donation_amount: req.body.donation_amount,
     terms: req.body.terms,
     isGroupApi: req.body.isGroupApi,
+    price: req.body.price,
   };
 
   const isGroupDiscount = discounts.some(
@@ -169,7 +170,7 @@ export default async function edituser(req, response) {
           terms: `${requestData.terms}`,
           status: `${requestData.status}`,
           isGroupDiscount: isGroupDiscount,
-          price: `${totalPrice}`,
+          price: `${requestData.price}`,
         },
       };
       if (!requestData.isGroupApi) {
@@ -205,7 +206,7 @@ export default async function edituser(req, response) {
           terms: `${requestData.terms}`,
           status: `${requestData.status}`,
           isGroupDiscount: isGroupDiscount,
-          price: `${totalPrice}`,
+          price: `${requestData.price}`,
         },
       };
       if (!requestData.isGroupApi) {
@@ -239,7 +240,7 @@ export default async function edituser(req, response) {
           terms: `${requestData.terms}`,
           status: `${requestData.status}`,
           isGroupDiscount: isGroupDiscount,
-          price: `${totalPrice}`,
+          price: `${requestData.price}`,
         },
       };
       if (!requestData.isGroupApi) {
@@ -273,7 +274,7 @@ export default async function edituser(req, response) {
           terms: `${requestData.terms}`,
           status: `${requestData.status}`,
           isGroupDiscount: isGroupDiscount,
-          price: `${totalPrice}`,
+          price: `${requestData.price}`,
         },
       };
       if (!requestData.isGroupApi) {
@@ -308,7 +309,7 @@ export default async function edituser(req, response) {
           terms: `${requestData.terms}`,
           status: `${requestData.status}`,
           isGroupDiscount: isGroupDiscount,
-          price: `${totalPrice}`,
+          price: `${requestData.price}`,
         },
       };
       if (!requestData.isGroupApi) {
@@ -328,7 +329,7 @@ export default async function edituser(req, response) {
         await removeFromCapacity(ticketId);
       }
     }
-    await updateUserInfo(req.body, totalPrice);
+    await updateUserInfo(req.body, requestData.price);
     response.status(200).json();
   }
 }

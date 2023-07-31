@@ -83,7 +83,6 @@ export default async function register(req, response) {
     donation_amount: req.body.donation_amount,
     lunch: req.body.lunch,
     terms: req.body.terms,
-    isGroupApi: req.body.isGroupApi,
   };
 
   const ticketName =
