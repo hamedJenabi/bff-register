@@ -11,7 +11,11 @@ const RegistrationForm = dynamic(
   () => import("../components/Form/RegistrationForm.js"),
   { ssr: false }
 );
-import { getPrice, isGroupDiscount } from "../utils/functions";
+import {
+  getPrice,
+  isGroupDiscount,
+  isAfterTargetDate,
+} from "../utils/functions";
 import { unstable_useFormState as useFormState } from "reakit/Form";
 
 export default function Home({ tickets }) {
@@ -98,6 +102,8 @@ export default function Home({ tickets }) {
         .catch((error) => console.log(error));
     },
   });
+
+  const isAfterTargetDateValue = isAfterTargetDate("2023-08-03T17:59:00+02:00");
   return (
     <div className={styles.container}>
       <Head>
@@ -130,7 +136,7 @@ export default function Home({ tickets }) {
         ]}
       />
       <main className={styles.main}>
-        {router?.query?.intern === "true" ? (
+        {router?.query?.intern === "true" || isAfterTargetDateValue ? (
           <RegistrationForm
             form={form}
             tickets={tickets}

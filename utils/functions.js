@@ -236,3 +236,14 @@ export const discounts = [
 
 export const isGroupDiscount = (email) =>
   discounts.some(({ mail }) => mail === email);
+
+export function isAfterTargetDate(d) {
+  // Specify the target date and time (3rd August 2023, 18:00 CET)
+  const targetDate = new Date(d);
+
+  // Get the current date and time
+  const currentDate = new Date();
+
+  // Compare the current date with the target date
+  return currentDate > targetDate;
+}
