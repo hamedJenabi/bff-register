@@ -65,7 +65,7 @@ export default async function edituser(req, response) {
   ];
   const time = new Date();
   const date = new Date().toISOString();
-  console.log('req.body',req.body)
+  console.log("req.body", req.body);
   const requestData = {
     status: req.body.status,
     prevStatus: req.body.prevStatus,
@@ -83,7 +83,7 @@ export default async function edituser(req, response) {
     competition_role: req.body.competition_role,
     competitions: req.body.competitions,
     lunch: req.body.lunch,
-    donation_amount: req.body.donation_amount,
+    donation_amount: req.body.donation,
     terms: req.body.terms,
     isGroupApi: req.body.isGroupApi,
     price: req.body.price,
@@ -171,6 +171,8 @@ export default async function edituser(req, response) {
           status: `${requestData.status}`,
           isGroupDiscount: isGroupDiscount,
           price: `${requestData.price}`,
+          donation: `${requestData.donation_amount}`,
+          lunch: `${requestData.lunch}`,
         },
       };
       if (!requestData.isGroupApi) {
@@ -207,6 +209,8 @@ export default async function edituser(req, response) {
           status: `${requestData.status}`,
           isGroupDiscount: isGroupDiscount,
           price: `${requestData.price}`,
+          donation: `${requestData.donation_amount}`,
+          lunch: `${requestData.lunch}`,
         },
       };
       if (!requestData.isGroupApi) {
@@ -241,6 +245,8 @@ export default async function edituser(req, response) {
           status: `${requestData.status}`,
           isGroupDiscount: isGroupDiscount,
           price: `${requestData.price}`,
+          donation: `${requestData.donation_amount}`,
+          lunch: `${requestData.lunch}`,
         },
       };
       if (!requestData.isGroupApi) {
@@ -275,6 +281,8 @@ export default async function edituser(req, response) {
           status: `${requestData.status}`,
           isGroupDiscount: isGroupDiscount,
           price: `${requestData.price}`,
+          donation: `${requestData.donation_amount}`,
+          lunch: `${requestData.lunch}`,
         },
       };
       if (!requestData.isGroupApi) {
@@ -310,6 +318,10 @@ export default async function edituser(req, response) {
           status: `${requestData.status}`,
           isGroupDiscount: isGroupDiscount,
           price: `${requestData.price}`,
+          donation: `${requestData.donation_amount}`,
+          lunch: `${requestData.lunch}`,
+          donation: `${requestData.donation_amount}`,
+          lunch: `${requestData.lunch}`,
         },
       };
       if (!requestData.isGroupApi) {
