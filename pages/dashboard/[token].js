@@ -236,6 +236,7 @@ export default function Dashboard({ users, tickets }) {
           <p>Level</p>
           <p> Follow</p>
           <p>Lead</p>
+          <p>Both</p>
         </div>
         {levelsToShow.map((lvl) => (
           <div key={lvl.value} className={styles.ticketRow}>
@@ -256,6 +257,13 @@ export default function Dashboard({ users, tickets }) {
               reminder: {getTicketAmount(lvl.value, "lead").reminder} <br />
               waitinglist: {getTicketAmount(lvl.value, "lead").waiting} <br />
               confirmed: {getTicketAmount(lvl.value, "lead").paid}
+            </p>
+            <p>
+              register: {getTicketAmount(lvl.value, "both").registered} <br />
+              send: {getTicketAmount(lvl.value, "both").sent} <br />
+              reminder: {getTicketAmount(lvl.value, "both").reminder} <br />
+              waitinglist: {getTicketAmount(lvl.value, "both").waiting} <br />
+              confirmed: {getTicketAmount(lvl.value, "both").paid}
             </p>
           </div>
         ))}

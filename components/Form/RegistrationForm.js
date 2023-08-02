@@ -394,6 +394,7 @@ export default function RegistrationForm({ form, isClicked }) {
                 {...form}
                 name="donation_amount"
                 type="number"
+                onWheel={(e) => e.target.blur()}
                 placeholder="€"
               />
             </div>
