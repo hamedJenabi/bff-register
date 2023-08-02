@@ -205,7 +205,7 @@ export default function RegistrationForm({ form, isClicked }) {
                   </a>
                   <br />
                   *** Please consider that <strong>Idiom Tracks</strong> are for
-                  Advanced and above. ****
+                  Int/Advanced and above. ****
                 </div>
               </div>
 
