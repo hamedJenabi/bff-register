@@ -166,6 +166,19 @@ export const discounts = [
   { name: "", email: "shakethatblues@gmail.com" },
   { name: "", email: "k.prusniewski@gmail.com" },
 ];
+export const newDiscount = [
+  { name: "test", email: "hamed.jenabi@gmail.com" },
+  { name: "", email: "natalia.vodislavska@gmail.com" },
+  { name: "", email: "gejza.katona@gmail.com" },
+  { name: "", email: "janacova.veronika@gmail.com" },
+  { name: "", email: "gurthfin@gmail.com" },
+  { name: "", email: "melegova.s@gmail.com" },
+  { name: "", email: "  kruzliak@charita.sk" },
+
+  { name: "", email: "lea.debnar@gmail.com" },
+  { name: "", email: "ivana.klukova@gmail.com" },
+  { name: "", email: "duricova.tina@gmail.com" },
+];
 
 export const isGroupDiscount = (email) =>
   discounts.some(({ mail }) => mail === email);
