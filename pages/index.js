@@ -111,7 +111,7 @@ export default function Home({ tickets }) {
         <meta name="description" content="BLUES FEVER 2023 Registration" />
         <meta
           property="og:image"
-          content="https://www.bluesfever.eu/wp-content/uploads/2022/08/bff2022.png"
+          content="https://www.bluesfever.eu/wp-content/uploads/2023/07/bff2023-scaled.jpg"
         />
 
         <link rel="icon" href="/icon.png" />
