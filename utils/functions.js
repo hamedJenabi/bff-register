@@ -189,6 +189,15 @@ export const newDiscount = [
   { name: "", email: "robertwi@web.de" },
   { name: "", email: "ka.arc@gmx.de" },
   { name: "", email: "Yhoepfner@gmail.com" },
+  { name: "", email: "otorras2@gmail.com" },
+  { name: "", email: "mcpascual59@gmail.com" },
+  { name: "", email: "sos_lis@hotmail.com" },
+  { name: "", email: "mariacerratolara@gmail.com" },
+  { name: "", email: "lolivalencia@yahoo.es" },
+  { name: "", email: "miguel.c.valles@gmail.com" },
+  { name: "", email: "rafagacor@gmail.com" },
+  { name: "", email: "antonifm100@gmail.com" },
+  { name: "", email: "fisioklaas@gmail.com" },
 ];
 
 export const isGroupDiscount = (email) =>
