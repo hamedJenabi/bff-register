@@ -37,6 +37,14 @@ export default function Dashboard({ users, tickets }) {
         : 0)
     );
   }, 0);
+  const totalDonation = userToShow.reduce((acc, user) => {
+    return (
+      acc +
+      (user.status !== "canceled" && user.status !== "out" && user.donation
+        ? parseInt(user.donation, 10)
+        : 0)
+    );
+  }, 0);
   const router = useRouter();
 
   const form = useFormState({
@@ -606,6 +614,7 @@ export default function Dashboard({ users, tickets }) {
             }{" "}
             ={totalAmountList}
           </p>
+          <p>Donation: {totalDonation}</p>
         </div>
       </div>
       <main className={styles.main}>
