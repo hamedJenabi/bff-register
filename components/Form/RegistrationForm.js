@@ -235,7 +235,7 @@ export default function RegistrationForm({ form, isClicked }) {
 
           <h3 className={styles.title}>Themed Classes? (€45)</h3>
           <p className={styles.infoText}>
-            You can add this classes to your Full-or Partypass. (Happening on
+            You can add this class to your Full-or Partypass. (Happening on
             Friday afternoon)
           </p>
           <FormRadioGroup
