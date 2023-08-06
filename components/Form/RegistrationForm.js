@@ -338,7 +338,7 @@ export default function RegistrationForm({ form, isClicked }) {
           )}
           <div className={styles.radioGroup}>
             <h4 className={styles.title}>
-              Which day you wanto to have lunch at the Venue? <br />
+              Which day you want to have lunch at the Venue? <br />
               (You can choose both days):
             </h4>
             <p className={styles.infoText}>
