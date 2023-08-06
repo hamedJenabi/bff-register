@@ -173,11 +173,22 @@ export const newDiscount = [
   { name: "", email: "janacova.veronika@gmail.com" },
   { name: "", email: "gurthfin@gmail.com" },
   { name: "", email: "melegova.s@gmail.com" },
-  { name: "", email: "  kruzliak@charita.sk" },
-
+  { name: "", email: "kruzliak@charita.sk" },
   { name: "", email: "lea.debnar@gmail.com" },
   { name: "", email: "ivana.klukova@gmail.com" },
   { name: "", email: "duricova.tina@gmail.com" },
+  { name: "", email: "daria@yurieva.ru" },
+  { name: "", email: "s.hilzinger@gmx.de" },
+  { name: "", email: "aayang444@gmail.com" },
+  { name: "", email: "edward.curran@hotmail.co.uk" },
+  { name: "", email: "krhuang5@gmail.com" },
+  { name: "", email: "rundmails@AndreasMerkert.de" },
+  { name: "", email: "zhenmaodentist@gmail.com" },
+  { name: "", email: "P.henrich@uckert.de" },
+  { name: "", email: "qianita.sun@gmail.com" },
+  { name: "", email: "robertwi@web.de" },
+  { name: "", email: "ka.arc@gmx.de" },
+  { name: "", email: "Yhoepfner@gmail.com" },
 ];
 
 export const isGroupDiscount = (email) =>
