@@ -68,7 +68,7 @@ const getTicketLabel = (ticket) => {
 export default async function register(req, response) {
   const requestData = {
     date: time.toDateString(),
-    email: req.body.email,
+    email: req.body.email.trim().toLowerCase(),
     firstname: req.body.firstname,
     lastname: req.body.lastname,
     country: req.body.country,
@@ -89,7 +89,7 @@ export default async function register(req, response) {
     requestData.ticket === "partyPass"
       ? requestData.ticket
       : `${requestData.level}_${requestData.role}`;
-  console.log("ticketName", ticketName);
+
   // const { id: ticketId } = await getTicketByName(ticketName);
   // const { capacity } = await isTicketAvailable(ticketId);
   // const { waiting_list } = await isTicketAvailable(ticketId);

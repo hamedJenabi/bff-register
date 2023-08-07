@@ -66,7 +66,7 @@ export default async function edituser(req, response) {
   ];
   const time = new Date();
   const date = new Date().toISOString();
-  console.log("req.body", req.body);
+
   const requestData = {
     status: req.body.status,
     prevStatus: req.body.prevStatus,
