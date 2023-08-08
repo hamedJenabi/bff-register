@@ -182,7 +182,7 @@ export const newDiscount = [
   { name: "", email: "aayang444@gmail.com" },
   { name: "", email: "edward.curran@hotmail.co.uk" },
   { name: "", email: "krhuang5@gmail.com" },
-  { name: "", email: "rundmails@AndreasMerkert.de" },
+  { name: "", email: "rundmails@andreasMerkert.de" },
   { name: "", email: "zhenmaodentist@gmail.com" },
   { name: "", email: "P.henrich@uckert.de" },
   { name: "", email: "qianita.sun@gmail.com" },

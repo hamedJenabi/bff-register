@@ -94,7 +94,8 @@ export default async function edituser(req, response) {
   //   ({ email }) => email === req.body.email
   // );
   const isGroupDiscount = newDiscount.some(
-    ({ email }) => email === req.body.email
+    ({ email }) =>
+      email.trim().toLowerCase() === req.body.email.trim().toLowerCase()
   );
 
   // const getPrice = (requestData, isGroupDiscount) => {
