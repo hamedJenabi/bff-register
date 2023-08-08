@@ -69,6 +69,12 @@ export default function Home({ tickets }) {
       }
     },
     onSubmit: (values) => {
+      if (form.values.ticket === "") {
+        alert("Please select a ticket");
+        window.scrollTo({ top: 140, behavior: "smooth" });
+
+        return;
+      }
       setIsClicked(true);
       const isDiscount = isGroupDiscount(values.email);
       const totalPrice = getPrice(values, isDiscount); //
