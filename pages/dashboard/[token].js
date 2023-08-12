@@ -325,6 +325,7 @@ export default function Dashboard({ users, tickets }) {
           <p>Level</p>
           <p> Follow</p>
           <p>Lead</p>
+          <p>Both</p>
         </div>
         {levelsToShow.map((lvl) => (
           <div key={lvl.value} className={styles.ticketRow}>
