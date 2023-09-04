@@ -253,11 +253,12 @@ export default function RegistrationForm({ form, isClicked }) {
             </label> */}
             <label>
               <FormRadio
+                disabled
                 {...form}
                 name="theme_class"
                 value="teacher_training"
               />
-              <p>Teacher Training</p>
+              <p>Teacher Training (fully booked)</p>
             </label>
             <label>
               <FormRadio {...form} name="theme_class" value="no" />
