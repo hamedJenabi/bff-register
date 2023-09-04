@@ -439,16 +439,22 @@ export default function Dashboard({ users, tickets }) {
     ];
     return (
       <div className={styles.tickets}>
-        {ticketToshow?.map((ticket) => (
+        <div className={styles.ticketRow}>
+          <p>Level (both fills the gap)</p>
+          <p>Lead</p>
+          <p>follow</p>
+        </div>
+
+        {levelsToShow?.map((ticket) => (
           <div key={ticket.name} className={styles.ticketRow}>
             <div className={styles.ticketItem}>
-              <p>{ticket.name}</p>
+              <p>{ticket.label}</p>
             </div>
             <div className={styles.ticketItem}>
-              <p>{ticket.capacity}</p>
+              <p>{ticket.lead}</p>
             </div>
             <div className={styles.ticketItem}>
-              <p>{ticket.waiting_list}</p>
+              <p>{ticket.follow}</p>
             </div>
           </div>
         ))}
