@@ -355,8 +355,8 @@ export default function RegistrationForm({ form, isClicked }) {
             </p>
 
             <label>
-              <FormCheckbox {...form} name="lunch" value="saturday" /> Saturday
-              Lunch
+              <FormCheckbox disabled {...form} name="lunch" value="saturday" />{" "}
+              Saturday Lunch (fully booked)
             </label>
             <label>
               <FormCheckbox {...form} name="lunch" value="sunday" /> Sunday
