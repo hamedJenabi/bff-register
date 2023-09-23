@@ -52,11 +52,7 @@ const Modal = ({ user, handleUser, info, form }) => {
                 name={info}
                 placeholder={info}
               />
-              <FormSubmitButton
-                className={styles.submit}
-                // onClick={() => handleUser(user.firstname)}
-                {...form}
-              >
+              <FormSubmitButton className={styles.submit} {...form}>
                 Submit
               </FormSubmitButton>
             </div>

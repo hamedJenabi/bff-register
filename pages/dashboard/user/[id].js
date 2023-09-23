@@ -9,6 +9,25 @@ import styles from "./user.module.scss";
 import Header from "../../../components/Header/Header.js";
 const Modal = dynamic(() => import("./Modal"), { ssr: false });
 
+const header = [
+  "status",
+  "price",
+  "id",
+  "email",
+  "firstname",
+  "lastname",
+  "ticket",
+  "parent_partner",
+  "role",
+  "level",
+  "themed class",
+  "competition",
+  "competition role",
+  "competitions",
+  "donation",
+  "lunch",
+];
+
 export default function User({ user }) {
   const isMobile = useMedia({ maxWidth: "768px" });
   const form = useFormState({
@@ -29,13 +48,16 @@ export default function User({ user }) {
       competitions: user.competitions?.toString(),
       theme_class: user.theme_class || "",
       price: user.price,
+      parent_partner: user.parent_partner,
+      donation: user.donation,
+      lunch: user.lunch,
       terms: user.terms,
     },
     onValidate: (values) => {
       // noob
     },
     onSubmit: () => {
-      fetch("/api/edituser", {
+      fetch("/api/edituser?action=edit", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -84,140 +106,22 @@ export default function User({ user }) {
         menuItems={[{ title: "Home", link: "https://thebluesjoint.dance" }]}
       />
       <main className={styles.main}>
-        <div className={styles.linkButton}>
-          <Link
-            className={styles.linkButton}
-            href="/dashboard/fdjhfdskjfhdskjh"
-          >
-            Back to Dashboard
-          </Link>
-        </div>
+        <Link className={styles.linkButton} href="/dashboard/fdjhfdskjfhdskjh">
+          Back to Dashboard
+        </Link>
+
         <p style={{ margin: "10px" }}>
           Accepted status: 1.registered 2. email-sent 3. confirmed 4.
           waitinglist 5. canceled
         </p>
         <div className={styles.contentWrapper}>
-          <div className={styles.row}>
-            <p>Status:</p>
-            <p>{user.status}</p>
-            <Modal
-              user={user}
-              handleUser={handleClick}
-              info="status"
-              form={form}
-            />
-          </div>
-          <div className={styles.row}>
-            <p>First Name:</p>
-            <p>{user.firstname}</p>
-            <Modal
-              user={user}
-              handleUser={handleClick}
-              info="firstname"
-              form={form}
-            />
-          </div>
-          <div className={styles.row}>
-            <p>Last Name:</p>
-            <p>{user.lastname}</p>
-            <Modal
-              user={user}
-              handleUser={handleClick}
-              info="lastname"
-              form={form}
-            />
-          </div>
-          <div className={styles.row}>
-            <p>Email:</p>
-            <p> {user.email}</p>
-            <Modal
-              user={user}
-              handleUser={handleClick}
-              info="email"
-              form={form}
-            />
-          </div>
-          <div className={styles.row}>
-            <p>Ticket:</p>
-            <p> {user.ticket}</p>
-            <Modal
-              user={user}
-              handleUser={handleClick}
-              info="ticket"
-              form={form}
-            />
-          </div>
-          <div className={styles.row}>
-            <p>Role:</p>
-            <p> {user.role}</p>
-            <Modal
-              user={user}
-              handleUser={handleClick}
-              info="role"
-              form={form}
-            />
-          </div>
-          <div className={styles.row}>
-            <p>Level:</p>
-            <p> {user.level}</p>
-            <Modal
-              user={user}
-              handleUser={handleClick}
-              info="level"
-              form={form}
-            />
-          </div>
-
-          <div className={styles.row}>
-            <p>Country:</p>
-            <p> {user.country}</p>
-            <Modal
-              user={user}
-              handleUser={handleClick}
-              info="country"
-              form={form}
-            />
-          </div>
-          <div className={styles.row}>
-            <p>Competition:</p>
-            <p> {user.competition}</p>
-            <Modal
-              user={user}
-              handleUser={handleClick}
-              info="competition"
-              form={form}
-            />
-          </div>
-          <div className={styles.row}>
-            <p>Competition Role:</p>
-            <p> {user.competition_role}</p>
-            <Modal
-              user={user}
-              handleUser={handleClick}
-              info="competition_role"
-              form={form}
-            />
-          </div>
-          <div className={styles.row}>
-            <p>Competitions:</p>
-            <p> {user.competitions}</p>
-            <Modal
-              user={user}
-              handleUser={handleClick}
-              info="competitions"
-              form={form}
-            />
-          </div>
-          <div className={styles.row}>
-            <p>theme_class:</p>
-            <p> {user.theme_class}</p>
-            <Modal
-              user={user}
-              handleUser={handleClick}
-              info="theme_class"
-              form={form}
-            />
-          </div>
+          {header.map((item) => (
+            <div className={styles.row}>
+              <p>{item}:</p>
+              <p>{user[item]}</p>
+              <Modal user={user} info={item} form={form} />
+            </div>
+          ))}
         </div>
       </main>
 

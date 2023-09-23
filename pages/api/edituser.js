@@ -64,6 +64,8 @@ export default async function edituser(req, response) {
     "canceled",
     "out",
   ];
+  const isEditing = req.query?.action === "edit";
+
   const time = new Date();
   const date = new Date().toISOString();
 
@@ -89,8 +91,7 @@ export default async function edituser(req, response) {
     isGroupApi: req.body.isGroupApi,
     price: req.body.price,
   };
-
-  // const isGroupDiscount = discounts.some(
+  // constx isGroupDiscount = discounts.some(
   //   ({ email }) => email === req.body.email
   // );
   const isGroupDiscount = newDiscount.some(
@@ -184,7 +185,7 @@ export default async function edituser(req, response) {
           lunch: `${requestData.lunch}`,
         },
       };
-      if (!requestData.isGroupApi) {
+      if (!requestData.isGroupApi && !isEditing) {
         console.log("email SENTSS");
         await sendEmail(msg);
       }
@@ -222,7 +223,7 @@ export default async function edituser(req, response) {
           lunch: `${requestData.lunch}`,
         },
       };
-      if (!requestData.isGroupApi) {
+      if (!requestData.isGroupApi && !isEditing) {
         console.log("email SENTSS");
         await sendEmail(msg);
       }
@@ -258,7 +259,7 @@ export default async function edituser(req, response) {
           lunch: `${requestData.lunch}`,
         },
       };
-      if (!requestData.isGroupApi) {
+      if (!requestData.isGroupApi && !isEditing) {
         console.log("email SENTSS");
         await sendEmail(msg);
       }
@@ -294,7 +295,7 @@ export default async function edituser(req, response) {
           lunch: `${requestData.lunch}`,
         },
       };
-      if (!requestData.isGroupApi) {
+      if (!requestData.isGroupApi && !isEditing) {
         console.log("email SENTSS");
         await sendEmail(msg);
       }
@@ -333,7 +334,7 @@ export default async function edituser(req, response) {
           lunch: `${requestData.lunch}`,
         },
       };
-      if (!requestData.isGroupApi) {
+      if (!requestData.isGroupApi && !isEditing) {
         console.log("email senttt");
         await sendEmail(msg);
       }
