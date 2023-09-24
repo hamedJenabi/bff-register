@@ -215,12 +215,6 @@ export default function RegistrationForm({ form, isClicked }) {
                 name="level"
               >
                 {levelsToShow.map(({ label, value, detail }) => {
-                  if (
-                    value === "adv+" &&
-                    router.query.level !== "invitational"
-                  ) {
-                    return null;
-                  }
                   return (
                     <label key={value}>
                       <FormRadio {...form} name="level" value={value} />

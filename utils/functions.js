@@ -51,7 +51,7 @@ export const levelsToShow = [
   {
     lead: 18,
     follow: 18,
-    label: "Invitational",
+    label: "Advanced +",
     value: "adv+",
     detail:
       "You and Blues have a long story together. You end up going to finals in almost every competition, you practice regularly, and may teach Blues not only in your scene but also internationally.",
