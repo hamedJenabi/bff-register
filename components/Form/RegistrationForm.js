@@ -14,7 +14,12 @@ import { useRouter } from "next/router";
 import classNames from "classnames";
 
 import InfoModal from "../InfoModal/InfoModal";
-import { levelsToShow, compettionsInfo } from "../../utils/functions";
+import {
+  levelsToShow,
+  compettionsInfo,
+  fullpassPrice,
+  partyPrice,
+} from "../../utils/functions";
 import styles from "./RegistrationForm.module.scss";
 import countries from "../../utils/countries";
 import { useDialogState } from "reakit/Dialog";
@@ -116,7 +121,7 @@ export default function RegistrationForm({ form, isClicked }) {
               <p>6+ hours classes</p>
               <p>1 free competition</p>
               <p>All 5 Parties</p>
-              <p>€225</p>
+              <p>€{fullpassPrice}</p>
             </div>
 
             <div
@@ -127,7 +132,7 @@ export default function RegistrationForm({ form, isClicked }) {
             >
               <h3>Party Pass</h3>
               <p>All 5 Parties</p>
-              <p>€115</p>
+              <p>{partyPrice}</p>
             </div>
             <div
               onClick={() => handleTicket(3)}
@@ -141,7 +146,7 @@ export default function RegistrationForm({ form, isClicked }) {
               </p>
               <p>6+ hours classes</p>
               <p>All 5 Parties</p>
-              <p>€115</p>
+              <p>€{partyPrice}</p>
             </div>
           </div>
           {form.values.ticket === "parentPass" && (

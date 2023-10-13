@@ -119,12 +119,18 @@ export const compettionsInfo = [
       "This level is for those who have been dancing Blues since birth, or at least three years. You have attended many international workshops and maybe even teaching in your local scene. Done competitions and reached the final now and then. There will be no audition but we don’t spare you in this level, so please don’t misjudge your ability, for your sake and for your class mates.",
   },
 ];
+export const fullpassPrice = isAfterTargetDate("2023-10-15T00:01:00+02:00")
+  ? 245
+  : 225;
+export const partyPrice = isAfterTargetDate("2023-10-15T00:01:00+02:00")
+  ? 125
+  : 115;
 
 export const getPrice = (requestData, isGroupDiscount) => {
   const initialPrice =
     requestData.ticket === "partyPass" || requestData.ticket === "parentPass"
-      ? 115
-      : 225;
+      ? partyPrice
+      : fullpassPrice;
   const competitions =
     requestData.competition === "yes"
       ? requestData.competitions?.length * 10
