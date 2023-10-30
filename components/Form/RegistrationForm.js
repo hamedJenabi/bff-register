@@ -48,6 +48,12 @@ export default function RegistrationForm({ form, isClicked }) {
     form.values.level === "int" ||
     form.values.level === "beg/int" ||
     form.values.level === "struttin";
+
+  const isDisabled = (value) =>
+    value === "beg/int" ||
+    value === "int" ||
+    (value === "texas_shuffle" && form.values.role === "follow");
+
   return (
     <>
       {!isClicked && (
@@ -222,8 +228,15 @@ export default function RegistrationForm({ form, isClicked }) {
                 {levelsToShow.map(({ label, value, detail }) => {
                   return (
                     <label key={value}>
-                      <FormRadio {...form} name="level" value={value} />
-                      <p style={{ fontSize: "14px" }}>{label}</p>
+                      <FormRadio
+                        {...form}
+                        name="level"
+                        value={value}
+                        disabled={isDisabled(value)}
+                      />
+                      <p style={{ fontSize: "14px" }}>
+                        {label} {isDisabled(value) && "(Sold out)"}
+                      </p>
                       {/* <InfoModal header={label} info={detail} /> */}
                     </label>
                   );
@@ -282,16 +295,9 @@ export default function RegistrationForm({ form, isClicked }) {
               <p>No</p>
             </label>
             <label>
-              <FormRadio {...form} name="competition" value="later" />
+              <FormRadio {...form} name="competition" value="later" disabled />
               <p>I will decide later</p>
             </label>
-            <div className={styles.infoTextWrapper}>
-              <p className={styles.infoText}>
-                You can decide later if you want to participate in the
-                competitions. We will send you an email around October. You will
-                have to pay the competition fee at the door.
-              </p>
-            </div>
           </FormRadioGroup>
 
           {form.values.competition === "yes" && (
