@@ -52,7 +52,7 @@ export default function RegistrationForm({ form, isClicked }) {
   const isDisabled = (value) =>
     value === "beg/int" ||
     value === "int" ||
-    (value === "texas_shuffle" && form.values.role === "follow");
+    (value === "texas_shuffle" && form.values.role === "lead");
 
   return (
     <>
