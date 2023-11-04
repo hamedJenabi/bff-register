@@ -1,7 +1,6 @@
 import Head from "next/head";
 import useMedia from "use-media";
 import Router from "next/router";
-import Checkout from "../components/Checkout/Checkout";
 import React, { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { emailRegex } from "../utils/validate";
@@ -11,7 +10,6 @@ const CompForm = dynamic(() => import("../components/Form/CompForm.js"), {
   ssr: false,
 });
 import { unstable_useFormState as useFormState } from "reakit/Form";
-import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
 
 export default function Home({ tickets, clientID }) {
   const isMobile = useMedia({ maxWidth: "768px" });

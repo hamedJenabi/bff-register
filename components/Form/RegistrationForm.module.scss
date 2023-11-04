@@ -329,3 +329,40 @@
     letter-spacing: 1.1px;
   }
 }
+
+.compInfo {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  margin: 2rem 0;
+  border: 1px solid #eaeaea;
+  text-align: center;
+  padding: 40px;
+  background-color: #d3dbe3;
+  animation: pulse 6s;
+  @media (min-width: 600px) {
+    width: 50%;
+  }
+}
+// make a puls animation
+
+@keyframes pulse {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(0, 0, 0, 0.7);
+    background-color: #d3dbe3;
+  }
+
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 10px rgba(0, 0, 0, 0);
+    background-color: #98acc0;
+  }
+
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
+    background-color: #d3dbe3;
+  }
+}

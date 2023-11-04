@@ -180,9 +180,9 @@ export async function updateUserInfo(user, totalPrice) {
   return user[0];
 }
 
-export async function getConfirmedUserByEmailAndName(email) {
+export async function getConfirmedUserByEmailAndName(email, firstname) {
   const user = await sql`
-    SELECT * FROM registrations_23 WHERE email = ${email} AND status = 'confirmed'
+    SELECT * FROM registrations_23 WHERE email = ${email} AND status = 'confirmed' AND firstname = ${firstname}
   `;
   return user[0];
 }

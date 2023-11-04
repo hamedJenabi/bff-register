@@ -12,7 +12,10 @@ export default async function comp(req, response) {
     competition_role: req.body.competition_role.toString(),
     competitions: req.body.competitions.toString(),
   };
-  const userToUpdate = await getConfirmedUserByEmailAndName(requestData.email);
+  const userToUpdate = await getConfirmedUserByEmailAndName(
+    requestData.email,
+    requestData.firstname
+  );
   if (!userToUpdate) {
     response.status(404).json();
     return;
