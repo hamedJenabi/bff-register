@@ -50,9 +50,7 @@ export default function RegistrationForm({ form, isClicked }) {
     form.values.level === "struttin";
 
   const isDisabled = (value) =>
-    value === "beg/int" ||
-    value === "int" ||
-    (value === "texas_shuffle" && form.values.role === "lead");
+    value === "beg/int" || value === "int" || value === "texas_shuffle";
 
   return (
     <>
