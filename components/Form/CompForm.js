@@ -31,7 +31,7 @@ export default function CompForm({ form, tickets, isClicked }) {
         <>
           <div className={styles.compInfo}>
             <p styles={{ textAlign: "center" }}>
-              IMPORTANT: If you have already registered for Compoetitions and
+              IMPORTANT: If you have already registered for competitions and
               want to update them, please contact us via
               registration@bluesfever.eu
             </p>
