@@ -182,7 +182,7 @@ export async function updateUserInfo(user, totalPrice) {
 
 export async function getConfirmedUserByEmailAndName(email, firstname) {
   const user = await sql`
-    SELECT * FROM registrations_23 WHERE email = ${email} AND status = 'confirmed' AND firstname = ${firstname}
+    SELECT * FROM registrations_23 WHERE email = ${email} AND status = 'confirmed'
   `;
   return user[0];
 }
