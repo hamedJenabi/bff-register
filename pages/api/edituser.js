@@ -3,6 +3,7 @@ import {
   discounts,
   newDiscount,
   levelsToShow,
+  finalLevelsToShow,
   groupLevelsToShow,
   getPrice,
 } from "../../utils/functions";
@@ -19,11 +20,10 @@ const getLevelLabelForEmail = (level) => {
     return "";
   }
   if (level !== "") {
-    const title = levelsToShow?.find((item) => item.value === level)?.label;
-    const groupTitle = groupLevelsToShow?.find(
+    const title = finalLevelsToShow?.find(
       (item) => item.value === level
     )?.label;
-    return titleCase(title) ? titleCase(title) : titleCase(groupTitle);
+    return titleCase(title) ? titleCase(title) : "";
   }
 };
 const sgMail = require("@sendgrid/mail");

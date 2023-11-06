@@ -9,6 +9,7 @@ import Header from "../../components/Header/Header.js";
 import classNames from "classnames";
 import {
   levelsToShow,
+  finalLevelsToShow,
   groupLevelsToShow,
   titleCase,
 } from "../../utils/functions";
@@ -61,7 +62,7 @@ export default function Dashboard({ users, tickets }) {
     },
   });
   const [status, setStatus] = useState("");
-  const [groupLevel, setGroupLevel] = useState("trumpet1");
+  const [groupLevel, setGroupLevel] = useState("int1");
   const [usersToChange, setUsersToChange] = useState([]);
 
   const handleStatusChange = async () => {
@@ -246,7 +247,7 @@ export default function Dashboard({ users, tickets }) {
           <p>Lead</p>
           <p>Both</p>
         </div>
-        {levelsToShow.map((lvl) => (
+        {finalLevelsToShow.map((lvl) => (
           <div key={lvl.value} className={styles.ticketRow}>
             <h4>{lvl.value}</h4>
             <p>
@@ -327,7 +328,7 @@ export default function Dashboard({ users, tickets }) {
           <p>Lead</p>
           <p>Both</p>
         </div>
-        {levelsToShow.map((lvl) => (
+        {finalLevelsToShow.map((lvl) => (
           <div key={lvl.value} className={styles.ticketRow}>
             <h4>{lvl.value}</h4>
             <p>{getTicketAmount(lvl.value, "follow").paid}</p>
@@ -779,21 +780,19 @@ export default function Dashboard({ users, tickets }) {
                 <option>out</option>
               </select> */}
 
-              {/* <select
+              <select
                 onChange={(e) => setGroupLevel(e.target.value)}
                 className={styles.select}
               >
-                <option>trumpet1</option>
-                <option>trumpet2</option>
-                <option>drums1</option>
-                <option>drums2</option>
+                <option>int1</option>
+                <option>int2</option>
               </select>
               <button
                 className={styles.statusButton}
                 onClick={handleGroupChange}
               >
                 Change Group Name
-              </button> */}
+              </button>
 
               {/* <p>Search first name</p>
               <input onChange={(e) => setNameSearch(e.target.value)} /> */}
