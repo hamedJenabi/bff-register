@@ -22,7 +22,7 @@ const header = [
   "level",
   "themed class",
   "competition",
-  "competition role",
+  "competition_role",
   "competitions",
   "donation",
   "lunch",
@@ -83,7 +83,6 @@ export default function User({ user }) {
       Router.push("/login/admin");
     }
   }
-
   const handleClick = (key) => {
     alert(key);
   };
