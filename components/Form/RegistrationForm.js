@@ -53,8 +53,8 @@ export default function RegistrationForm({ form, isClicked }) {
     value === "beg/int" ||
     value === "int" ||
     value === "texas_shuffle" ||
-    (value === "struttin" && form.values.role === "follow") ||
-    (value === "stride_strut" && form.values.role === "follow");
+    value === "stride_strut" ||
+    (value === "struttin" && form.values.role === "follow");
 
   return (
     <>
