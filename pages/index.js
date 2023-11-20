@@ -109,7 +109,7 @@ export default function Home({ tickets }) {
     },
   });
 
-  const isAfterTargetDateValue = isAfterTargetDate("2023-08-03T17:59:00+02:00");
+  // const isAfterTargetDateValue = isAfterTargetDate("2023-11-21T10:00:00+02:00");
   return (
     <div className={styles.container}>
       <Head>
@@ -142,14 +142,14 @@ export default function Home({ tickets }) {
         ]}
       />
       <main className={styles.main}>
-        {router?.query?.intern === "true" || isAfterTargetDateValue ? (
+        {router?.query?.intern === "true" ? (
           <RegistrationForm
             form={form}
             tickets={tickets}
             isClicked={isClicked}
           />
         ) : (
-          <h3>Registration start in August</h3>
+          <h3>We are sold out :) </h3>
         )}
       </main>
 
