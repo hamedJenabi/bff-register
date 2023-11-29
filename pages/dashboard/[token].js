@@ -824,11 +824,8 @@ export default function Dashboard({ users, tickets }) {
           )}
           <button
             style={{ margin: "40px 0" }}
-            className={classNames(styles.statusButton, {
-              [styles.disable]: true,
-            })}
+            className={styles.statusButton}
             onClick={handleSendEmail}
-            disabled
           >
             Send Email to All confirmed
           </button>

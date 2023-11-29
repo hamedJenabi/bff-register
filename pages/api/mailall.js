@@ -2,6 +2,7 @@ import {
   titleCase,
   groupLevelsToShow,
   levelsToShow,
+  finalLevelsToShow,
 } from "../../utils/functions";
 
 const sgMail = require("@sendgrid/mail");
@@ -44,8 +45,10 @@ export default async function mailall(req, response) {
       return "";
     }
     if (level !== "") {
-      const title = levelsToShow?.find((item) => item.value === level)?.label;
-      const groupTitle = groupLevelsToShow?.find(
+      const title = finalLevelsToShow?.find(
+        (item) => item.value === level
+      )?.label;
+      const groupTitle = finalLevelsToShow?.find(
         (item) => item.value === level
       )?.label;
       return titleCase(title) ? titleCase(title) : titleCase(groupTitle);
@@ -58,6 +61,9 @@ export default async function mailall(req, response) {
     if (ticket === "fullpass") {
       return "Full Pass";
     }
+    if (ticket === "parentPass") {
+      return "Parent Pass";
+    }
   };
   const ticket = getTicketLabel(requestData.ticket);
 
@@ -69,7 +75,7 @@ export default async function mailall(req, response) {
       firstname: `${user.firstname}`,
       lastname: `${user.lastname}`,
       country: `${user.country}`,
-      role: `${titleCase(user.role)}`,
+      role: `${user.role}`,
       level: `${getLevelLabelForEmail(user.level)}`,
       ticket: `${ticket}`,
       lunch: requestData.lunch ? `${requestData.lunch}` : "No",
