@@ -799,9 +799,9 @@ export default function Dashboard({ users, tickets }) {
             </div>
           )}
 
-          {/* <button className={styles.statusButton} onClick={handleSendOneMail}>
-            Send Final email to:
-          </button> */}
+          <button className={styles.statusButton} onClick={handleSendOneMail}>
+            Send Final email to specific users:
+          </button>
           {!capacityShow &&
             activeSideBar !== "balance" &&
             activeSideBar !== "lastbalance" && (
