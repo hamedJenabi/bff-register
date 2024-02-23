@@ -64,8 +64,8 @@ export default function Admin({ tickets }) {
   return (
     <div className={styles.container}>
       <Head>
-        <title>BLUES FEVER 2023</title>
-        <meta name="description" content="BLUES FEVER 2023 Registration" />
+        <title>BLUES FEVER 2024</title>
+        <meta name="description" content="BLUES FEVER 2024 Registration" />
         <link rel="icon" href="/icon.png" />
 
         <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -76,7 +76,7 @@ export default function Admin({ tickets }) {
         />
       </Head>
       <Header
-        title="BLUES FEVER 2023"
+        title="BLUES FEVER 2024"
         menuItems={[{ title: "Home", link: "https://thebluesjoint.dance" }]}
       />
       <main className={styles.main}>
