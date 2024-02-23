@@ -83,7 +83,9 @@ export default async function edituser(req, response) {
     level: req.body.level,
     theme_class: req.body.theme_class,
     competition: req.body.competition,
-    competition_role: req.body.competition_role,
+    open_mixnmatch_role: req.body.open_mixnmatch_role,
+    newcomers_mixnmatch_role: req.body.newcomers_mixnmatch_role,
+    strictly_role: req.body.strictly_role,
     competitions: req.body.competitions,
     lunch: req.body.lunch,
     donation_amount: req.body.donation,
@@ -171,7 +173,9 @@ export default async function edituser(req, response) {
           competition: requestData.competition === "yes" ? true : false,
           competitionAnswer:
             requestData.competition === "later" ? "I will decide later" : "No",
-          competition_role: `${requestData.competition_role}`,
+          open_mixnmatch_role: `${requestData.open_mixnmatch_role}`,
+          newcomers_mixnmatch_role: `${requestData.newcomers_mixnmatch_role}`,
+          strictly_role: `${requestData.strictly_role}`,
           competitions: requestData.competitions
             ? `${requestData.competitions
                 .split(",")
@@ -209,7 +213,9 @@ export default async function edituser(req, response) {
           competition: requestData.competition === "yes" ? true : false,
           competitionAnswer:
             requestData.competition === "later" ? "I will decide later" : "No",
-          competition_role: `${requestData.competition_role}`,
+          open_mixnmatch_role: `${requestData.open_mixnmatch_role}`,
+          newcomers_mixnmatch_role: `${requestData.newcomers_mixnmatch_role}`,
+          strictly_role: `${requestData.strictly_role}`,
           competitions: requestData.competitions
             ? `${requestData.competitions
                 .split(",")
@@ -245,7 +251,9 @@ export default async function edituser(req, response) {
           competition: requestData.competition === "yes" ? true : false,
           competitionAnswer:
             requestData.competition === "later" ? "I will decide later" : "No",
-          competition_role: `${requestData.competition_role}`,
+          open_mixnmatch_role: `${requestData.open_mixnmatch_role}`,
+          newcomers_mixnmatch_role: `${requestData.newcomers_mixnmatch_role}`,
+          strictly_role: `${requestData.strictly_role}`,
           competitions: requestData.competitions
             ? `${requestData.competitions
                 .split(",")
@@ -281,7 +289,9 @@ export default async function edituser(req, response) {
           competition: requestData.competition === "yes" ? true : false,
           competitionAnswer:
             requestData.competition === "later" ? "I will decide later" : "No",
-          competition_role: `${requestData.competition_role}`,
+          open_mixnmatch_role: `${requestData.open_mixnmatch_role}`,
+          newcomers_mixnmatch_role: `${requestData.newcomers_mixnmatch_role}`,
+          strictly_role: `${requestData.strictly_role}`,
           competitions: requestData.competitions
             ? `${requestData.competitions
                 .split(",")
@@ -318,7 +328,9 @@ export default async function edituser(req, response) {
           competition: requestData.competition === "yes" ? true : false,
           competitionAnswer:
             requestData.competition === "later" ? "I will decide later" : "No",
-          competition_role: `${requestData.competition_role}`,
+          open_mixnmatch_role: `${requestData.open_mixnmatch_role}`,
+          newcomers_mixnmatch_role: `${requestData.newcomers_mixnmatch_role}`,
+          strictly_role: `${requestData.strictly_role}`,
           competitions: requestData.competitions
             ? `${requestData.competitions
                 .split(",")

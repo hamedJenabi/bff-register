@@ -19,6 +19,7 @@ import {
   compettionsInfo,
   fullpassPrice,
   partyPrice,
+  titleCase,
 } from "../../utils/functions";
 import styles from "./RegistrationForm.module.scss";
 import countries from "../../utils/countries";
@@ -42,6 +43,11 @@ export default function RegistrationForm({ form, isClicked }) {
     form.values.competitions?.includes("strictly") ||
     form.values.competitions?.includes("newcomers_mixnmatch") ||
     form.values.competitions?.includes("open_mixnmatch");
+
+  const complisting = ["strictly", "newcomers_mixnmatch", "open_mixnmatch"];
+  const roleNeededComps = complisting.reduce((acc, comp) => {
+    return form.values.competitions?.includes(comp) ? [...acc, comp] : acc;
+  }, []);
   const isFullPass =
     form.values.ticket === "fullpass" || form.values.ticket === "parentPass";
   const noTeacher =
@@ -234,10 +240,11 @@ export default function RegistrationForm({ form, isClicked }) {
                         {...form}
                         name="level"
                         value={value}
-                        disabled={isDisabled(value)}
+                        // disabled={isDisabled(value)}
                       />
                       <p style={{ fontSize: "14px" }}>
-                        {label} {isDisabled(value) && "(Sold out)"}
+                        {label}
+                        {/* {isDisabled(value) && "(Sold out)"} */}
                       </p>
                       {/* <InfoModal header={label} info={detail} /> */}
                     </label>
@@ -325,24 +332,36 @@ export default function RegistrationForm({ form, isClicked }) {
             </div>
           )}
           {form.values.competition === "yes" && isRoleNeeded && (
-            <div className={styles.radioGroup}>
-              <h3 className={styles.title}>Your role in the competition:</h3>
-              <FormRadioGroup
-                className={styles.radioGroup}
-                {...form}
-                name="competition_role"
-              >
-                <label>
-                  <FormRadio {...form} name="competition_role" value="follow" />
-                  <p>Follow</p>
-                </label>
+            <>
+              {roleNeededComps.map((comp) => (
+                <div className={styles.radioGroup}>
+                  <h4 className={styles.title}>
+                    Your role in the{" "}
+                    <span style={{ fontSize: "13px" }}>{titleCase(comp)}</span>{" "}
+                    competition:
+                  </h4>
+                  <FormRadioGroup
+                    className={styles.radioGroup}
+                    {...form}
+                    name={`${comp}_role`}
+                  >
+                    <label>
+                      <FormRadio
+                        {...form}
+                        name={`${comp}_role`}
+                        value="follow"
+                      />
+                      <p>Follow</p>
+                    </label>
 
-                <label>
-                  <FormRadio {...form} name="competition_role" value="lead" />
-                  <p>Lead</p>
-                </label>
-              </FormRadioGroup>
-            </div>
+                    <label>
+                      <FormRadio {...form} name={`${comp}_role`} value="lead" />
+                      <p>Lead</p>
+                    </label>
+                  </FormRadioGroup>
+                </div>
+              ))}
+            </>
           )}
           <div className={styles.radioGroup}>
             <h4 className={styles.title}>
@@ -362,8 +381,8 @@ export default function RegistrationForm({ form, isClicked }) {
             </p>
 
             <label>
-              <FormCheckbox disabled {...form} name="lunch" value="saturday" />{" "}
-              Saturday Lunch (fully booked)
+              <FormCheckbox {...form} name="lunch" value="saturday" /> Saturday
+              Lunch
             </label>
             <label>
               <FormCheckbox {...form} name="lunch" value="sunday" /> Sunday

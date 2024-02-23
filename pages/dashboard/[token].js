@@ -487,7 +487,9 @@ export default function Dashboard({ users, tickets }) {
           theme_class,
           level,
           competition,
-          competition_role,
+          open_mixnmatch_role,
+          newcomers_mixnmatch_role,
+          strictly_role,
           competitions,
           lunch,
           donation,
@@ -540,7 +542,9 @@ export default function Dashboard({ users, tickets }) {
               <td>{level}</td>
               <td>{titleCase(theme_class)}</td>
               <td>{competition}</td>
-              <td>{competition_role}</td>
+              <td>{open_mixnmatch_role}</td>
+              <td>{newcomers_mixnmatch_role}</td>
+              <td>{strictly_role}</td>
               <td>
                 {competitions && (
                   <div style={{ display: "flex", gap: "10px" }}>

@@ -34,7 +34,9 @@ export default async function mailall(req, response) {
     level: req.body.level,
     theme_class: req.body.theme_class,
     competition: req.body.competition,
-    competition_role: req.body.competition_role,
+    open_mixnmatch_role: req.body.open_mixnmatch_role,
+    newcomers_mixnmatch_role: req.body.newcomers_mixnmatch_role,
+    strictly_role: req.body.strictly_role,
     competitions: req.body.competitions,
     lunch: req.body.lunch,
     terms: req.body.terms,
@@ -86,7 +88,9 @@ export default async function mailall(req, response) {
           : false,
       competitionAnswer:
         user.competition === "later" ? "I will decide later" : "No",
-      competition_role: `${user.competition_role}`,
+      open_mixnmatch_role: `${user.open_mixnmatch_role}`,
+      newcomers_mixnmatch_role: `${user.newcomers_mixnmatch_role}`,
+      strictly_role: `${user.strictly_role}`,
       competitions: user.competitions
         ? `${user.competitions
             .split(",")
