@@ -151,7 +151,7 @@ export default function Home({ tickets }) {
             isClicked={isClicked}
           />
         ) : (
-          <h3>We are sold out :) </h3>
+          <h3>Registration is in July :) </h3>
         )}
       </main>
 
