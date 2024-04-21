@@ -418,10 +418,12 @@ export default function Dashboard({ users, tickets }) {
       "parent_partner",
       "role",
       "level",
-      "themed class",
+      // "themed class",
       "competition",
-      "competition role",
       "competitions",
+      "Open MnM role",
+      "Newcom. role",
+      "Strictly role",
       "donation",
       "lunch",
       "country",
@@ -484,7 +486,6 @@ export default function Dashboard({ users, tickets }) {
           parent_partner,
           lastname,
           country,
-          theme_class,
           level,
           competition,
           open_mixnmatch_role,
@@ -540,11 +541,8 @@ export default function Dashboard({ users, tickets }) {
               <td>{parent_partner}</td>
               <td>{role}</td>
               <td>{level}</td>
-              <td>{titleCase(theme_class)}</td>
+              {/* <td>{titleCase(theme_class)}</td> */}
               <td>{competition}</td>
-              <td>{open_mixnmatch_role}</td>
-              <td>{newcomers_mixnmatch_role}</td>
-              <td>{strictly_role}</td>
               <td>
                 {competitions && (
                   <div style={{ display: "flex", gap: "10px" }}>
@@ -563,6 +561,9 @@ export default function Dashboard({ users, tickets }) {
                   </div>
                 )}
               </td>
+              <td>{open_mixnmatch_role}</td>
+              <td>{newcomers_mixnmatch_role}</td>
+              <td>{strictly_role}</td>
               <td>{donation}</td>
               <td>
                 {lunch && (

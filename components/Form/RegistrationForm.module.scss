@@ -122,9 +122,10 @@
     transition: all 400ms;
   }
   &.selected {
-    border: 1px solid grey;
-    transform: translateY(-6px);
+    border: 1px solid rgb(125, 102, 102);
+    transform: translateY(-10px);
     transition: all 400ms;
+    background-color: #a6d0dc;
 
     // @include focus();
     &::after {

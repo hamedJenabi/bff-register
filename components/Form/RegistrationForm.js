@@ -254,7 +254,7 @@ export default function RegistrationForm({ form, isClicked }) {
             </>
           )}
 
-          <h3 className={styles.title}>Themed Classes? (€45)</h3>
+          {/* <h3 className={styles.title}>Themed Classes? (€45)</h3>
           <p className={styles.infoText}>
             You can add this class to your Full-or Partypass. (Happening on
             Friday afternoon)
@@ -263,8 +263,8 @@ export default function RegistrationForm({ form, isClicked }) {
             className={styles.radioGroup}
             {...form}
             name="theme_class"
-          >
-            {/* <label>
+          > */}
+          {/* <label>
               <FormRadio
                 {...form}
                 name="theme_class"
@@ -272,7 +272,7 @@ export default function RegistrationForm({ form, isClicked }) {
               />
               <p>Build a Choreography </p>
             </label> */}
-            <label>
+          {/* <label>
               <FormRadio
                 disabled
                 {...form}
@@ -284,8 +284,8 @@ export default function RegistrationForm({ form, isClicked }) {
             <label>
               <FormRadio {...form} name="theme_class" value="no" />
               <p>No</p>
-            </label>
-          </FormRadioGroup>
+            </label> */}
+          {/* </FormRadioGroup> */}
           <h3 className={styles.title}>
             Do you want to participate in competitions?
           </h3>
