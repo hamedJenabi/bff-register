@@ -55,12 +55,12 @@ export default function RegistrationForm({ form, isClicked }) {
     form.values.level === "beg/int" ||
     form.values.level === "struttin";
 
-  const isDisabled = (value) =>
-    value === "beg/int" ||
-    value === "int" ||
-    value === "texas_shuffle" ||
-    value === "stride_strut" ||
-    (value === "struttin" && form.values.role === "follow");
+  // const isDisabled = (value) =>
+  //   value === "beg/int" ||
+  //   value === "int" ||
+  //   value === "latin_blues" ||
+  //   value === "stride_strut" ||
+  //   (value === "struttin" && form.values.role === "follow");
 
   return (
     <>

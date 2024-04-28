@@ -39,8 +39,8 @@ export const levelsToShow = [
   {
     lead: 18,
     follow: 18,
-    label: "Texas Shuffle (Int/Advanced and above)",
-    value: "texas_shuffle",
+    label: "Latin Blues (Int/Advanced and above)",
+    value: "latin_blues",
   },
   {
     lead: 18,
@@ -102,8 +102,8 @@ export const finalLevelsToShow = [
   {
     lead: 18,
     follow: 18,
-    label: "Texas Shuffle (Int/Advanced and above)",
-    value: "texas_shuffle",
+    label: "Latin Blues (Int/Advanced and above)",
+    value: "latin_blues",
   },
   {
     lead: 18,
@@ -187,8 +187,8 @@ export const fullpassPrice = isAfterTargetDate("2024-09-15T00:01:00+02:00")
   ? 245
   : 225;
 export const partyPrice = isAfterTargetDate("2024-09-15T00:01:00+02:00")
-  ? 125
-  : 115;
+  ? 135
+  : 125;
 
 export const getPrice = (requestData, isGroupDiscount) => {
   const initialPrice =
