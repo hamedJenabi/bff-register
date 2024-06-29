@@ -118,17 +118,27 @@ export default async function register(req, response) {
     // 302 -> already registered
     response.status(302).json();
   }
-
+  console.log("requestData", requestData);
   if (!isAlreadyRegistered) {
     // await updateTicketCapacity(ticketId); TODO - update capacity??
-    const user = {
+    let user = {
       status: "registered",
       price: totalPrice.toString(),
       ...requestData,
     };
+    template = "d-a3d0a3b2f11f4c0d8c9008e9db9fa07d";
+
+    if (requestData.ticket === "partyPass") {
+      user = {
+        status: "email-sent",
+        price: totalPrice.toString(),
+        ...requestData,
+      };
+      template = "d-eec50fc0f8824f0aa2c66a7196890ed5";
+    }
 
     const [{ id }] = await insertRegistration(user);
-    template = "d-a3d0a3b2f11f4c0d8c9008e9db9fa07d";
+
     // await updateGoogle(user);
 
     response.status(200).json();

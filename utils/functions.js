@@ -23,7 +23,15 @@ export const levelsToShow = [
   {
     lead: 20,
     follow: 20,
-    label: "Struttin' (Int/Advanced and above)",
+    label: "Advanced",
+    value: "adv",
+    detail:
+      "You travel internationally to festivals and have attended workshops. You have an expanded vocabulary (aesthetics and movements) and have achieved good musicality. You have a high understanding of partnership in dancing.",
+  },
+  {
+    lead: 20,
+    follow: 20,
+    label: "Struttin' (Advanced and above)",
     value: "struttin",
     detail:
       "You consistently demonstrate, describe, and differentiate between a range of styles and movements, while maintaining blues aesthetic. You include some layered movements. You can observe and work out movement execution. You may teach blues at your local scene and do lots of international workshops.",
@@ -31,7 +39,7 @@ export const levelsToShow = [
   {
     lead: 18,
     follow: 18,
-    label: "Chicago Triple (Int/Advanced and above)",
+    label: "Chicago Triple (Advanced and above)",
     value: "chicago_triple",
     detail:
       "You consistently demonstrate, describe, and differentiate between a range of styles and movements, while maintaining blues aesthetic. You include some layered movements. You can observe and work out movement execution. You may teach blues at your local scene and do lots of international workshops.",
@@ -39,13 +47,13 @@ export const levelsToShow = [
   {
     lead: 18,
     follow: 18,
-    label: "Latin Blues (Int/Advanced and above)",
+    label: "Latin Blues (Advanced and above)",
     value: "latin_blues",
   },
   {
     lead: 18,
     follow: 18,
-    label: "Stride & Strut - Ballroomin' (Int/Advanced and above)",
+    label: "Stride & Strut - Ballroomin' (Advanced and above)",
     value: "stride_strut",
   },
   {
@@ -184,11 +192,11 @@ export const compettionsInfo = [
   },
 ];
 export const fullpassPrice = isAfterTargetDate("2024-09-15T00:01:00+02:00")
-  ? 245
-  : 225;
+  ? 255
+  : 235;
 export const partyPrice = isAfterTargetDate("2024-09-15T00:01:00+02:00")
-  ? 135
-  : 125;
+  ? 145
+  : 135;
 
 export const getPrice = (requestData, isGroupDiscount) => {
   const initialPrice =
@@ -226,63 +234,8 @@ export const getPrice = (requestData, isGroupDiscount) => {
   return output;
 };
 
-export const discounts = [
-  { name: "test", email: "hamed.jenabi@gmail.com" },
-  { name: "", email: "sylwia-mazanek@wp.pl" },
-  { name: "", email: "katarzynakoskapl@gmail.com" },
-  { name: "", email: "abrodaa@gmail.com" },
-  { name: "", email: "marczynska.lena@gmail.com" },
-  { name: "", email: "agnieszka.pluwak@gmail.com" },
-  { name: "", email: "jaturul@gmail.com" },
-  { name: "", email: "k.m.a.szewczyk@gmail.com" },
-  { name: "", email: "tombla7@gmail.com" },
-  { name: "", email: "D.suchostawski@gmail.com" },
-  { name: "", email: "Lukomska.maja@gmail.com" },
-  { name: "", email: "kasia.wojniak@gmail.com" },
-  { name: "", email: "m.kaminski569@gmail.com" },
-  { name: "", email: "twardziak.rita@gmail.com" },
-  { name: "", email: "fiodor.wasiewski@gmail.com" },
-  { name: "", email: "malwinakrause@o2.pl" },
-  { name: "", email: "andrzejzab@gmail.com" },
-  { name: "", email: "karolinaufa@gmail.com" },
-  { name: "", email: "strelkovskaia@gmail.com" },
-  { name: "", email: "agnieszka.zdancewicz@gmail.com" },
-  { name: "", email: "shakethatblues@gmail.com" },
-  { name: "", email: "k.prusniewski@gmail.com" },
-];
-export const newDiscount = [
-  { name: "test", email: "hamed.jenabi@gmail.com" },
-  { name: "", email: "natalia.vodislavska@gmail.com" },
-  { name: "", email: "gejza.katona@gmail.com" },
-  { name: "", email: "janacova.veronika@gmail.com" },
-  { name: "", email: "gurthfin@gmail.com" },
-  { name: "", email: "melegova.s@gmail.com" },
-  { name: "", email: "kruzliak@charita.sk" },
-  { name: "", email: "lea.debnar@gmail.com" },
-  { name: "", email: "ivana.klukova@gmail.com" },
-  { name: "", email: "duricova.tina@gmail.com" },
-  { name: "", email: "daria@yurieva.ru" },
-  { name: "", email: "s.hilzinger@gmx.de" },
-  { name: "", email: "aayang444@gmail.com" },
-  { name: "", email: "edward.curran@hotmail.co.uk" },
-  { name: "", email: "krhuang5@gmail.com" },
-  { name: "", email: "rundmails@andreasMerkert.de" },
-  { name: "", email: "zhenmaodentist@gmail.com" },
-  { name: "", email: "P.henrich@uckert.de" },
-  { name: "", email: "qianita.sun@gmail.com" },
-  { name: "", email: "robertwi@web.de" },
-  { name: "", email: "ka.arc@gmx.de" },
-  { name: "", email: "Yhoepfner@gmail.com" },
-  { name: "", email: "otorras2@gmail.com" },
-  { name: "", email: "mcpascual59@gmail.com" },
-  { name: "", email: "sos_lis@hotmail.com" },
-  { name: "", email: "mariacerratolara@gmail.com" },
-  { name: "", email: "lolivalencia@yahoo.es" },
-  { name: "", email: "miguel.c.valles@gmail.com" },
-  { name: "", email: "rafagacor@gmail.com" },
-  { name: "", email: "antonifm100@gmail.com" },
-  { name: "", email: "fisioklaas@gmail.com" },
-];
+export const discounts = [];
+export const newDiscount = [];
 
 export const isGroupDiscount = (email) =>
   discounts.some(({ mail }) => mail === email);
