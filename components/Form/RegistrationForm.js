@@ -146,7 +146,7 @@ export default function RegistrationForm({ form, isClicked }) {
             >
               <h3>Party Pass</h3>
               <p>All 5 Parties</p>
-              <p>{partyPrice}</p>
+              <p>€{partyPrice}</p>
             </div>
             <div
               onClick={() => handleTicket(3)}
@@ -304,7 +304,7 @@ export default function RegistrationForm({ form, isClicked }) {
               <p>No</p>
             </label>
             <label>
-              <FormRadio {...form} name="competition" value="later" disabled />
+              <FormRadio {...form} name="competition" value="later" />
               <p>I will decide later</p>
             </label>
           </FormRadioGroup>
@@ -365,7 +365,7 @@ export default function RegistrationForm({ form, isClicked }) {
           )}
           <div className={styles.radioGroup}>
             <h4 className={styles.title}>
-              Which day you want to have lunch at the Venue? <br />
+              Which day do you want to have lunch at the Venue? <br />
               (You can choose both days):
             </h4>
             <p className={styles.infoText}>
