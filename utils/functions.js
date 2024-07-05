@@ -218,11 +218,12 @@ export const getPrice = (requestData, isGroupDiscount) => {
   const donationAmount = requestData.donation_amount
     ? parseInt(requestData.donation_amount)
     : 0;
-
+  const tshirtPrice = requestData.tshirt.length > 0 ? 25 : 0;
   const lunchMoney = requestData.lunch?.length * 15 || 0;
   const totalPrice =
     initialPrice +
     donationAmount +
+    tshirtPrice +
     competitions +
     theme_class +
     lunchMoney +

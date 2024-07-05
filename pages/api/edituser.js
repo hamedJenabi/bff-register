@@ -89,6 +89,7 @@ export default async function edituser(req, response) {
     competitions: req.body.competitions,
     lunch: req.body.lunch,
     donation_amount: req.body.donation,
+    tshirt: req.body.tshirt,
     terms: req.body.terms,
     isGroupApi: req.body.isGroupApi,
     price: req.body.price,
@@ -183,6 +184,7 @@ export default async function edituser(req, response) {
             : "",
           terms: `${requestData.terms}`,
           status: `${requestData.status}`,
+          tshirt: `${requestData.tshirt ? requestData.tshirt : "No T-shirt"}`,
           isGroupDiscount: isGroupDiscount,
           price: `${newPrice}`,
           donation: `${requestData.donation_amount}`,
@@ -216,6 +218,7 @@ export default async function edituser(req, response) {
           open_mixnmatch_role: `${requestData.open_mixnmatch_role}`,
           newcomers_mixnmatch_role: `${requestData.newcomers_mixnmatch_role}`,
           strictly_role: `${requestData.strictly_role}`,
+          tshirt: `${requestData.tshirt ? requestData.tshirt : "No T-shirt"}`,
           competitions: requestData.competitions
             ? `${requestData.competitions
                 .split(",")
@@ -254,6 +257,7 @@ export default async function edituser(req, response) {
           open_mixnmatch_role: `${requestData.open_mixnmatch_role}`,
           newcomers_mixnmatch_role: `${requestData.newcomers_mixnmatch_role}`,
           strictly_role: `${requestData.strictly_role}`,
+          tshirt: `${requestData.tshirt ? requestData.tshirt : "No T-shirt"}`,
           competitions: requestData.competitions
             ? `${requestData.competitions
                 .split(",")
@@ -292,6 +296,7 @@ export default async function edituser(req, response) {
           open_mixnmatch_role: `${requestData.open_mixnmatch_role}`,
           newcomers_mixnmatch_role: `${requestData.newcomers_mixnmatch_role}`,
           strictly_role: `${requestData.strictly_role}`,
+          tshirt: `${requestData.tshirt ? requestData.tshirt : "No T-shirt"}`,
           competitions: requestData.competitions
             ? `${requestData.competitions
                 .split(",")
@@ -331,6 +336,7 @@ export default async function edituser(req, response) {
           open_mixnmatch_role: `${requestData.open_mixnmatch_role}`,
           newcomers_mixnmatch_role: `${requestData.newcomers_mixnmatch_role}`,
           strictly_role: `${requestData.strictly_role}`,
+          tshirt: `${requestData.tshirt ? requestData.tshirt : "No T-shirt"}`,
           competitions: requestData.competitions
             ? `${requestData.competitions
                 .split(",")

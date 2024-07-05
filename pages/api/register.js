@@ -82,6 +82,7 @@ export default async function register(req, response) {
     newcomers_mixnmatch_role: req.body.newcomers_mixnmatch_role,
     strictly_role: req.body.strictly_role,
     competitions: req.body.competitions,
+    tshirt: req.body.tshirt,
     donation_amount: req.body.donation_amount,
     lunch: req.body.lunch,
     terms: req.body.terms,
@@ -205,6 +206,9 @@ export default async function register(req, response) {
       price: `${totalPrice}`,
       donation: `${requestData.donation_amount}`,
       lunch: `${requestData.lunch}`,
+      tshirt: `${
+        requestData.tshirt.leghth > 0 ? requestData.tshirt : "No T-shirt"
+      }`,
     },
   };
   // const generageMessage = () => {

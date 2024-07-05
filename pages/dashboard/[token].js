@@ -425,6 +425,7 @@ export default function Dashboard({ users, tickets }) {
       "Newcom. role",
       "Strictly role",
       "donation",
+      "tshirt",
       "lunch",
       "country",
       "terms",
@@ -465,7 +466,7 @@ export default function Dashboard({ users, tickets }) {
     );
   };
   //--------- Table Data
-
+  console.log("users", users);
   const renderTableData = () => {
     return userToShow
       .filter((user) =>
@@ -492,6 +493,7 @@ export default function Dashboard({ users, tickets }) {
           newcomers_mixnmatch_role,
           strictly_role,
           competitions,
+          tshirt,
           lunch,
           donation,
           email,
@@ -565,6 +567,7 @@ export default function Dashboard({ users, tickets }) {
               <td>{newcomers_mixnmatch_role}</td>
               <td>{strictly_role}</td>
               <td>{donation}</td>
+              <td>{tshirt}</td>
               <td>
                 {lunch && (
                   <div style={{ display: "flex", gap: "10px" }}>

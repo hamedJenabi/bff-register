@@ -90,6 +90,7 @@ export async function insertRegistration(user) {
     newcomers_mixnmatch_role: user.newcomers_mixnmatch_role,
     strictly_role: user.strictly_role,
     competitions: user.competitions.toString(),
+    tshirt: user.tshirt,
     lunch: user.lunch,
     donation: user.donation_amount,
     price: user.price,
@@ -115,6 +116,7 @@ export async function insertRegistration(user) {
     "newcomers_mixnmatch_role",
     "strictly_role",
     "competitions",
+    "tshirt",
     "price",
     "lunch",
     "donation",
@@ -158,6 +160,7 @@ export async function updateUserInfo(user, totalPrice) {
     newcomers_mixnmatch_role: user.newcomers_mixnmatch_role,
     strictly_role: user.strictly_role,
     competitions: user.competitions,
+    tshirt: user.tshirt,
     price: totalPrice,
     terms: true,
   };
@@ -181,6 +184,7 @@ export async function updateUserInfo(user, totalPrice) {
     "newcomers_mixnmatch_role"= ${userData.newcomers_mixnmatch_role},
     "strictly_role"= ${userData.strictly_role},
     "competitions" = ${userData.competitions},
+    "tshirt" = ${userData.tshirt},
     "price" = ${userData.price},
     "terms" = ${userData.terms}
   WHERE id = ${user.id}

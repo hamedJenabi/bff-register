@@ -55,13 +55,28 @@ export default function RegistrationForm({ form, isClicked }) {
     form.values.level === "beg/int" ||
     form.values.level === "struttin";
 
+  const shirtSize = [
+    "",
+    "Curvy XS (W)",
+    "Curvy S (W)",
+    "Curvy M (W)",
+    "Curvy L (W)",
+    "Curvy XL (W)",
+    "Curvy 2XL (W)",
+    "Straight XS (M)",
+    "Straight S (M)",
+    "Straight M (M)",
+    "Straight L (M)",
+    "Straight XL (M)",
+    "Straight 2XL (M)",
+  ];
   // const isDisabled = (value) =>
   //   value === "beg/int" ||
   //   value === "int" ||
   //   value === "latin_blues" ||
   //   value === "stride_strut" ||
   //   (value === "struttin" && form.values.role === "follow");
-
+  console.log("for", form.values);
   return (
     <>
       {!isClicked && (
@@ -390,6 +405,39 @@ export default function RegistrationForm({ form, isClicked }) {
             </label>
           </div>
           <h4 className={styles.title}>
+            Wanna have our organic BFF t-shirt? (€25)
+          </h4>
+          <FormRadioGroup
+            className={styles.radioGroup}
+            {...form}
+            name="shirtinfo"
+          >
+            <label>
+              <FormRadio {...form} name="shirtinfo" value="yes" /> <p>Yes</p>
+            </label>
+            <label>
+              <FormRadio {...form} name="shirtinfo" value="no" />
+              <p>No</p>
+            </label>
+          </FormRadioGroup>
+          {form.values.shirtinfo === "yes" && (
+            <>
+              <h4 className={styles.title}>Choose the T-Shirt size:</h4>
+              <div className={styles.selectWrapper}>
+                <select
+                  onChange={(e) => form.update("tshirt", e.target.value)}
+                  className={styles.select}
+                >
+                  {shirtSize?.map((size) => (
+                    <option value={size} key={size}>
+                      {size}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </>
+          )}
+          <h4 className={styles.title}>
             Do you want to donate to the Blues Fever Scholarship and discount
             Fund?
           </h4>
@@ -399,6 +447,7 @@ export default function RegistrationForm({ form, isClicked }) {
               to everyone. You can donate any amount you want.
             </p>
           </div>
+
           <FormRadioGroup
             className={styles.radioGroup}
             {...form}
@@ -413,6 +462,8 @@ export default function RegistrationForm({ form, isClicked }) {
               <p>No</p>
             </label>
           </FormRadioGroup>
+
+          <FormMessage className={styles.errorMessage} {...form} name="shirt" />
           {form.values.donation === "yes" && (
             <div className={styles.radioGroup}>
               <h4 className={styles.title}>How much do you want to donate?</h4>

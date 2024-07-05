@@ -42,6 +42,8 @@ export default function Home({ tickets }) {
       open_mixnmatch_role: "",
       newcomers_mixnmatch_role: "",
       strictly_role: "",
+      tshirtInfo: "",
+      tshirt: "",
       competitions: "",
       donation: "",
       donation_amount: "",
@@ -119,7 +121,7 @@ export default function Home({ tickets }) {
         <meta name="description" content="BLUES FEVER 2024 Registration" />
         <meta
           property="og:image"
-          content="https://www.bluesfever.eu/wp-content/uploads/2023/07/bff2023-scaled.jpg"
+          content="https://www.bluesfever.eu/wp-content/uploads/2024/01/bff24_title-finals-2-scaled.jpg"
         />
 
         <link rel="icon" href="/icon.png" />
