@@ -31,7 +31,7 @@ export const levelsToShow = [
   {
     lead: 20,
     follow: 20,
-    label: "Struttin' (Advanced and above)",
+    label: "Struttin'  (Intermediate/Advanced and above)",
     value: "struttin",
     detail:
       "You consistently demonstrate, describe, and differentiate between a range of styles and movements, while maintaining blues aesthetic. You include some layered movements. You can observe and work out movement execution. You may teach blues at your local scene and do lots of international workshops.",
@@ -39,7 +39,7 @@ export const levelsToShow = [
   {
     lead: 18,
     follow: 18,
-    label: "Chicago Triple (Advanced and above)",
+    label: "Chicago Triple (Intermediate/Advanced and above)",
     value: "chicago_triple",
     detail:
       "You consistently demonstrate, describe, and differentiate between a range of styles and movements, while maintaining blues aesthetic. You include some layered movements. You can observe and work out movement execution. You may teach blues at your local scene and do lots of international workshops.",
@@ -47,13 +47,13 @@ export const levelsToShow = [
   {
     lead: 18,
     follow: 18,
-    label: "Latin Blues (Advanced and above)",
+    label: "Latin Blues (Intermediate/Advanced and above)",
     value: "latin_blues",
   },
   {
     lead: 18,
     follow: 18,
-    label: "Stride & Strut - Ballroomin' (Advanced and above)",
+    label: "Stride & Strut - Ballroomin' (Intermediate/Advanced and above)",
     value: "stride_strut",
   },
   {
@@ -94,7 +94,7 @@ export const finalLevelsToShow = [
   {
     lead: 20,
     follow: 20,
-    label: "Struttin' (Int/Advanced and above)",
+    label: "Struttin'  (Intermediate/Advanced and above)",
     value: "struttin",
     detail:
       "You consistently demonstrate, describe, and differentiate between a range of styles and movements, while maintaining blues aesthetic. You include some layered movements. You can observe and work out movement execution. You may teach blues at your local scene and do lots of international workshops.",
@@ -102,7 +102,7 @@ export const finalLevelsToShow = [
   {
     lead: 18,
     follow: 18,
-    label: "Chicago Triple (Int/Advanced and above)",
+    label: "Chicago Triple  (Intermediate/Advanced and above)",
     value: "chicago_triple",
     detail:
       "You consistently demonstrate, describe, and differentiate between a range of styles and movements, while maintaining blues aesthetic. You include some layered movements. You can observe and work out movement execution. You may teach blues at your local scene and do lots of international workshops.",
@@ -110,13 +110,13 @@ export const finalLevelsToShow = [
   {
     lead: 18,
     follow: 18,
-    label: "Latin Blues (Int/Advanced and above)",
+    label: "Latin Blues  (Intermediate/Advanced and above)",
     value: "latin_blues",
   },
   {
     lead: 18,
     follow: 18,
-    label: "Stride & Strut - Ballroomin' (Int/Advanced and above)",
+    label: "Stride & Strut - Ballroomin'  (Intermediate/Advanced and above)",
     value: "stride_strut",
   },
   {
@@ -235,8 +235,34 @@ export const getPrice = (requestData, isGroupDiscount) => {
   return output;
 };
 
-export const discounts = [];
-export const newDiscount = [];
+export const discounts = [
+  { mail: "hamed.jenabi@gmail.com" },
+  { mail: "me@woutervervloet.com" },
+  { mail: "anicebo22@gmail.com" },
+  { mail: "dijkstra.lel@gmail.com" },
+  { mail: "nekotanik@gmail.com" },
+  { mail: "vicky.broos@gmail.com" },
+  { mail: "collinvandenbroek@gmail.com" },
+  { mail: "asnytin@gmail.com" },
+  { mail: "beauvandergiessen@gmail.com" },
+  { mail: "r.j.bongers@gmail.com" },
+  { mail: "snezana.otas@gmail.com" },
+  { mail: "jjbarreno@gmail.com" },
+  { mail: "victor_roosjr@hotmail.com" },
+  { main: "daria@yurieva.ru" },
+  { main: "elsa.filippidou@gmail.com" },
+  { main: "aayang444@gmail.com" },
+  { main: "edward.curran@hotmail.co.uk" },
+  { main: "krhuang5@gmail.com" },
+  { main: "mxeinhorn@gmail.com" },
+  { main: "qianita.sun@gmail.com" },
+  { main: "sampsondsyuan@gmail.com" },
+  { main: "yjkberlin@rawdata.space" },
+  { main: "izemylmaz@gmail.com" },
+  { main: "rundmails@AndreasMerkert.de" },
+  { main: "mykolamalik@gmail.com" },
+  { main: "yasmin@bluesfever.eu" },
+];
 
 export const isGroupDiscount = (email) =>
   discounts.some(({ mail }) => mail === email);

@@ -20,7 +20,7 @@ export default function Home({ tickets }) {
   return (
     <div className={styles.container}>
       <Head>
-        <title>BLUES FEVER 2023</title>
+        <title>BLUES FEVER 2024</title>
         <meta name="description" content="BLUES FEVER 2023 Registration" />
         <link rel="icon" href="/icon.png" />
 

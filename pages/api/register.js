@@ -1,4 +1,3 @@
-import { GoogleSpreadsheet } from "google-spreadsheet";
 import {
   insertRegistration,
   getTicketByName,
