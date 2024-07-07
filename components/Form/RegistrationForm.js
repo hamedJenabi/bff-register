@@ -227,7 +227,9 @@ export default function RegistrationForm({ form, isClicked }) {
           )}
           {isFullPass && (
             <>
-              <h3 className={styles.title}>Choose your Level:</h3>
+              <h3 className={styles.title}>
+                Choose your Level: (classes in Fr/Sat/Sunday)
+              </h3>
               <div className={styles.infoTextWrapper}>
                 <div className={styles.infoText}>
                   Hey folks, There will be <strong>no audition</strong>,so
