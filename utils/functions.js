@@ -265,6 +265,19 @@ export const discounts = [
   { mail: "rundmails@AndreasMerkert.de" },
   { mail: "mykolamalik@gmail.com" },
   { mail: "yasmin@bluesfever.eu" },
+  { mail: "panayotova.vasilena@gmail.com" },
+  { mail: "nedahristova16@gmail.com" },
+  { mail: "desidesign1996@gmail.com" },
+  { mail: "gamanolova@gmail.com" },
+  { mail: "sirakova@greenlife.bg" },
+  { mail: "agodinova@gmail.com" },
+  { mail: "daniela.i.ranova@gmail.com" },
+  { mail: "angelov.pavel@gmail.com" },
+  { mail: "margarita.baykova@gmail.com" },
+  { mail: "kdentchev@mail.bg" },
+  { mail: "pavel966969@gmail.com" },
+  { mail: "a_lozev1962@abv.bg" },
+  { mail: "onopko@abv.bg" },
 ];
 
 export const isGroupDiscount = (email) =>
