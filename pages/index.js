@@ -125,11 +125,13 @@ export default function Home({ tickets }) {
   const [remainingTime, setRemainingTime] = useState(calculateRemainingTime());
 
   useEffect(() => {
-    if (!isAfterTargetDateValue) {
-      const interval = setInterval(() => {
-        setRemainingTime(calculateRemainingTime());
-      }, 1000);
+    let interval;
+    if (isAfterTargetDateValue) {
+      return;
     }
+    interval = setInterval(() => {
+      setRemainingTime(calculateRemainingTime());
+    }, 1000);
     return () => clearInterval(interval);
   }, []);
 
