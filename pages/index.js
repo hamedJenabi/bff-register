@@ -113,7 +113,7 @@ export default function Home({ tickets }) {
     },
   });
 
-  const isAfterTargetDateValue = isAfterTargetDate("2024-07-07T13:17:00+02:00");
+  const isAfterTargetDateValue = isAfterTargetDate("2024-07-07T19:00:00+02:00");
 
   const targetDate = new Date("2024-07-07T19:00:00+02:00").getTime();
 
