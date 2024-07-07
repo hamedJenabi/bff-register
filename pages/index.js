@@ -113,7 +113,8 @@ export default function Home({ tickets }) {
     },
   });
 
-  const isAfterTargetDateValue = isAfterTargetDate("2024-07-07T18:00:00+02:00");
+  const isAfterTargetDateValue = isAfterTargetDate("2024-07-07T19:00:00+02:00");
+
   return (
     <div className={styles.container}>
       <Head>

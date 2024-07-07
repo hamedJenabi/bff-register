@@ -63,7 +63,9 @@ export default function RegistrationForm({ form, isClicked }) {
     "Curvy L (W)",
     "Curvy XL (W)",
     "Curvy 2XL (W)",
-    "Straight XS (M)",
+    "Croptop S",
+    "Croptop M",
+    "Croptop L",
     "Straight S (M)",
     "Straight M (M)",
     "Straight L (M)",
@@ -76,7 +78,7 @@ export default function RegistrationForm({ form, isClicked }) {
   //   value === "latin_blues" ||
   //   value === "stride_strut" ||
   //   (value === "struttin" && form.values.role === "follow");
-  console.log("for", form.values);
+
   return (
     <>
       {!isClicked && (
