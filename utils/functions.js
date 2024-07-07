@@ -203,7 +203,7 @@ export const getPrice = (requestData, isGroupDiscount) => {
     requestData.ticket === "partyPass" || requestData.ticket === "parentPass"
       ? partyPrice
       : fullpassPrice;
-
+  console.log("initialPrice", isGroupDiscount);
   const ticketPrice = isGroupDiscount
     ? Math.round((initialPrice / 100) * 90)
     : initialPrice;

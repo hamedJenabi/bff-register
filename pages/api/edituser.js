@@ -95,9 +95,7 @@ export default async function edituser(req, response) {
     price: req.body.price,
   };
 
-  const isGroupDiscount = discounts.some(
-    ({ email }) => email === req.body.email
-  );
+  const isGroupDiscount = discounts.some(({ mail }) => mail === req.body.email);
 
   /***** GET PRICE AND LEVEL */
   const level = titleCase(requestData.level);

@@ -96,11 +96,9 @@ export default async function register(req, response) {
   // const { capacity } = await isTicketAvailable(ticketId);
   // const { waiting_list } = await isTicketAvailable(ticketId);
 
-  const isGroupDiscount = discounts.some(
-    ({ email }) => email === req.body.email
-  );
+  const isGroupDiscount = discounts.some(({ mail }) => mail === req.body.email);
   const totalPrice = getPrice(requestData, isGroupDiscount);
-
+  console.log("totalPrice", totalPrice);
   ///////   TODO: GET TOTAL PRICE ///////
   const level = getLevelLabel(requestData.level);
   const ticket = getTicketLabel(requestData.ticket);
