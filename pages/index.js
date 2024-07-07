@@ -141,7 +141,11 @@ export default function Home({ tickets }) {
         .padStart(2, "0");
       const seconds = (remainingTime % 60).toString().padStart(2, "0");
 
-      return `${hours}:${minutes}:${seconds}`;
+      return (
+        <p>
+          {hours}:{minutes}:{seconds}
+        </p>
+      );
     };
 
     return (
