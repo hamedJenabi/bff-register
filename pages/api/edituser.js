@@ -94,41 +94,11 @@ export default async function edituser(req, response) {
     isGroupApi: req.body.isGroupApi,
     price: req.body.price,
   };
-  // constx isGroupDiscount = discounts.some(
-  //   ({ email }) => email === req.body.email
-  // );
-  const isGroupDiscount = newDiscount.some(
-    ({ email }) =>
-      email.trim().toLowerCase() === req.body.email.trim().toLowerCase()
+
+  const isGroupDiscount = discounts.some(
+    ({ email }) => email === req.body.email
   );
 
-  // const getPrice = (requestData, isGroupDiscount) => {
-  //   const initialPrice = requestData.ticket === "partyPass" ? 110 : 225;
-  //   const competitions =
-  //     requestData.competition === "yes"
-  //       ? requestData.competitions.split(",")?.length * 10
-  //       : 0;
-  //   const theme_class =
-  //     requestData.theme_class === "no" || requestData.theme_class === ""
-  //       ? 0
-  //       : 40;
-  //   const fullPassdiscount =
-  //     requestData.ticket === "fullpass" &&
-  //     requestData.competition === "yes" &&
-  //     requestData.competitions?.length > 0
-  //       ? -10
-  //       : 0;
-  //   const totalPrice =
-  //     initialPrice + competitions + theme_class + fullPassdiscount;
-  //   const output = isGroupDiscount
-  //     ? Math.round((totalPrice / 100) * 90)
-  //     : totalPrice;
-  //   return output;
-  // };
-  const newPrice =
-    req.body.status === "email-sent" && isGroupDiscount
-      ? Math.round((requestData.price / 100) * 90)
-      : requestData.price;
   /***** GET PRICE AND LEVEL */
   const level = titleCase(requestData.level);
   const ticket = getTicketLabel(requestData.ticket);
@@ -186,7 +156,7 @@ export default async function edituser(req, response) {
           status: `${requestData.status}`,
           tshirt: `${requestData.tshirt ? requestData.tshirt : "No T-shirt"}`,
           isGroupDiscount: isGroupDiscount,
-          price: `${newPrice}`,
+          price: `${requestData.price}`,
           donation: `${requestData.donation_amount}`,
           lunch: `${requestData.lunch}`,
         },
@@ -227,7 +197,7 @@ export default async function edituser(req, response) {
           terms: `${requestData.terms}`,
           status: `${requestData.status}`,
           isGroupDiscount: isGroupDiscount,
-          price: `${newPrice}`,
+          price: `${requestData.price}`,
           donation: `${requestData.donation_amount}`,
           lunch: `${requestData.lunch}`,
         },
@@ -266,7 +236,7 @@ export default async function edituser(req, response) {
           terms: `${requestData.terms}`,
           status: `${requestData.status}`,
           isGroupDiscount: isGroupDiscount,
-          price: `${newPrice}`,
+          price: `${requestData.price}`,
           donation: `${requestData.donation_amount}`,
           lunch: `${requestData.lunch}`,
         },
@@ -305,7 +275,7 @@ export default async function edituser(req, response) {
           terms: `${requestData.terms}`,
           status: `${requestData.status}`,
           isGroupDiscount: isGroupDiscount,
-          price: `${newPrice}`,
+          price: `${requestData.price}`,
           donation: `${requestData.donation_amount}`,
           lunch: `${requestData.lunch}`,
         },
@@ -345,7 +315,7 @@ export default async function edituser(req, response) {
           terms: `${requestData.terms}`,
           status: `${requestData.status}`,
           isGroupDiscount: isGroupDiscount,
-          price: `${newPrice}`,
+          price: `${requestData.price}`,
           donation: `${requestData.donation_amount}`,
           lunch: `${requestData.lunch}`,
           donation: `${requestData.donation_amount}`,
@@ -369,7 +339,7 @@ export default async function edituser(req, response) {
         await removeFromCapacity(ticketId);
       }
     }
-    await updateUserInfo(req.body, newPrice);
+    await updateUserInfo(req.body, requestData.price);
     response.status(200).json();
   }
 }

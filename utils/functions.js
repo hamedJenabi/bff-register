@@ -203,6 +203,11 @@ export const getPrice = (requestData, isGroupDiscount) => {
     requestData.ticket === "partyPass" || requestData.ticket === "parentPass"
       ? partyPrice
       : fullpassPrice;
+
+  const ticketPrice = isGroupDiscount
+    ? Math.round((initialPrice / 100) * 90)
+    : initialPrice;
+
   const competitions =
     requestData.competition === "yes"
       ? requestData.competitions?.length * 10
@@ -220,19 +225,17 @@ export const getPrice = (requestData, isGroupDiscount) => {
     : 0;
   const tshirtPrice = requestData.tshirt.length > 0 ? 25 : 0;
   const lunchMoney = requestData.lunch?.length * 15 || 0;
+
   const totalPrice =
-    initialPrice +
+    ticketPrice +
     donationAmount +
     tshirtPrice +
     competitions +
     theme_class +
     lunchMoney +
     fullPassdiscount;
-  const output = isGroupDiscount
-    ? Math.round((totalPrice / 100) * 90)
-    : totalPrice;
 
-  return output;
+  return totalPrice;
 };
 
 export const discounts = [
@@ -249,19 +252,19 @@ export const discounts = [
   { mail: "snezana.otas@gmail.com" },
   { mail: "jjbarreno@gmail.com" },
   { mail: "victor_roosjr@hotmail.com" },
-  { main: "daria@yurieva.ru" },
-  { main: "elsa.filippidou@gmail.com" },
-  { main: "aayang444@gmail.com" },
-  { main: "edward.curran@hotmail.co.uk" },
-  { main: "krhuang5@gmail.com" },
-  { main: "mxeinhorn@gmail.com" },
-  { main: "qianita.sun@gmail.com" },
-  { main: "sampsondsyuan@gmail.com" },
-  { main: "yjkberlin@rawdata.space" },
-  { main: "izemylmaz@gmail.com" },
-  { main: "rundmails@AndreasMerkert.de" },
-  { main: "mykolamalik@gmail.com" },
-  { main: "yasmin@bluesfever.eu" },
+  { mail: "daria@yurieva.ru" },
+  { mail: "elsa.filippidou@gmail.com" },
+  { mail: "aayang444@gmail.com" },
+  { mail: "edward.curran@hotmail.co.uk" },
+  { mail: "krhuang5@gmail.com" },
+  { mail: "mxeinhorn@gmail.com" },
+  { mail: "qianita.sun@gmail.com" },
+  { mail: "sampsondsyuan@gmail.com" },
+  { mail: "yjkberlin@rawdata.space" },
+  { mail: "izemylmaz@gmail.com" },
+  { mail: "rundmails@AndreasMerkert.de" },
+  { mail: "mykolamalik@gmail.com" },
+  { mail: "yasmin@bluesfever.eu" },
 ];
 
 export const isGroupDiscount = (email) =>
