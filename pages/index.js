@@ -1,8 +1,8 @@
 import Head from "next/head";
-
+import { CountdownCircleTimer } from "react-countdown-circle-timer";
 import Router from "next/router";
 import { useRouter } from "next/router";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { emailRegex } from "../utils/validate";
 import styles from "../styles/Home.module.scss";
@@ -115,6 +115,50 @@ export default function Home({ tickets }) {
 
   const isAfterTargetDateValue = isAfterTargetDate("2024-07-07T19:00:00+02:00");
 
+  const targetDate = new Date("2024-07-07T19:00:00+02:00").getTime();
+
+  const calculateRemainingTime = () => {
+    const currentTime = new Date().getTime();
+    const difference = targetDate - currentTime;
+    return Math.max(Math.floor(difference / 1000), 0);
+  };
+  const [remainingTime, setRemainingTime] = useState(calculateRemainingTime());
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setRemainingTime(calculateRemainingTime());
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const UrgeWithPleasureComponent = () => {
+    const children = () => {
+      const hours = Math.floor(remainingTime / 3600)
+        .toString()
+        .padStart(2, "0");
+      const minutes = Math.floor((remainingTime % 3600) / 60)
+        .toString()
+        .padStart(2, "0");
+      const seconds = (remainingTime % 60).toString().padStart(2, "0");
+
+      return `${hours}:${minutes}:${seconds}`;
+    };
+
+    return (
+      <CountdownCircleTimer
+        isPlaying
+        colors={["#004777", "#F7B801", "#A30000", "#A30000"]}
+        colorsTime={[
+          remainingTime,
+          remainingTime * 0.9,
+          remainingTime * 0.3,
+          0,
+        ]}
+      >
+        {children}
+      </CountdownCircleTimer>
+    );
+  };
   return (
     <div className={styles.container}>
       <Head>
@@ -154,7 +198,12 @@ export default function Home({ tickets }) {
             isClicked={isClicked}
           />
         ) : (
-          <h3>Registration starts in July :) </h3>
+          <>
+            <h4>Registration starts at 7 pm. </h4>
+            <h4>Vienna time :) </h4>
+            <br />
+            <UrgeWithPleasureComponent />
+          </>
         )}
       </main>
 
