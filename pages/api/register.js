@@ -204,7 +204,7 @@ export default async function register(req, response) {
       donation: `${requestData.donation_amount}`,
       lunch: `${requestData.lunch}`,
       tshirt: `${
-        requestData.tshirt.leghth > 0 ? requestData.tshirt : "No T-shirt"
+        requestData.tshirt !== "" ? requestData.tshirt : "No T-shirt"
       }`,
     },
   };
