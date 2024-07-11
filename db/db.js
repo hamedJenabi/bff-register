@@ -178,7 +178,7 @@ export async function updateUserInfo(user, totalPrice) {
     "parent_partner" = ${userData.parent_partner},
     "role" = ${userData.role},
     "level" = ${userData.level},
-    "theme_class" = ${userData.theme_class},
+    "theme_class" = ${userData.theme_class || ""},
     "competition" = ${userData.competition},
     "open_mixnmatch_role"= ${userData.open_mixnmatch_role},
     "newcomers_mixnmatch_role"= ${userData.newcomers_mixnmatch_role},

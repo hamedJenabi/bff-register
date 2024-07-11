@@ -20,11 +20,11 @@ const header = [
   "parent_partner",
   "role",
   "level",
-  "themed class",
   "competition",
   "open_mixnmatch_role",
   "newcomers_mixnmatch_role",
   "strictly_role",
+  "tshirt",
   "competitions",
   "donation",
   "lunch",
@@ -44,16 +44,15 @@ export default function User({ user }) {
       level: user.level,
       ticket: user.ticket,
       role: user.role,
-      theme_class: user.theme_class || "",
       competition: user.competition,
       open_mixnmatch_role: user.open_mixnmatch_role,
       newcomers_mixnmatch_role: user.newcomers_mixnmatch_role,
       strictly_role: user.strictly_role,
       competitions: user.competitions?.toString(),
-      theme_class: user.theme_class || "",
       price: user.price,
       parent_partner: user.parent_partner,
       donation: user.donation,
+      tshirt: user.tshirt,
       lunch: user.lunch,
       terms: user.terms,
     },
@@ -90,6 +89,7 @@ export default function User({ user }) {
   const handleClick = (key) => {
     alert(key);
   };
+
   return (
     <div className={styles.container}>
       <Head>
