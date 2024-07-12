@@ -72,12 +72,11 @@ export default function RegistrationForm({ form, isClicked }) {
     "Straight XL (M)",
     "Straight 2XL (M)",
   ];
-  // const isDisabled = (value) =>
-  //   value === "beg/int" ||
+  const isDisabled = (value) =>
+    value === "int" || (value === "adv" && form.values.role === "follow");
   //   value === "int" ||
   //   value === "latin_blues" ||
   //   value === "stride_strut" ||
-  //   (value === "struttin" && form.values.role === "follow");
 
   return (
     <>
@@ -259,11 +258,11 @@ export default function RegistrationForm({ form, isClicked }) {
                         {...form}
                         name="level"
                         value={value}
-                        // disabled={isDisabled(value)}
+                        disabled={isDisabled(value)}
                       />
                       <p style={{ fontSize: "14px" }}>
                         {label}
-                        {/* {isDisabled(value) && "(Sold out)"} */}
+                        {isDisabled(value) && "(Sold out)"}
                       </p>
                       {/* <InfoModal header={label} info={detail} /> */}
                     </label>
