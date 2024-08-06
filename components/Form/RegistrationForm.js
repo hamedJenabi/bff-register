@@ -73,7 +73,10 @@ export default function RegistrationForm({ form, isClicked }) {
     "Straight 2XL (M)",
   ];
   const isDisabled = (value) =>
-    value === "int" || (value === "adv" && form.values.role === "follow");
+    value === "int" ||
+    (value === "adv" && form.values.role === "follow") ||
+    (value === "latin_blues" && form.values.role === "follow");
+
   //   value === "int" ||
   //   value === "latin_blues" ||
   //   value === "stride_strut" ||
