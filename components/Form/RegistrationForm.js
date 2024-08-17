@@ -74,7 +74,8 @@ export default function RegistrationForm({ form, isClicked }) {
   ];
   const isDisabled = (value) =>
     value === "int" ||
-    (value === "adv" && form.values.role === "follow") ||
+    value === "adv" ||
+    value === "adv+" ||
     (value === "latin_blues" && form.values.role === "follow");
 
   //   value === "int" ||
