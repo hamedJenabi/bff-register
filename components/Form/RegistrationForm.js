@@ -267,7 +267,7 @@ export default function RegistrationForm({ form, isClicked }) {
                       />
                       <p style={{ fontSize: "14px" }}>
                         {label}
-                        {isDisabled(value) && "(Sold out)"}
+                        {isDisabled(value) && " (Sold out)"}
                       </p>
                       {/* <InfoModal header={label} info={detail} /> */}
                     </label>
