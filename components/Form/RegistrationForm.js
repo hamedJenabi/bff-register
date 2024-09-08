@@ -76,7 +76,7 @@ export default function RegistrationForm({ form, isClicked }) {
     value === "int" ||
     value === "adv" ||
     value === "adv+" ||
-    (value === "chicago_triple" && form.values.role === "follow") ||
+    value === "chicago_triple" ||
     (value === "struttin" && form.values.role === "follow") ||
     (value === "latin_blues" && form.values.role === "follow");
 
