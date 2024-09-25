@@ -73,6 +73,7 @@ export default function RegistrationForm({ form, isClicked }) {
     "Straight 2XL (M)",
   ];
   const isDisabled = (value) =>
+    value === "beg/int" ||
     value === "int" ||
     value === "adv" ||
     value === "adv+" ||
