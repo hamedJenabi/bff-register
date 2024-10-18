@@ -407,6 +407,7 @@ export default function Dashboard({ users, tickets }) {
     const header = [
       "select",
       "status",
+      "to_pay",
       "price",
       "date",
       "actions",
@@ -479,6 +480,7 @@ export default function Dashboard({ users, tickets }) {
         ({
           id,
           status,
+          to_pay,
           price,
           date,
           role,
@@ -525,6 +527,7 @@ export default function Dashboard({ users, tickets }) {
               </td>
               {/* <td>{getToPay(to_pay, lunch)}</td> */}
               <td>{status}</td>
+              <td>{to_pay}</td>
               <td>{price}</td>
               <td>{date}</td>
               <td>
