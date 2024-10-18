@@ -13,7 +13,7 @@ import {
 import classNames from "classnames";
 
 import InfoModal from "../InfoModal/InfoModal";
-import { levelsToShow, compettionsInfo } from "../../utils/functions";
+import { titleCase, compettionsInfo } from "../../utils/functions";
 import styles from "./RegistrationForm.module.scss";
 import Card from "../Card/Card";
 import countries from "../../utils/countries";
@@ -25,6 +25,11 @@ const flatProps = {
 export default function CompForm({ form, tickets, isClicked }) {
   const dialog = useDialogState();
   const disabled = form.values.competitions.includes("newcomers_mixnmatch");
+  const complisting = ["strictly", "newcomers_mixnmatch", "open_mixnmatch"];
+  const roleNeededComps = complisting.reduce((acc, comp) => {
+    return form.values.competitions?.includes(comp) ? [...acc, comp] : acc;
+  }, []);
+
   return (
     <>
       {!isClicked && (
@@ -100,31 +105,34 @@ export default function CompForm({ form, tickets, isClicked }) {
               })}
             </div>
             <div className={styles.radioGroup}>
-              <h3 className={styles.title}>Your role in the competition:</h3>
-              <p className={styles.infoText}>
-                if you register *only* for the Fever Showcase, you don't need to
-                choose your role
-              </p>
-              <FormRadioGroup
-                className={styles.radioGroup}
-                {...form}
-                name="competition_role"
-              >
-                <label>
-                  <FormRadio
+              {roleNeededComps.map((comp) => (
+                <div className={styles.radioGroup}>
+                  <h4 className={styles.title}>
+                    Your role in the{" "}
+                    <span style={{ fontSize: "13px" }}>{titleCase(comp)}</span>{" "}
+                    competition:
+                  </h4>
+                  <FormRadioGroup
+                    className={styles.radioGroup}
                     {...form}
-                    name="competition_role"
-                    value="follow"
-                    disabled={disabled}
-                  />
-                  <p>Follow {disabled && "(Fully Booked)"}</p>
-                </label>
+                    name={`${comp}_role`}
+                  >
+                    <label>
+                      <FormRadio
+                        {...form}
+                        name={`${comp}_role`}
+                        value="follow"
+                      />
+                      <p>Follow</p>
+                    </label>
 
-                <label>
-                  <FormRadio {...form} name="competition_role" value="lead" />
-                  <p>Lead</p>
-                </label>
-              </FormRadioGroup>
+                    <label>
+                      <FormRadio {...form} name={`${comp}_role`} value="lead" />
+                      <p>Lead</p>
+                    </label>
+                  </FormRadioGroup>
+                </div>
+              ))}
             </div>
             <FormMessage
               className={styles.errorMessage}

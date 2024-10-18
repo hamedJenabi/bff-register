@@ -25,7 +25,9 @@ export default function Home({ tickets, clientID }) {
       firstname: "",
       lastname: "",
       email: "",
-      competition_role: "",
+      open_mixnmatch_role: "",
+      newcomers_mixnmatch_role: "",
+      strictly_role: "",
       competitions: "",
     },
     onValidate: (values) => {
@@ -51,7 +53,6 @@ export default function Home({ tickets, clientID }) {
       const req = {
         ...form.values,
       };
-
       fetch("/api/comp", {
         method: "POST",
         headers: {

@@ -194,7 +194,7 @@ export async function updateUserInfo(user, totalPrice) {
 
 export async function getConfirmedUserByEmailAndName(email, firstname) {
   const user = await sql`
-    SELECT * FROM registrations_23 WHERE email = ${email} AND status = 'confirmed'
+    SELECT * FROM registrations_23 WHERE email = ${email} AND firstname = ${firstname} AND status = 'confirmed'
   `;
   return user[0];
 }
@@ -213,13 +213,18 @@ export async function setUserLunchById(id, lunch) {
 }
 export async function setUserCompById(
   id,
-  competition_role,
+  open_mixnmatch_role,
+  newcomers_mixnmatch_role,
+  strictly_role,
   competitions,
   to_pay
 ) {
   await sql`
    UPDATE registrations_23
-    SET competition_role = ${competition_role},
+    SET 
+    open_mixnmatch_role = ${open_mixnmatch_role},
+    newcomers_mixnmatch_role = ${newcomers_mixnmatch_role},
+    strictly_role = ${strictly_role},
     competitions = ${competitions},
     to_pay = ${to_pay}
      WHERE id = ${id};

@@ -9,13 +9,16 @@ export default async function comp(req, response) {
     email: req.body.email,
     firstname: req.body.firstname,
     lastname: req.body.lastname,
-    competition_role: req.body.competition_role.toString(),
+    open_mixnmatch_role: req.body.open_mixnmatch_role,
+    newcomers_mixnmatch_role: req.body.newcomers_mixnmatch_role,
+    strictly_role: req.body.strictly_role,
     competitions: req.body.competitions.toString(),
   };
   const userToUpdate = await getConfirmedUserByEmailAndName(
     requestData.email,
     requestData.firstname
   );
+
   if (!userToUpdate) {
     response.status(404).json();
     return;
@@ -29,7 +32,9 @@ export default async function comp(req, response) {
   if (userToUpdate) {
     await setUserCompById(
       userToUpdate.id,
-      requestData.competition_role,
+      requestData.open_mixnmatch_role,
+      requestData.newcomers_mixnmatch_role,
+      requestData.strictly_role,
       requestData.competitions,
       toPay
     );
