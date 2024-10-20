@@ -122,8 +122,13 @@ export default function CompForm({ form, tickets, isClicked }) {
                         {...form}
                         name={`${comp}_role`}
                         value="follow"
+                        disabled={comp === "newcomers_mixnmatch"}
                       />
-                      <p>Follow</p>
+                      <p>
+                        {comp === "newcomers_mixnmatch"
+                          ? "Follow - fully booked"
+                          : "Follow"}
+                      </p>
                     </label>
 
                     <label>
