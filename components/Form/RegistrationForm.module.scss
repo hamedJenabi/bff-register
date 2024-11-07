@@ -165,6 +165,12 @@
 .buttonWrapper {
   display: flex;
 }
+.disabled {
+  background-color: rgb(222, 206, 206);
+  &:hover {
+    cursor: auto;
+  }
+}
 .button {
   @include button;
   @include fade-in-slow;

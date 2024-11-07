@@ -31,13 +31,14 @@ export default function RegistrationForm({ form, isClicked }) {
   const handleTicket = (ticket) => {
     if (ticket === 1) {
       form.update("ticket", "fullpass");
-    } else if (ticket === 3) {
-      form.update("ticket", "parentPass");
-    } else {
-      form.update("ticket", "partyPass");
-      form.update("role", "");
-      form.update("level", "");
     }
+    // else if (ticket === 3) {
+    //   form.update("ticket", "parentPass");
+    // } else {
+    //   form.update("ticket", "partyPass");
+    //   form.update("role", "");
+    //   form.update("level", "");
+    // }
   };
   const isRoleNeeded =
     form.values.competitions?.includes("strictly") ||
@@ -164,21 +165,23 @@ export default function RegistrationForm({ form, isClicked }) {
 
             <div
               onClick={() => handleTicket(2)}
-              className={classNames(styles.card, {
+              className={classNames(styles.card, styles.disabled, {
                 [styles.selected]: form.values.ticket === "partyPass",
               })}
             >
               <h3>Party Pass</h3>
+              <h4>(sold out)</h4>
               <p>All 5 Parties</p>
               <p>€{partyPrice}</p>
             </div>
             <div
               onClick={() => handleTicket(3)}
-              className={classNames(styles.card, {
+              className={classNames(styles.card, styles.disabled, {
                 [styles.selected]: form.values.ticket === "parentPass",
               })}
             >
-              <h3>Parent Pass</h3>
+              <h3>Parent Pass </h3>
+              <h4>(sold out)</h4>
               <p className={styles.infoText}>
                 Two dancers sharing a child-care
               </p>
@@ -415,7 +418,7 @@ export default function RegistrationForm({ form, isClicked }) {
               Lunch
             </label>
           </div>
-          <h4 className={styles.title}>
+          {/* <h4 className={styles.title}>
             Wanna have our organic BFF t-shirt? (€25)
           </h4>
           <FormRadioGroup
@@ -447,7 +450,7 @@ export default function RegistrationForm({ form, isClicked }) {
                 </select>
               </div>
             </>
-          )}
+          )} */}
           <h4 className={styles.title}>
             Do you want to donate to the Blues Fever Scholarship and discount
             Fund?
