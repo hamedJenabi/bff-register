@@ -212,7 +212,7 @@ export default function RegistrationForm({ form, isClicked }) {
                 onClick={() => form.update("level", "")}
               >
                 <label>
-                  <FormRadio {...form} name="role" value="follow" />{" "}
+                  <FormRadio {...form} name="role" value="follow" disabled />{" "}
                   <p>Mainly follower</p>
                 </label>
                 <label>
