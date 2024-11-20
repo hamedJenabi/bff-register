@@ -29,8 +29,8 @@ export default function RegistrationForm({ form, isClicked }) {
   const router = useRouter();
   const dialog = useDialogState();
   const handleTicket = (ticket) => {
-    if (ticket === 1) {
-      form.update("ticket", "fullpass");
+    if (ticket === 2) {
+      form.update("ticket", "partyPass");
     }
     // else if (ticket === 3) {
     //   form.update("ticket", "parentPass");
@@ -151,7 +151,7 @@ export default function RegistrationForm({ form, isClicked }) {
           <div className={styles.cardWrapper}>
             <div
               onClick={() => handleTicket(1)}
-              className={classNames(styles.card, {
+              className={classNames(styles.card, styles.disabled, {
                 [styles.selected]: form.values.ticket === "fullpass",
               })}
             >
@@ -165,7 +165,7 @@ export default function RegistrationForm({ form, isClicked }) {
 
             <div
               onClick={() => handleTicket(2)}
-              className={classNames(styles.card, styles.disabled, {
+              className={classNames(styles.card, {
                 [styles.selected]: form.values.ticket === "partyPass",
               })}
             >
@@ -392,7 +392,7 @@ export default function RegistrationForm({ form, isClicked }) {
               ))}
             </>
           )}
-          <div className={styles.radioGroup}>
+          {/* <div className={styles.radioGroup}>
             <h4 className={styles.title}>
               Which day do you want to have lunch at the Venue? <br />
               (You can choose both days):
@@ -417,7 +417,7 @@ export default function RegistrationForm({ form, isClicked }) {
               <FormCheckbox {...form} name="lunch" value="sunday" /> Sunday
               Lunch
             </label>
-          </div>
+          </div> */}
           {/* <h4 className={styles.title}>
             Wanna have our organic BFF t-shirt? (€25)
           </h4>
