@@ -325,12 +325,12 @@ export default function RegistrationForm({ form, isClicked }) {
             name="competition"
           >
             <label>
-              <FormRadio {...form} name="competition" value="yes" />
+              <FormRadio {...form} name="competition" disabled value="yes" />
               <p>Yes</p>
             </label>
             <label>
               <FormRadio {...form} name="competition" value="no" />
-              <p>No</p>
+              <p>No (fully booked)</p>
             </label>
             <label>
               <FormRadio {...form} name="competition" disabled value="later" />
