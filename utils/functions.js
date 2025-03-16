@@ -238,47 +238,7 @@ export const getPrice = (requestData, isGroupDiscount) => {
   return totalPrice;
 };
 
-export const discounts = [
-  { mail: "hamed.jenabi@gmail.com" },
-  { mail: "me@woutervervloet.com" },
-  { mail: "anicebo22@gmail.com" },
-  { mail: "dijkstra.lel@gmail.com" },
-  { mail: "nekotanik@gmail.com" },
-  { mail: "vicky.broos@gmail.com" },
-  { mail: "collinvandenbroek@gmail.com" },
-  { mail: "asnytin@gmail.com" },
-  { mail: "beauvandergiessen@gmail.com" },
-  { mail: "r.j.bongers@gmail.com" },
-  { mail: "snezana.otas@gmail.com" },
-  { mail: "jjbarreno@gmail.com" },
-  { mail: "victor_roosjr@hotmail.com" },
-  { mail: "daria@yurieva.ru" },
-  { mail: "elsa.filippidou@gmail.com" },
-  { mail: "aayang444@gmail.com" },
-  { mail: "edward.curran@hotmail.co.uk" },
-  { mail: "krhuang5@gmail.com" },
-  { mail: "mxeinhorn@gmail.com" },
-  { mail: "qianita.sun@gmail.com" },
-  { mail: "sampsondsyuan@gmail.com" },
-  { mail: "yjkberlin@rawdata.space" },
-  { mail: "izemylmaz@gmail.com" },
-  { mail: "rundmails@AndreasMerkert.de" },
-  { mail: "mykolamalik@gmail.com" },
-  { mail: "yasmin@bluesfever.eu" },
-  { mail: "panayotova.vasilena@gmail.com" },
-  { mail: "nedahristova16@gmail.com" },
-  { mail: "desidesign1996@gmail.com" },
-  { mail: "gamanolova@gmail.com" },
-  { mail: "sirakova@greenlife.bg" },
-  { mail: "agodinova@gmail.com" },
-  { mail: "daniela.i.ranova@gmail.com" },
-  { mail: "angelov.pavel@gmail.com" },
-  { mail: "margarita.baykova@gmail.com" },
-  { mail: "kdentchev@mail.bg" },
-  { mail: "pavel966969@gmail.com" },
-  { mail: "a_lozev1962@abv.bg" },
-  { mail: "onopko@abv.bg" },
-];
+export const discounts = [{ mail: "hamed.jjenabi@gmail.com" }];
 
 export const isGroupDiscount = (email) =>
   discounts.some(({ mail }) => mail === email);

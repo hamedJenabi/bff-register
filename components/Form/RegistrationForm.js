@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   unstable_Form as Form,
   unstable_FormMessage as FormMessage,
@@ -12,7 +12,7 @@ import {
 import SkeletonComponent from "../Skeleton/Skeleton";
 import { useRouter } from "next/router";
 import classNames from "classnames";
-
+import CheckoutButton from "../CheckoutButton/CheckoutButton";
 import InfoModal from "../InfoModal/InfoModal";
 import {
   levelsToShow,
@@ -27,6 +27,7 @@ import { useDialogState } from "reakit/Dialog";
 
 export default function RegistrationForm({ form, isClicked }) {
   const router = useRouter();
+
   const dialog = useDialogState();
   const handleTicket = (ticket) => {
     if (ticket === 2) {
