@@ -3,6 +3,25 @@ export const titleCase = (s) =>
     c ? c.toUpperCase() : " " + d.toUpperCase()
   );
 
+export const SoloLevelToShow = [
+  {
+    label: "Intermediate",
+    value: "int",
+    detail:
+      "You have had one or two blues dance classes and are ready to know more about Blues.",
+    lead: 16,
+    follow: 16,
+  },
+  {
+    label: "Advanced",
+    value: "adv",
+    detail:
+      "You have had one or two blues dance classes and are ready to know more about Blues.",
+    lead: 16,
+    follow: 16,
+  },
+];
+
 export const levelsToShow = [
   {
     label: "Beginner/Intermediate",
@@ -17,6 +36,14 @@ export const levelsToShow = [
     follow: 20,
     label: "Intermediate",
     value: "int",
+    detail:
+      "You have had local classes and maybe one or more international workshops. You can execute the basic movements and steps. You know some variations of basics and you can choose them depending on the style of music.",
+  },
+  {
+    lead: 20,
+    follow: 20,
+    label: "Intermediate/Advanced",
+    value: "int/adv",
     detail:
       "You have had local classes and maybe one or more international workshops. You can execute the basic movements and steps. You know some variations of basics and you can choose them depending on the style of music.",
   },
@@ -191,10 +218,10 @@ export const compettionsInfo = [
       "This level is for those who have been dancing Blues since birth, or at least three years. You have attended many international workshops and maybe even teaching in your local scene. Done competitions and reached the final now and then. There will be no audition but we don’t spare you in this level, so please don’t misjudge your ability, for your sake and for your class mates.",
   },
 ];
-export const fullpassPrice = isAfterTargetDate("2024-09-15T00:01:00+02:00")
+export const fullpassPrice = isAfterTargetDate("2025-09-15T00:01:00+02:00")
   ? 255
   : 235;
-export const partyPrice = isAfterTargetDate("2024-09-15T00:01:00+02:00")
+export const partyPrice = isAfterTargetDate("2025-09-15T00:01:00+02:00")
   ? 145
   : 135;
 
