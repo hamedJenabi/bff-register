@@ -56,34 +56,6 @@ export const levelsToShow = [
       "You travel internationally to festivals and have attended workshops. You have an expanded vocabulary (aesthetics and movements) and have achieved good musicality. You have a high understanding of partnership in dancing.",
   },
   {
-    lead: 20,
-    follow: 20,
-    label: "Struttin'  (Intermediate/Advanced and above)",
-    value: "struttin",
-    detail:
-      "You consistently demonstrate, describe, and differentiate between a range of styles and movements, while maintaining blues aesthetic. You include some layered movements. You can observe and work out movement execution. You may teach blues at your local scene and do lots of international workshops.",
-  },
-  {
-    lead: 18,
-    follow: 18,
-    label: "Chicago Triple (Intermediate/Advanced and above)",
-    value: "chicago_triple",
-    detail:
-      "You consistently demonstrate, describe, and differentiate between a range of styles and movements, while maintaining blues aesthetic. You include some layered movements. You can observe and work out movement execution. You may teach blues at your local scene and do lots of international workshops.",
-  },
-  {
-    lead: 18,
-    follow: 18,
-    label: "Latin Blues (Intermediate/Advanced and above)",
-    value: "latin_blues",
-  },
-  {
-    lead: 18,
-    follow: 18,
-    label: "Stride & Strut - Ballroomin' (Intermediate/Advanced and above)",
-    value: "stride_strut",
-  },
-  {
     lead: 18,
     follow: 18,
     label: "Advanced +",
@@ -91,6 +63,41 @@ export const levelsToShow = [
     detail:
       "You and Blues have a long story together. You end up going to finals in almost every competition, you practice regularly, and may teach Blues not only in your scene but also internationally.",
   },
+  {
+    lead: 15,
+    follow: 15,
+    label: "Solo Blues (Intermediate and above)",
+    value: "solo",
+    detail: "Solo Blues.",
+  },
+  {
+    lead: 20,
+    follow: 20,
+    label: "Funk Blues (Intermediate/Advanced and above)",
+    value: "funk_blues",
+    detail:
+      "You consistently demonstrate, describe, and differentiate between a range of styles and movements, while maintaining blues aesthetic. You include some layered movements. You can observe and work out movement execution. You may teach blues at your local scene and do lots of international workshops.",
+  },
+  {
+    lead: 18,
+    follow: 18,
+    label: "Piedmont Blues (Intermediate/Advanced and above)",
+    value: "piedmont_blues",
+    detail:
+      "You consistently demonstrate, describe, and differentiate between a range of styles and movements, while maintaining blues aesthetic. You include some layered movements. You can observe and work out movement execution. You may teach blues at your local scene and do lots of international workshops.",
+  },
+  // {
+  //   lead: 18,
+  //   follow: 18,
+  //   label: "Latin Blues (Intermediate/Advanced and above)",
+  //   value: "latin_blues",
+  // },
+  // {
+  //   lead: 18,
+  //   follow: 18,
+  //   label: "Stride & Strut - Ballroomin' (Intermediate/Advanced and above)",
+  //   value: "stride_strut",
+  // },
 ];
 
 export const finalLevelsToShow = [

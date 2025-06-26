@@ -51,7 +51,7 @@ export default function RegistrationForm({ form, isClicked }) {
   }, []);
   const isFullPass =
     form.values.ticket === "fullpass" || form.values.ticket === "parentPass";
-  const isSolo = form.values.ticket === "solo";
+  // const isSolo = form.values.ticket === "solo";
   const noTeacher =
     form.values.level === "int" ||
     form.values.level === "beg/int" ||
@@ -157,25 +157,25 @@ export default function RegistrationForm({ form, isClicked }) {
               })}
             >
               {/* 4 plus pre party */}
-              <h3>Full pass</h3>
+              <h3>Full pass </h3>
               <p>6+ hours partner classes</p>
               <p>1 free competition</p>
               <p>All 5 Parties</p>
               <p>€{fullpassPrice}</p>
             </div>
-            <div
+            {/* <div
               onClick={() => handleTicket(4)}
               className={classNames(styles.card, {
                 [styles.selected]: form.values.ticket === "solo",
               })}
             >
-              {/* 4 plus pre party */}
+
               <h3>Solo pass</h3>
               <p>6+ hours of solo classes</p>
               <p>1 free competition</p>
               <p>All 5 Parties</p>
               <p>€{fullpassPrice}</p>
-            </div>
+            </div> */}
 
             {isAfterTargetDate("2025-08-16T00:12:00+02:00") && (
               <div
@@ -217,44 +217,11 @@ export default function RegistrationForm({ form, isClicked }) {
               />
             </div>
           )}
-          {isFullPass && (
-            <>
-              <h3 className={styles.title}>Choose your dance role:</h3>
-              <FormRadioGroup
-                className={styles.radioGroup}
-                {...form}
-                name="role"
-                onClick={() => form.update("level", "")}
-              >
-                <label>
-                  <FormRadio {...form} name="role" value="follow" />{" "}
-                  <p>Mainly follower</p>
-                </label>
-                <label>
-                  <FormRadio {...form} name="role" value="lead" />
-                  <p> Mainly leader</p>
-                </label>
-                <label>
-                  <FormRadio {...form} name="role" value="both" />
-                  <p> Both</p>
-
-                  {/* <InfoModal header="both" info="whatever" /> */}
-                </label>
-                <div className={styles.infoTextWrapper}>
-                  <p className={styles.infoText}>
-                    You choose <strong>"Both"</strong> role if you will attend
-                    some classes as LEAD and some as FOLLOW to help balance out
-                    the ration between the two roles.
-                  </p>
-                </div>
-              </FormRadioGroup>
-            </>
-          )}
 
           {isFullPass && (
             <>
               <h3 className={styles.title}>
-                Choose your Level: (classes on Fr/Sat/Sunday)
+                Choose your Track: (classes on Fr/Sat/Sunday)
               </h3>
               <div className={styles.infoTextWrapper}>
                 <div className={styles.infoText}>
@@ -268,8 +235,8 @@ export default function RegistrationForm({ form, isClicked }) {
                     more info here
                   </a>
                   <br />
-                  *** Please consider that <strong>Idiom Tracks</strong> are for
-                  Int/Advanced and above. ****
+                  {/* *** Please consider that <strong>Idiom Tracks</strong> are for
+                  Int/Advanced and above. **** */}
                 </div>
               </div>
 
@@ -298,50 +265,41 @@ export default function RegistrationForm({ form, isClicked }) {
               </FormRadioGroup>
             </>
           )}
-          {isSolo && (
-            <>
-              <h3 className={styles.title}>
-                Choose your Level: (classes on Sat/Sunday)
-              </h3>
-              <div className={styles.infoTextWrapper}>
-                <div className={styles.infoText}>
-                  Hey folks, There will be <strong>no audition</strong>,so
-                  please read the level description carefully.{" "}
-                  <a
-                    style={{ color: "blue" }}
-                    target="_blank"
-                    href="https://www.bluesfever.eu/passes-levels/#level"
-                  >
-                    more info here
-                  </a>
-                </div>
-              </div>
+          {isFullPass &&
+            form.values.level !== "" &&
+            form.values.level !== "solo" && (
+              <>
+                <h3 className={styles.title}>Choose your dance role:</h3>
+                <FormRadioGroup
+                  className={styles.radioGroup}
+                  {...form}
+                  name="role"
+                  onClick={() => form.update("level", "")}
+                >
+                  <label>
+                    <FormRadio {...form} name="role" value="follow" />{" "}
+                    <p>Mainly follower</p>
+                  </label>
+                  <label>
+                    <FormRadio {...form} name="role" value="lead" />
+                    <p> Mainly leader</p>
+                  </label>
+                  <label>
+                    <FormRadio {...form} name="role" value="both" />
+                    <p> Both</p>
 
-              <FormRadioGroup
-                className={styles.radioGroup}
-                {...form}
-                name="level"
-              >
-                {SoloLevelToShow.map(({ label, value, detail }) => {
-                  return (
-                    <label key={value}>
-                      <FormRadio
-                        {...form}
-                        name="level"
-                        value={value}
-                        disabled={isDisabled(value)}
-                      />
-                      <p style={{ fontSize: "14px" }}>
-                        {label}
-                        {isDisabled(value) && " (Sold out)"}
-                      </p>
-                      {/* <InfoModal header={label} info={detail} /> */}
-                    </label>
-                  );
-                })}
-              </FormRadioGroup>
-            </>
-          )}
+                    {/* <InfoModal header="both" info="whatever" /> */}
+                  </label>
+                  <div className={styles.infoTextWrapper}>
+                    <p className={styles.infoText}>
+                      You choose <strong>"Both"</strong> role if you will attend
+                      some classes as LEAD and some as FOLLOW to help balance
+                      out the ration between the two roles.
+                    </p>
+                  </div>
+                </FormRadioGroup>
+              </>
+            )}
 
           {/* <h3 className={styles.title}>Themed Classes? (€45)</h3>
           <p className={styles.infoText}>
