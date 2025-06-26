@@ -21,6 +21,7 @@ import {
   fullpassPrice,
   partyPrice,
   titleCase,
+  isAfterTargetDate,
 } from "../../utils/functions";
 import styles from "./RegistrationForm.module.scss";
 import countries from "../../utils/countries";
@@ -176,16 +177,19 @@ export default function RegistrationForm({ form, isClicked }) {
               <p>€{fullpassPrice}</p>
             </div>
 
-            <div
-              onClick={() => handleTicket(2)}
-              className={classNames(styles.card, {
-                [styles.selected]: form.values.ticket === "partyPass",
-              })}
-            >
-              <h3>Party Pass</h3>
-              <p>All 5 Parties</p>
-              <p>€{partyPrice}</p>
-            </div>
+            {isAfterTargetDate("2025-08-16T00:12:00+02:00") && (
+              <div
+                onClick={() => handleTicket(2)}
+                className={classNames(styles.card, {
+                  [styles.selected]: form.values.ticket === "partyPass",
+                })}
+              >
+                <h3>Party Pass</h3>
+                <h4>(sold out)</h4>
+                <p>All 5 Parties</p>
+                <p>€{partyPrice}</p>
+              </div>
+            )}
             <div
               onClick={() => handleTicket(3)}
               className={classNames(styles.card, {

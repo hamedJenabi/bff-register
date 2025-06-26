@@ -227,7 +227,7 @@ export default function Home({ tickets }) {
           />
         ) : (
           <>
-            <h3>We are fully booked :) </h3>
+            <h3>Registration starts on August 2nd:) </h3>
             <br />
             {/* <UrgeWithPleasureComponent /> */}
           </>
