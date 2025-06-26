@@ -20,6 +20,7 @@ import {
   fullpassPrice,
   partyPrice,
   titleCase,
+  isAfterTargetDate,
 } from "../../utils/functions";
 import styles from "./RegistrationForm.module.scss";
 import countries from "../../utils/countries";
@@ -29,16 +30,15 @@ export default function RegistrationForm({ form, isClicked }) {
   const router = useRouter();
   const dialog = useDialogState();
   const handleTicket = (ticket) => {
-    if (ticket === 2) {
+    if (ticket === 1) {
+      form.update("ticket", "fullpass");
+    } else if (ticket === 3) {
+      form.update("ticket", "parentPass");
+    } else {
       form.update("ticket", "partyPass");
+      form.update("role", "");
+      form.update("level", "");
     }
-    // else if (ticket === 3) {
-    //   form.update("ticket", "parentPass");
-    // } else {
-    //   form.update("ticket", "partyPass");
-    //   form.update("role", "");
-    //   form.update("level", "");
-    // }
   };
   const isRoleNeeded =
     form.values.competitions?.includes("strictly") ||
@@ -151,7 +151,7 @@ export default function RegistrationForm({ form, isClicked }) {
           <div className={styles.cardWrapper}>
             <div
               onClick={() => handleTicket(1)}
-              className={classNames(styles.card, styles.disabled, {
+              className={classNames(styles.card, {
                 [styles.selected]: form.values.ticket === "fullpass",
               })}
             >
@@ -163,20 +163,22 @@ export default function RegistrationForm({ form, isClicked }) {
               <p>€{fullpassPrice}</p>
             </div>
 
-            <div
-              onClick={() => handleTicket(2)}
-              className={classNames(styles.card, {
-                [styles.selected]: form.values.ticket === "partyPass",
-              })}
-            >
-              <h3>Party Pass</h3>
-              <h4>(sold out)</h4>
-              <p>All 5 Parties</p>
-              <p>€{partyPrice}</p>
-            </div>
+            {isAfterTargetDate("2025-08-16T00:12:00+02:00") && (
+              <div
+                onClick={() => handleTicket(2)}
+                className={classNames(styles.card, {
+                  [styles.selected]: form.values.ticket === "partyPass",
+                })}
+              >
+                <h3>Party Pass</h3>
+                <h4>(sold out)</h4>
+                <p>All 5 Parties</p>
+                <p>€{partyPrice}</p>
+              </div>
+            )}
             <div
               onClick={() => handleTicket(3)}
-              className={classNames(styles.card, styles.disabled, {
+              className={classNames(styles.card, {
                 [styles.selected]: form.values.ticket === "parentPass",
               })}
             >

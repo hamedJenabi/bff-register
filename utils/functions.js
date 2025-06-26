@@ -191,12 +191,29 @@ export const compettionsInfo = [
       "This level is for those who have been dancing Blues since birth, or at least three years. You have attended many international workshops and maybe even teaching in your local scene. Done competitions and reached the final now and then. There will be no audition but we don’t spare you in this level, so please don’t misjudge your ability, for your sake and for your class mates.",
   },
 ];
-export const fullpassPrice = isAfterTargetDate("2024-09-15T00:01:00+02:00")
-  ? 255
-  : 235;
-export const partyPrice = isAfterTargetDate("2024-09-15T00:01:00+02:00")
-  ? 145
-  : 135;
+let fullpassPriceTemp = 235;
+let partyPriceTemp = 135;
+
+if (isAfterTargetDate("2025-08-04T00:12:00+02:00")) {
+  fullpassPriceTemp = 245;
+}
+
+if (isAfterTargetDate("2025-09-15T00:01:00+02:00")) {
+  fullpassPriceTemp = 255;
+}
+
+if (isAfterTargetDate("2024-09-15T00:01:00+02:00")) {
+  partyPriceTemp = 145;
+}
+
+// export const fullpassPrice = isAfterTargetDate("2024-09-15T00:01:00+02:00")
+//   ? 255
+//   : 235;
+// export const partyPrice = isAfterTargetDate("2024-09-15T00:01:00+02:00")
+//   ? 145
+//   : 135;
+export const fullpassPrice = fullpassPriceTemp;
+export const partyPrice = partyPriceTemp;
 
 export const getPrice = (requestData, isGroupDiscount) => {
   const initialPrice =
