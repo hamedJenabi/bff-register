@@ -16,7 +16,6 @@ import CheckoutButton from "../CheckoutButton/CheckoutButton";
 import InfoModal from "../InfoModal/InfoModal";
 import {
   levelsToShow,
-  SoloLevelToShow,
   compettionsInfo,
   fullpassPrice,
   partyPrice,
@@ -32,8 +31,6 @@ export default function RegistrationForm({ form, isClicked }) {
       form.update("ticket", "fullpass");
     } else if (ticket === 3) {
       form.update("ticket", "parentPass");
-    } else if (ticket === 4) {
-      form.update("ticket", "solo");
     } else {
       form.update("ticket", "partyPass");
       form.update("role", "");
@@ -158,24 +155,11 @@ export default function RegistrationForm({ form, isClicked }) {
             >
               {/* 4 plus pre party */}
               <h3>Full pass </h3>
-              <p>6+ hours partner classes</p>
+              <p>6+ hours classes</p>
               <p>1 free competition</p>
               <p>All 5 Parties</p>
               <p>€{fullpassPrice}</p>
             </div>
-            {/* <div
-              onClick={() => handleTicket(4)}
-              className={classNames(styles.card, {
-                [styles.selected]: form.values.ticket === "solo",
-              })}
-            >
-
-              <h3>Solo pass</h3>
-              <p>6+ hours of solo classes</p>
-              <p>1 free competition</p>
-              <p>All 5 Parties</p>
-              <p>€{fullpassPrice}</p>
-            </div> */}
 
             {isAfterTargetDate("2025-08-16T00:12:00+02:00") && (
               <div
@@ -235,8 +219,6 @@ export default function RegistrationForm({ form, isClicked }) {
                     more info here
                   </a>
                   <br />
-                  {/* *** Please consider that <strong>Idiom Tracks</strong> are for
-                  Int/Advanced and above. **** */}
                 </div>
               </div>
 
@@ -274,7 +256,6 @@ export default function RegistrationForm({ form, isClicked }) {
                   className={styles.radioGroup}
                   {...form}
                   name="role"
-                  onClick={() => form.update("level", "")}
                 >
                   <label>
                     <FormRadio {...form} name="role" value="follow" />{" "}
@@ -287,8 +268,6 @@ export default function RegistrationForm({ form, isClicked }) {
                   <label>
                     <FormRadio {...form} name="role" value="both" />
                     <p> Both</p>
-
-                    {/* <InfoModal header="both" info="whatever" /> */}
                   </label>
                   <div className={styles.infoTextWrapper}>
                     <p className={styles.infoText}>
@@ -436,7 +415,7 @@ export default function RegistrationForm({ form, isClicked }) {
               Lunch
             </label>
           </div> */}
-          {/* <h4 className={styles.title}>
+          <h4 className={styles.title}>
             Wanna have our organic BFF t-shirt? (€25)
           </h4>
           <FormRadioGroup
@@ -468,7 +447,7 @@ export default function RegistrationForm({ form, isClicked }) {
                 </select>
               </div>
             </>
-          )} */}
+          )}
           <h4 className={styles.title}>
             Do you want to donate to the Blues Fever Scholarship and discount
             Fund?

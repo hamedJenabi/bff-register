@@ -14,6 +14,7 @@ exports.up = async (sql) => {
 			level VARCHAR,
 			theme_class VARCHAR,
 			lunch VARCHAR (200),
+			tshirt VARCHAR (100),
 			competition VARCHAR,
 			strictly_role VARCHAR(100),
 			newcomers_mixnmatch_role VARCHAR(100),
