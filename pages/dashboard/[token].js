@@ -467,7 +467,7 @@ export default function Dashboard({ users, tickets }) {
     );
   };
   //--------- Table Data
-  console.log("users", users);
+
   const renderTableData = () => {
     return userToShow
       .filter((user) =>

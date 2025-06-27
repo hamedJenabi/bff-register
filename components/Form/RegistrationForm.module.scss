@@ -70,9 +70,11 @@
   flex-direction: column;
   margin-bottom: $xl;
   margin-top: $sm;
-  @media (min-width: 600px) {
+  @media (min-width: 800px) {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: $md;
     // padding-right: $xl;
-    flex-direction: row;
   }
 }
 .personalTitle {

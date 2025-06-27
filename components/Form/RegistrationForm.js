@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   unstable_Form as Form,
   unstable_FormMessage as FormMessage,
@@ -12,10 +12,11 @@ import {
 import SkeletonComponent from "../Skeleton/Skeleton";
 import { useRouter } from "next/router";
 import classNames from "classnames";
-
+import CheckoutButton from "../CheckoutButton/CheckoutButton";
 import InfoModal from "../InfoModal/InfoModal";
 import {
   levelsToShow,
+  SoloLevelToShow,
   compettionsInfo,
   fullpassPrice,
   partyPrice,
@@ -24,16 +25,15 @@ import {
 } from "../../utils/functions";
 import styles from "./RegistrationForm.module.scss";
 import countries from "../../utils/countries";
-import { useDialogState } from "reakit/Dialog";
 
 export default function RegistrationForm({ form, isClicked }) {
-  const router = useRouter();
-  const dialog = useDialogState();
   const handleTicket = (ticket) => {
     if (ticket === 1) {
       form.update("ticket", "fullpass");
     } else if (ticket === 3) {
       form.update("ticket", "parentPass");
+    } else if (ticket === 4) {
+      form.update("ticket", "solo");
     } else {
       form.update("ticket", "partyPass");
       form.update("role", "");
@@ -51,6 +51,7 @@ export default function RegistrationForm({ form, isClicked }) {
   }, []);
   const isFullPass =
     form.values.ticket === "fullpass" || form.values.ticket === "parentPass";
+  // const isSolo = form.values.ticket === "solo";
   const noTeacher =
     form.values.level === "int" ||
     form.values.level === "beg/int" ||
@@ -73,15 +74,15 @@ export default function RegistrationForm({ form, isClicked }) {
     "Straight XL (M)",
     "Straight 2XL (M)",
   ];
-  const isDisabled = (value) =>
-    value === "beg/int" ||
-    value === "int" ||
-    value === "adv" ||
-    value === "adv+" ||
-    value === "chicago_triple" ||
-    (value === "struttin" && form.values.role === "follow") ||
-    (value === "stride_strut" && form.values.role === "follow") ||
-    (value === "latin_blues" && form.values.role === "follow");
+  const isDisabled = (value) => false;
+  // value === "beg/int" ||
+  // value === "int" ||
+  // value === "adv" ||
+  // value === "adv+" ||
+  // value === "chicago_triple" ||
+  // (value === "struttin" && form.values.role === "follow") ||
+  // (value === "stride_strut" && form.values.role === "follow") ||
+  // (value === "latin_blues" && form.values.role === "follow");
 
   //   value === "int" ||
   //   value === "latin_blues" ||
@@ -156,12 +157,25 @@ export default function RegistrationForm({ form, isClicked }) {
               })}
             >
               {/* 4 plus pre party */}
-              <h3>Full pass</h3>
-              <p>6+ hours classes</p>
+              <h3>Full pass </h3>
+              <p>6+ hours partner classes</p>
               <p>1 free competition</p>
               <p>All 5 Parties</p>
               <p>€{fullpassPrice}</p>
             </div>
+            {/* <div
+              onClick={() => handleTicket(4)}
+              className={classNames(styles.card, {
+                [styles.selected]: form.values.ticket === "solo",
+              })}
+            >
+
+              <h3>Solo pass</h3>
+              <p>6+ hours of solo classes</p>
+              <p>1 free competition</p>
+              <p>All 5 Parties</p>
+              <p>€{fullpassPrice}</p>
+            </div> */}
 
             {isAfterTargetDate("2025-08-16T00:12:00+02:00") && (
               <div
@@ -183,7 +197,6 @@ export default function RegistrationForm({ form, isClicked }) {
               })}
             >
               <h3>Parent Pass </h3>
-              <h4>(sold out)</h4>
               <p className={styles.infoText}>
                 Two dancers sharing a child-care
               </p>
@@ -204,43 +217,11 @@ export default function RegistrationForm({ form, isClicked }) {
               />
             </div>
           )}
-          {isFullPass && (
-            <>
-              <h3 className={styles.title}>Choose your dance role:</h3>
-              <FormRadioGroup
-                className={styles.radioGroup}
-                {...form}
-                name="role"
-                onClick={() => form.update("level", "")}
-              >
-                <label>
-                  <FormRadio {...form} name="role" value="follow" disabled />{" "}
-                  <p>Mainly follower</p>
-                </label>
-                <label>
-                  <FormRadio {...form} name="role" value="lead" />
-                  <p> Mainly leader</p>
-                </label>
-                <label>
-                  <FormRadio {...form} name="role" value="both" />
-                  <p> Both</p>
 
-                  {/* <InfoModal header="both" info="whatever" /> */}
-                </label>
-                <div className={styles.infoTextWrapper}>
-                  <p className={styles.infoText}>
-                    You choose <strong>"Both"</strong> role if you will attend
-                    some classes as LEAD and some as FOLLOW to help balance out
-                    the ration between the two roles.
-                  </p>
-                </div>
-              </FormRadioGroup>
-            </>
-          )}
           {isFullPass && (
             <>
               <h3 className={styles.title}>
-                Choose your Level: (classes in Fr/Sat/Sunday)
+                Choose your Track: (classes on Fr/Sat/Sunday)
               </h3>
               <div className={styles.infoTextWrapper}>
                 <div className={styles.infoText}>
@@ -254,8 +235,8 @@ export default function RegistrationForm({ form, isClicked }) {
                     more info here
                   </a>
                   <br />
-                  *** Please consider that <strong>Idiom Tracks</strong> are for
-                  Int/Advanced and above. ****
+                  {/* *** Please consider that <strong>Idiom Tracks</strong> are for
+                  Int/Advanced and above. **** */}
                 </div>
               </div>
 
@@ -284,6 +265,41 @@ export default function RegistrationForm({ form, isClicked }) {
               </FormRadioGroup>
             </>
           )}
+          {isFullPass &&
+            form.values.level !== "" &&
+            form.values.level !== "solo" && (
+              <>
+                <h3 className={styles.title}>Choose your dance role:</h3>
+                <FormRadioGroup
+                  className={styles.radioGroup}
+                  {...form}
+                  name="role"
+                  onClick={() => form.update("level", "")}
+                >
+                  <label>
+                    <FormRadio {...form} name="role" value="follow" />{" "}
+                    <p>Mainly follower</p>
+                  </label>
+                  <label>
+                    <FormRadio {...form} name="role" value="lead" />
+                    <p> Mainly leader</p>
+                  </label>
+                  <label>
+                    <FormRadio {...form} name="role" value="both" />
+                    <p> Both</p>
+
+                    {/* <InfoModal header="both" info="whatever" /> */}
+                  </label>
+                  <div className={styles.infoTextWrapper}>
+                    <p className={styles.infoText}>
+                      You choose <strong>"Both"</strong> role if you will attend
+                      some classes as LEAD and some as FOLLOW to help balance
+                      out the ration between the two roles.
+                    </p>
+                  </div>
+                </FormRadioGroup>
+              </>
+            )}
 
           {/* <h3 className={styles.title}>Themed Classes? (€45)</h3>
           <p className={styles.infoText}>
@@ -327,15 +343,15 @@ export default function RegistrationForm({ form, isClicked }) {
             name="competition"
           >
             <label>
-              <FormRadio {...form} name="competition" disabled value="yes" />
+              <FormRadio {...form} name="competition" value="yes" />
               <p>Yes</p>
             </label>
             <label>
               <FormRadio {...form} name="competition" value="no" />
-              <p>No (fully booked)</p>
+              <p>No</p>
             </label>
             <label>
-              <FormRadio {...form} name="competition" disabled value="later" />
+              <FormRadio {...form} name="competition" value="later" />
               <p>I will decide later</p>
             </label>
           </FormRadioGroup>

@@ -20,6 +20,7 @@ import { unstable_useFormState as useFormState } from "reakit/Form";
 
 export default function Home({ tickets }) {
   const [isClicked, setIsClicked] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   if (typeof window !== "undefined") {
     localStorage.removeItem("accepted");
@@ -99,7 +100,8 @@ export default function Home({ tickets }) {
         .then((response) => {
           if (response.status === 200) {
             localStorage.setItem("accepted", JSON.stringify(form.values));
-            Router.push("/accept");
+            // Router.push("/accept");
+            handleCheckout(totalPrice * 100);
           }
 
           if (response.status === 301) {
@@ -112,7 +114,25 @@ export default function Home({ tickets }) {
         .catch((error) => console.log(error));
     },
   });
+  const handleCheckout = async (price) => {
+    setLoading(true);
+    const res = await fetch("/api/checkout", {
+      method: "POST",
+      // add price
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        price: price,
+      }),
+    });
 
+    const data = await res.json();
+    if (data.url) {
+      window.location.href = data.url; // Redirect to Stripe
+    }
+    setLoading(false);
+  };
   const isAfterTargetDateValue = isAfterTargetDate("2024-07-07T19:00:00+02:00");
 
   const targetDate = new Date("2024-07-07T19:00:00+02:00").getTime();

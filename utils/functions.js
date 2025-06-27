@@ -3,6 +3,25 @@ export const titleCase = (s) =>
     c ? c.toUpperCase() : " " + d.toUpperCase()
   );
 
+export const SoloLevelToShow = [
+  {
+    label: "Intermediate",
+    value: "int",
+    detail:
+      "You have had one or two blues dance classes and are ready to know more about Blues.",
+    lead: 16,
+    follow: 16,
+  },
+  {
+    label: "Advanced",
+    value: "adv",
+    detail:
+      "You have had one or two blues dance classes and are ready to know more about Blues.",
+    lead: 16,
+    follow: 16,
+  },
+];
+
 export const levelsToShow = [
   {
     label: "Beginner/Intermediate",
@@ -23,38 +42,18 @@ export const levelsToShow = [
   {
     lead: 20,
     follow: 20,
-    label: "Advanced",
-    value: "adv",
+    label: "Intermediate/Advanced",
+    value: "int/adv",
     detail:
-      "You travel internationally to festivals and have attended workshops. You have an expanded vocabulary (aesthetics and movements) and have achieved good musicality. You have a high understanding of partnership in dancing.",
+      "You have had local classes and maybe one or more international workshops. You can execute the basic movements and steps. You know some variations of basics and you can choose them depending on the style of music.",
   },
   {
     lead: 20,
     follow: 20,
-    label: "Struttin'  (Intermediate/Advanced and above)",
-    value: "struttin",
+    label: "Advanced",
+    value: "adv",
     detail:
-      "You consistently demonstrate, describe, and differentiate between a range of styles and movements, while maintaining blues aesthetic. You include some layered movements. You can observe and work out movement execution. You may teach blues at your local scene and do lots of international workshops.",
-  },
-  {
-    lead: 18,
-    follow: 18,
-    label: "Chicago Triple (Intermediate/Advanced and above)",
-    value: "chicago_triple",
-    detail:
-      "You consistently demonstrate, describe, and differentiate between a range of styles and movements, while maintaining blues aesthetic. You include some layered movements. You can observe and work out movement execution. You may teach blues at your local scene and do lots of international workshops.",
-  },
-  {
-    lead: 18,
-    follow: 18,
-    label: "Latin Blues (Intermediate/Advanced and above)",
-    value: "latin_blues",
-  },
-  {
-    lead: 18,
-    follow: 18,
-    label: "Stride & Strut - Ballroomin' (Intermediate/Advanced and above)",
-    value: "stride_strut",
+      "You travel internationally to festivals and have attended workshops. You have an expanded vocabulary (aesthetics and movements) and have achieved good musicality. You have a high understanding of partnership in dancing.",
   },
   {
     lead: 18,
@@ -64,6 +63,41 @@ export const levelsToShow = [
     detail:
       "You and Blues have a long story together. You end up going to finals in almost every competition, you practice regularly, and may teach Blues not only in your scene but also internationally.",
   },
+  {
+    lead: 15,
+    follow: 15,
+    label: "Solo Blues (Intermediate and above)",
+    value: "solo",
+    detail: "Solo Blues.",
+  },
+  {
+    lead: 20,
+    follow: 20,
+    label: "Funk Blues (Intermediate/Advanced and above)",
+    value: "funk_blues",
+    detail:
+      "You consistently demonstrate, describe, and differentiate between a range of styles and movements, while maintaining blues aesthetic. You include some layered movements. You can observe and work out movement execution. You may teach blues at your local scene and do lots of international workshops.",
+  },
+  {
+    lead: 18,
+    follow: 18,
+    label: "Piedmont Blues (Intermediate/Advanced and above)",
+    value: "piedmont_blues",
+    detail:
+      "You consistently demonstrate, describe, and differentiate between a range of styles and movements, while maintaining blues aesthetic. You include some layered movements. You can observe and work out movement execution. You may teach blues at your local scene and do lots of international workshops.",
+  },
+  // {
+  //   lead: 18,
+  //   follow: 18,
+  //   label: "Latin Blues (Intermediate/Advanced and above)",
+  //   value: "latin_blues",
+  // },
+  // {
+  //   lead: 18,
+  //   follow: 18,
+  //   label: "Stride & Strut - Ballroomin' (Intermediate/Advanced and above)",
+  //   value: "stride_strut",
+  // },
 ];
 
 export const finalLevelsToShow = [
@@ -255,47 +289,7 @@ export const getPrice = (requestData, isGroupDiscount) => {
   return totalPrice;
 };
 
-export const discounts = [
-  { mail: "hamed.jenabi@gmail.com" },
-  { mail: "me@woutervervloet.com" },
-  { mail: "anicebo22@gmail.com" },
-  { mail: "dijkstra.lel@gmail.com" },
-  { mail: "nekotanik@gmail.com" },
-  { mail: "vicky.broos@gmail.com" },
-  { mail: "collinvandenbroek@gmail.com" },
-  { mail: "asnytin@gmail.com" },
-  { mail: "beauvandergiessen@gmail.com" },
-  { mail: "r.j.bongers@gmail.com" },
-  { mail: "snezana.otas@gmail.com" },
-  { mail: "jjbarreno@gmail.com" },
-  { mail: "victor_roosjr@hotmail.com" },
-  { mail: "daria@yurieva.ru" },
-  { mail: "elsa.filippidou@gmail.com" },
-  { mail: "aayang444@gmail.com" },
-  { mail: "edward.curran@hotmail.co.uk" },
-  { mail: "krhuang5@gmail.com" },
-  { mail: "mxeinhorn@gmail.com" },
-  { mail: "qianita.sun@gmail.com" },
-  { mail: "sampsondsyuan@gmail.com" },
-  { mail: "yjkberlin@rawdata.space" },
-  { mail: "izemylmaz@gmail.com" },
-  { mail: "rundmails@AndreasMerkert.de" },
-  { mail: "mykolamalik@gmail.com" },
-  { mail: "yasmin@bluesfever.eu" },
-  { mail: "panayotova.vasilena@gmail.com" },
-  { mail: "nedahristova16@gmail.com" },
-  { mail: "desidesign1996@gmail.com" },
-  { mail: "gamanolova@gmail.com" },
-  { mail: "sirakova@greenlife.bg" },
-  { mail: "agodinova@gmail.com" },
-  { mail: "daniela.i.ranova@gmail.com" },
-  { mail: "angelov.pavel@gmail.com" },
-  { mail: "margarita.baykova@gmail.com" },
-  { mail: "kdentchev@mail.bg" },
-  { mail: "pavel966969@gmail.com" },
-  { mail: "a_lozev1962@abv.bg" },
-  { mail: "onopko@abv.bg" },
-];
+export const discounts = [{ mail: "hamed.jjenabi@gmail.com" }];
 
 export const isGroupDiscount = (email) =>
   discounts.some(({ mail }) => mail === email);
