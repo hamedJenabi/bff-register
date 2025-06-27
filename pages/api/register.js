@@ -15,6 +15,10 @@ import {
   discounts,
 } from "../../utils/functions";
 
+import Stripe from "stripe";
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+
 const sgMail = require("@sendgrid/mail");
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
@@ -86,11 +90,26 @@ export default async function register(req, response) {
     lunch: req.body.lunch,
     terms: req.body.terms,
   };
+  const { session_id } = req.query;
 
-  const ticketName =
+  let ticketName =
     requestData.ticket === "partyPass"
       ? requestData.ticket
       : `${requestData.level}_${requestData.role}`;
+
+  if (ticketName === "solo__") {
+    ticketName = "solo_";
+  }
+  console.log("ticketName", ticketName);
+  const session = await stripe.checkout.sessions.retrieve(session_id);
+  let user_status = "registered";
+  if (session.payment_status === "paid") {
+    // update ticket capacity in database
+    await updateTicketCapacity(ticketName);
+    user_status = "confirmed";
+    // add confirmation email template to it,
+    // template = ....
+  }
 
   // const { id: ticketId } = await getTicketByName(ticketName);
   // const { capacity } = await isTicketAvailable(ticketId);
@@ -98,7 +117,7 @@ export default async function register(req, response) {
 
   const isGroupDiscount = discounts.some(({ mail }) => mail === req.body.email);
   const totalPrice = getPrice(requestData, isGroupDiscount);
-  console.log("totalPrice", totalPrice);
+  // console.log("totalPrice", totalPrice);
   ///////   TODO: GET TOTAL PRICE ///////
   const level = getLevelLabel(requestData.level);
   const ticket = getTicketLabel(requestData.ticket);
@@ -116,24 +135,24 @@ export default async function register(req, response) {
     // 302 -> already registered
     response.status(302).json();
   }
-  console.log("requestData", requestData);
+
   if (!isAlreadyRegistered) {
     // await updateTicketCapacity(ticketId); TODO - update capacity??
     let user = {
-      status: "registered",
+      status: user_status,
       price: totalPrice.toString(),
       ...requestData,
     };
     template = "d-a3d0a3b2f11f4c0d8c9008e9db9fa07d";
 
-    if (requestData.ticket === "partyPass") {
-      user = {
-        status: "email-sent",
-        price: totalPrice.toString(),
-        ...requestData,
-      };
-      template = "d-eec50fc0f8824f0aa2c66a7196890ed5";
-    }
+    // if (requestData.ticket === "partyPass") {
+    //   user = {
+    //     status: "email-sent",
+    //     price: totalPrice.toString(),
+    //     ...requestData,
+    //   };
+    //   template = "d-eec50fc0f8824f0aa2c66a7196890ed5";
+    // }
 
     const [{ id }] = await insertRegistration(user);
 

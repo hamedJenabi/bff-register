@@ -22,9 +22,6 @@ export default function Home({ tickets }) {
   const [isClicked, setIsClicked] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  if (typeof window !== "undefined") {
-    localStorage.removeItem("accepted");
-  }
   const router = useRouter();
 
   const form = useFormState({
@@ -88,33 +85,38 @@ export default function Home({ tickets }) {
         ...form.values,
         totalPrice,
       };
+      if (typeof window !== "undefined") {
+        localStorage.setItem("accepted_user", JSON.stringify(req));
+      }
 
-      fetch("/api/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Cache-Control": "no-cache, no-store",
-        },
-        body: JSON.stringify(req),
-      })
-        .then((response) => {
-          if (response.status === 200) {
-            localStorage.setItem("accepted", JSON.stringify(form.values));
-            // Router.push("/accept");
-            handleCheckout(totalPrice * 100);
-          }
+      handleCheckout(totalPrice * 100, req);
 
-          if (response.status === 301) {
-            Router.push("/soldout");
-          }
-          if (response.status === 302) {
-            Router.push("/alreadyRegistered");
-          }
-        })
-        .catch((error) => console.log(error));
+      // fetch("/api/register", {
+      //   method: "POST",
+      //   headers: {
+      //     "Content-Type": "application/json",
+      //     "Cache-Control": "no-cache, no-store",
+      //   },
+      //   body: JSON.stringify(req),
+      // })
+      //   .then((response) => {
+      //     if (response.status === 200) {
+      //       localStorage.setItem("accepted_user", JSON.stringify(form.values));
+      //       // Router.push("/accept");
+      //       handleCheckout(totalPrice * 100);
+      //     }
+
+      //     if (response.status === 301) {
+      //       Router.push("/soldout");
+      //     }
+      //     if (response.status === 302) {
+      //       Router.push("/alreadyRegistered");
+      //     }
+      //   })
+      //   .catch((error) => console.log(error));
     },
   });
-  const handleCheckout = async (price) => {
+  const handleCheckout = async (price, req) => {
     setLoading(true);
     const res = await fetch("/api/checkout", {
       method: "POST",
@@ -124,6 +126,7 @@ export default function Home({ tickets }) {
       },
       body: JSON.stringify({
         price: price,
+        user: req,
       }),
     });
 
@@ -251,7 +254,7 @@ export default function Home({ tickets }) {
 export async function getServerSideProps() {
   const { getTickets } = await import("../db/db");
   const tickets = await getTickets();
-
+  console.log("tickets", tickets);
   return {
     props: {
       tickets: tickets,

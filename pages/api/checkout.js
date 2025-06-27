@@ -16,7 +16,7 @@ export default async function handler(req, res) {
           price_data: {
             currency: "eur",
             product_data: {
-              name: "Sample Product",
+              name: "Your Event Ticket",
             },
             unit_amount: price,
           },
@@ -24,7 +24,7 @@ export default async function handler(req, res) {
         },
       ],
       mode: "payment",
-      success_url: `${req.headers.origin}/accept`,
+      success_url: `${req.headers.origin}/accept?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${req.headers.origin}/cancel`,
     });
 

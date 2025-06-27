@@ -14,7 +14,7 @@ export default function Home({ tickets }) {
   const isMobile = useMedia({ maxWidth: "768px" });
   let user = null;
   if (typeof window !== "undefined") {
-    user = JSON.parse(localStorage.getItem("accepted"));
+    user = JSON.parse(localStorage.getItem("accepted_user"));
   }
   return (
     <div className={styles.container}>

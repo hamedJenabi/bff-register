@@ -18,7 +18,7 @@ export default function Home({ tickets, clientID }) {
   const [priceToPay, setPriceToday] = useState(12.5);
 
   if (typeof window !== "undefined") {
-    localStorage.removeItem("accepted");
+    localStorage.removeItem("accepted_user");
   }
   const form = useFormState({
     values: {

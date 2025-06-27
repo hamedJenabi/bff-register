@@ -13,7 +13,7 @@ const sql =
 
 export async function getTickets() {
   const tickets = await sql`
-      SELECT id, name, capacity, waiting_list FROM tickets_23
+      SELECT id, name, label, capacity, waiting_list FROM tickets_23
       `;
   return tickets;
 }
@@ -21,7 +21,7 @@ export async function updateTicketCapacity(ticketId) {
   await sql`
     UPDATE tickets_23
     SET capacity = capacity - 1
-    WHERE id = ${ticketId}
+    WHERE name = ${ticketId}
     `;
 }
 export async function updateTicketWaiting(ticketId) {

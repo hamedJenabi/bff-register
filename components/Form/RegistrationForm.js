@@ -1,4 +1,3 @@
-import React, { useState } from "react";
 import {
   unstable_Form as Form,
   unstable_FormMessage as FormMessage,
@@ -24,8 +23,10 @@ import {
 } from "../../utils/functions";
 import styles from "./RegistrationForm.module.scss";
 import countries from "../../utils/countries";
+import React, { useState, useEffect } from "react";
 
-export default function RegistrationForm({ form, isClicked }) {
+export default function RegistrationForm({ form, tickets, isClicked }) {
+  const [ticketName, setTicketName] = useState("");
   const handleTicket = (ticket) => {
     if (ticket === 1) {
       form.update("ticket", "fullpass");
@@ -84,6 +85,16 @@ export default function RegistrationForm({ form, isClicked }) {
   //   value === "int" ||
   //   value === "latin_blues" ||
   //   value === "stride_strut" ||
+
+  useEffect(() => {
+    setTicketName(`${form.values.level}_${form.values.role}`);
+    if (form.values.ticket === "partyPass") {
+      setTicketName("partyPass");
+    }
+    if (form.values.level === "solo_") {
+      setTicketName("solo_");
+    }
+  }, [form]);
 
   return (
     <>
@@ -227,18 +238,18 @@ export default function RegistrationForm({ form, isClicked }) {
                 {...form}
                 name="level"
               >
-                {levelsToShow.map(({ label, value, detail }) => {
+                {tickets.map(({ label, name: value, capacity }) => {
                   return (
                     <label key={value}>
                       <FormRadio
                         {...form}
                         name="level"
                         value={value}
-                        disabled={isDisabled(value)}
+                        disabled={capacity === 0 || isDisabled(value)}
                       />
                       <p style={{ fontSize: "14px" }}>
                         {label}
-                        {isDisabled(value) && " (Sold out)"}
+                        {capacity === 0 && " –– Sold out"}
                       </p>
                       {/* <InfoModal header={label} info={detail} /> */}
                     </label>
@@ -247,7 +258,7 @@ export default function RegistrationForm({ form, isClicked }) {
               </FormRadioGroup>
             </>
           )}
-          {isFullPass &&
+          {/* {isFullPass &&
             form.values.level !== "" &&
             form.values.level !== "solo" && (
               <>
@@ -278,7 +289,7 @@ export default function RegistrationForm({ form, isClicked }) {
                   </div>
                 </FormRadioGroup>
               </>
-            )}
+            )} */}
 
           {/* <h3 className={styles.title}>Themed Classes? (€45)</h3>
           <p className={styles.infoText}>

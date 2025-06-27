@@ -1,22 +1,19 @@
 exports.up = async (sql) => {
   await sql`
-	  INSERT INTO tickets_23 (name,capacity,waiting_list) VALUES   									
-			  ('beg/int_lead',20,50),
-			  ('beg/int_follow',20,50),
-			  ('int_lead',20,50),
-			  ('int_follow',20,50),
-			  ('int/adv_lead',20,50),
-			  ('int/adv_follow',20,50),
-			  ('adv_lead',40,50),
-			  ('adv_follow',40,50),
-			  ('adv+_lead',20,50),
-			  ('adv+_follow',20,50),
-			  ('solo',20,50),
-			  ('funk_lead',20,50),
-			  ('funk_follow',20,50),
-			  ('piedmont_lead',20,50),
-			  ('piedmont_follow',20,50),
-			  ('partyPass',200,200)
+	  INSERT INTO tickets_23 (name,label,capacity,waiting_list) VALUES   							
+			  ('beg/int_lead', 'Beginner/Intermediate - Mainly Leader', 18, 10),
+			  ('beg/int_follow', 'Beginner/Intermediate - Mainly Follow', 18, 10),
+			  ('int/adv_lead', 'Intermediate/Advanced - Mainly Leader', 18, 10),
+			  ('int/adv_follow', 'Intermediate/Advanced - Mainly Follow', 18, 10),
+			  ('adv_lead', 'Advanced - Mainly Leader', 36, 10),
+			  ('adv_follow', 'Advanced - Mainly Follow', 36, 10),
+			  ('adv+_lead', 'Advanced Plus - Mainly Leader', 18, 10),
+			  ('adv+_follow', 'Advanced Plus - Mainly Follow', 18, 10),
+			  ('solo_', 'Solo Blues (Intermediate and above)', 30, 10),
+			  ('funk_lead', 'Funk - Mainly Leader  (Intermediate/Advanced and above)', 18, 10),
+			  ('funk_follow', 'Funk - Mainly Follow  (Intermediate/Advanced and above)', 18, 10),
+			  ('piedmont_lead', 'Piedmont - Mainly Leader  (Intermediate/Advanced and above)', 18, 10),
+			  ('piedmont_follow', 'Piedmont - Mainly Follow  (Intermediate/Advanced and above)', 18, 10)
 	  `;
 };
 

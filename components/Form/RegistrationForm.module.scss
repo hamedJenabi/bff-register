@@ -202,10 +202,14 @@
   label {
     font-family: $Paragraph;
     display: flex;
-
+    align-items: center;
     gap: $xs;
     &:hover {
       cursor: pointer;
+    }
+    input {
+      width: 25px;
+      height: 25px;
     }
   }
   gap: $xs;
