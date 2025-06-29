@@ -95,11 +95,8 @@ export default async function register(req, response) {
   let ticketName =
     requestData.ticket === "partyPass"
       ? requestData.ticket
-      : `${requestData.level}_${requestData.role}`;
+      : `${requestData.level}`;
 
-  if (ticketName === "solo__") {
-    ticketName = "solo_";
-  }
   console.log("ticketName", ticketName);
   const session = await stripe.checkout.sessions.retrieve(session_id);
   let user_status = "registered";

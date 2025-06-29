@@ -9,7 +9,7 @@ exports.up = async (sql) => {
 			  ('adv_follow', 'Advanced - Mainly Follow', 36, 10),
 			  ('adv+_lead', 'Advanced Plus - Mainly Leader', 18, 10),
 			  ('adv+_follow', 'Advanced Plus - Mainly Follow', 18, 10),
-			  ('solo_', 'Solo Blues (Intermediate and above)', 30, 10),
+			  ('solo', 'Solo Blues (Intermediate and above)', 30, 10),
 			  ('funk_lead', 'Funk Blues - Mainly Leader  (Intermediate and above)', 18, 10),
 			  ('funk_follow', 'Funk Blues  - Mainly Follow  (Intermediate and above)', 18, 10),
 			  ('piedmont_lead', 'Piedmont Blues - Mainly Leader  (Intermediate and above)', 18, 10),

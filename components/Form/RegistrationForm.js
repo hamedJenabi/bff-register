@@ -87,12 +87,9 @@ export default function RegistrationForm({ form, tickets, isClicked }) {
   //   value === "stride_strut" ||
 
   useEffect(() => {
-    setTicketName(`${form.values.level}_${form.values.role}`);
+    setTicketName(`${form.values.level}`);
     if (form.values.ticket === "partyPass") {
       setTicketName("partyPass");
-    }
-    if (form.values.level === "solo_") {
-      setTicketName("solo_");
     }
   }, [form]);
 
