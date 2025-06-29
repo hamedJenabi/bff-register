@@ -72,7 +72,7 @@
   margin-top: $sm;
   @media (min-width: 800px) {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr 1fr 1fr;
     gap: $md;
     // padding-right: $xl;
   }
@@ -207,6 +207,9 @@
     &:hover {
       cursor: pointer;
     }
+    &:focus {
+      border: 1px solid $blue;
+    }
     input {
       width: 25px;
       height: 25px;
@@ -215,6 +218,16 @@
   gap: $xs;
   @media (min-width: 600px) {
     width: 580px;
+  }
+  &.radioTicket {
+    label {
+      border: 1px solid #dac7c7;
+      border-radius: 5px;
+      padding: $xs;
+      &:hover {
+        border: 1px solid $blue;
+      }
+    }
   }
 }
 

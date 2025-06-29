@@ -234,7 +234,7 @@ export default function RegistrationForm({ form, tickets, isClicked }) {
               </div>
 
               <FormRadioGroup
-                className={styles.radioGroup}
+                className={classNames(styles.radioGroup, styles.radioTicket)}
                 {...form}
                 name="level"
               >
