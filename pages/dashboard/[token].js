@@ -445,24 +445,25 @@ export default function Dashboard({ users, tickets }) {
     return (
       <div className={styles.tickets}>
         <div className={styles.ticketRow}>
-          <p>Level (both fills the gap)</p>
-          <p>Lead</p>
-          <p>follow</p>
+          <p>Level </p>
+          <p>Capacity</p>
         </div>
 
-        {levelsToShow?.map((ticket) => (
-          <div key={ticket.name} className={styles.ticketRow}>
-            <div className={styles.ticketItem}>
-              <p>{ticket.label}</p>
+        {tickets
+          .sort((a, b) => a.id - b.id)
+          .map((ticket) => (
+            <div key={ticket.name} className={styles.infoRow}>
+              <div className={styles.ticketItem}>
+                <p>{ticket.label}</p>
+              </div>
+              <div className={styles.ticketItem}>
+                <p>{ticket.capacity}</p>
+              </div>
+              <div className={styles.ticketItem}>
+                <p>{ticket.follow}</p>
+              </div>
             </div>
-            <div className={styles.ticketItem}>
-              <p>{ticket.lead}</p>
-            </div>
-            <div className={styles.ticketItem}>
-              <p>{ticket.follow}</p>
-            </div>
-          </div>
-        ))}
+          ))}
       </div>
     );
   };
@@ -834,6 +835,7 @@ export default function Dashboard({ users, tickets }) {
             </div>
           )}
           <button
+            disabled
             style={{ margin: "40px 0" }}
             className={styles.statusButton}
             onClick={handleSendEmail}

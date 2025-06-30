@@ -235,23 +235,25 @@ export default function RegistrationForm({ form, tickets, isClicked }) {
                 {...form}
                 name="level"
               >
-                {tickets.map(({ label, name: value, capacity }) => {
-                  return (
-                    <label key={value}>
-                      <FormRadio
-                        {...form}
-                        name="level"
-                        value={value}
-                        disabled={capacity === 0 || isDisabled(value)}
-                      />
-                      <p style={{ fontSize: "14px" }}>
-                        {label}
-                        {capacity === 0 && " –– Sold out"}
-                      </p>
-                      {/* <InfoModal header={label} info={detail} /> */}
-                    </label>
-                  );
-                })}
+                {tickets
+                  .sort((a, b) => a.id - b.id)
+                  .map(({ label, name: value, capacity }) => {
+                    return (
+                      <label key={value}>
+                        <FormRadio
+                          {...form}
+                          name="level"
+                          value={value}
+                          disabled={capacity === 0 || isDisabled(value)}
+                        />
+                        <p style={{ fontSize: "14px" }}>
+                          {label}
+                          {capacity === 0 && " –– Sold out"}
+                        </p>
+                        {/* <InfoModal header={label} info={detail} /> */}
+                      </label>
+                    );
+                  })}
               </FormRadioGroup>
             </>
           )}

@@ -223,7 +223,25 @@
 }
 .ticketRow {
   display: flex;
-  justify-content: space-around;
+  align-items: center;
+  padding: $sm 0;
+  width: 100%;
+  &:first-child {
+    background-color: rgb(101, 236, 223);
+  }
+  p {
+    min-width: 100px;
+  }
+  @media (min-width: 600px) {
+    p {
+      min-width: 340px;
+      text-align: center;
+    }
+  }
+}
+.infoRow {
+  display: flex;
+  justify-content: space-between;
   align-items: center;
   padding: $sm 0;
   border-bottom: 1px solid #dce6e5;
@@ -237,7 +255,6 @@
   @media (min-width: 600px) {
     p {
       min-width: 250px;
-      border: 1px solid #dce6e5;
       text-align: center;
     }
     h4 {
@@ -245,6 +262,7 @@
     }
   }
 }
+
 .ticketItem {
   @media (min-width: 600px) {
     text-align: center;

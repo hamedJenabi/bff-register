@@ -91,12 +91,12 @@ export default async function register(req, response) {
     terms: req.body.terms,
   };
   const { session_id } = req.query;
+  const { label } = await getTicketByName(requestData.level);
+  console.log("label", label);
 
   let ticketName =
-    requestData.ticket === "partyPass"
-      ? requestData.ticket
-      : `${requestData.level}`;
-
+    requestData.ticket === "partyPass" ? requestData.ticket : requestData.level;
+  let template = "";
   console.log("ticketName", ticketName);
   const session = await stripe.checkout.sessions.retrieve(session_id);
   let user_status = "registered";
@@ -105,7 +105,7 @@ export default async function register(req, response) {
     await updateTicketCapacity(ticketName);
     user_status = "confirmed";
     // add confirmation email template to it,
-    // template = ....
+    template = "d-9a1d3b06c6fb43f69a1ee68b940ebe35";
   }
 
   // const { id: ticketId } = await getTicketByName(ticketName);
@@ -125,7 +125,6 @@ export default async function register(req, response) {
       userswithSameEmail.email + userswithSameEmail.firstname ===
       requestData.email + requestData.firstname;
   }
-  let template = "";
   let isSoldOut = false;
   //******** Check Capacity ********/
   if (isAlreadyRegistered) {
@@ -140,7 +139,7 @@ export default async function register(req, response) {
       price: totalPrice.toString(),
       ...requestData,
     };
-    template = "d-a3d0a3b2f11f4c0d8c9008e9db9fa07d";
+    // template = "d-a3d0a3b2f11f4c0d8c9008e9db9fa07d";
 
     // if (requestData.ticket === "partyPass") {
     //   user = {
@@ -197,8 +196,8 @@ export default async function register(req, response) {
       firstname: `${requestData.firstname}`,
       lastname: `${requestData.lastname}`,
       country: `${requestData.country}`,
-      role: `${titleCase(requestData.role)}`,
-      level: `${getLevelLabelForEmail(requestData.level)}`,
+      // role: `${titleCase(requestData.role)}`,
+      level: label ?? "",
       ticket: `${ticket}`,
       parent_partner: `${requestData.parent_partner}`,
       themeClass: `${titleCase(requestData.theme_class)}`,

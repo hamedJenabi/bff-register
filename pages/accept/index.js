@@ -67,6 +67,7 @@ export default function Home({ tickets }) {
       <main className={styles.main}>
         <div className={styles.content}>
           <div className={styles.title}>
+            <h3>Thank you for registering!</h3>
             <br />
             <p>
               Please note that your registration confirmation e-mail may end up
