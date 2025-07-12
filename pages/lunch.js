@@ -11,7 +11,6 @@ const FoodForm = dynamic(() => import("../components/Form/FoodForm.js"), {
   ssr: false,
 });
 import { unstable_useFormState as useFormState } from "reakit/Form";
-import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
 
 export default function Home({ tickets, clientID }) {
   const isMobile = useMedia({ maxWidth: "768px" });

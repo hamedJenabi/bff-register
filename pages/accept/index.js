@@ -24,6 +24,9 @@ export default function Home({ tickets }) {
     if (typeof window !== "undefined") {
       user = JSON.parse(localStorage.getItem("accepted_user"));
     }
+    if (!user) {
+      return;
+    }
 
     fetch(`/api/register?session_id=${session_id}`, {
       method: "POST",

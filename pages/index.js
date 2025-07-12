@@ -46,6 +46,7 @@ export default function Home({ tickets }) {
       donation: "",
       donation_amount: "",
       lunch: "",
+      voucher: "",
       terms: false,
     },
 
@@ -89,7 +90,7 @@ export default function Home({ tickets }) {
         localStorage.setItem("accepted_user", JSON.stringify(req));
       }
 
-      handleCheckout(totalPrice * 100, req);
+      handleCheckout(totalPrice * 100, req, values.voucher);
 
       // fetch("/api/register", {
       //   method: "POST",
@@ -116,7 +117,7 @@ export default function Home({ tickets }) {
       //   .catch((error) => console.log(error));
     },
   });
-  const handleCheckout = async (price, req) => {
+  const handleCheckout = async (price, req, voucher) => {
     setLoading(true);
     const res = await fetch("/api/checkout", {
       method: "POST",
@@ -127,6 +128,7 @@ export default function Home({ tickets }) {
       body: JSON.stringify({
         price: price,
         user: req,
+        voucher: voucher || "",
       }),
     });
 

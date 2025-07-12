@@ -438,14 +438,10 @@ export default function Dashboard({ users, tickets }) {
 
   //--------- Ticket Component
   const TicketsComponent = () => {
-    const ticketToshow = [
-      { name: "Level", capacity: "Capacity", waiting_list: "Waiting List" },
-      ...tickets,
-    ];
     return (
       <div className={styles.tickets}>
         <div className={styles.ticketRow}>
-          <p>Level </p>
+          <p>Level</p>
           <p>Capacity</p>
         </div>
 
@@ -458,9 +454,6 @@ export default function Dashboard({ users, tickets }) {
               </div>
               <div className={styles.ticketItem}>
                 <p>{ticket.capacity}</p>
-              </div>
-              <div className={styles.ticketItem}>
-                <p>{ticket.follow}</p>
               </div>
             </div>
           ))}
@@ -811,7 +804,11 @@ export default function Dashboard({ users, tickets }) {
             </div>
           )}
 
-          <button className={styles.statusButton} onClick={handleSendOneMail}>
+          <button
+            className={styles.statusButton}
+            disabled
+            onClick={handleSendOneMail}
+          >
             Send Final email to specific users:
           </button>
           {!capacityShow &&

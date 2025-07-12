@@ -498,6 +498,10 @@ export default function RegistrationForm({ form, tickets, isClicked }) {
               />
             </div>
           )}
+          <div className={styles.radioGroup}>
+            <h4 className={styles.title}>Do you have a voucher?</h4>
+            <FormInput className={styles.input} {...form} name="voucher" />
+          </div>
           <div className={styles.checkboxWrapper}>
             <FormCheckbox {...form} name="terms" />
             <FormLabel className={styles.infoText} {...form} name="terms">
