@@ -92,7 +92,14 @@ export default function RegistrationForm({ form, tickets, isClicked }) {
       setTicketName("partyPass");
     }
   }, [form]);
-
+  // add a deviding line in array to show after every item in tickts array that has "follow" in its name
+  const ticketsWithFollow = tickets.map((ticket) => {
+    if (ticket.name.includes("follow")) {
+      return { ...ticket, devide: true };
+    }
+    return ticket;
+  });
+  console.log("ticketsWithFollow", ticketsWithFollow);
   return (
     <>
       {!isClicked && (
@@ -235,23 +242,26 @@ export default function RegistrationForm({ form, tickets, isClicked }) {
                 {...form}
                 name="level"
               >
-                {tickets
+                {ticketsWithFollow
                   .sort((a, b) => a.id - b.id)
-                  .map(({ label, name: value, capacity }) => {
+                  .map(({ label, name: value, capacity, devide }) => {
                     return (
-                      <label key={value}>
-                        <FormRadio
-                          {...form}
-                          name="level"
-                          value={value}
-                          disabled={capacity === 0 || isDisabled(value)}
-                        />
-                        <p style={{ fontSize: "14px" }}>
-                          {label}
-                          {capacity === 0 && " –– Sold out"}
-                        </p>
-                        {/* <InfoModal header={label} info={detail} /> */}
-                      </label>
+                      <span key={value}>
+                        <label>
+                          <FormRadio
+                            {...form}
+                            name="level"
+                            value={value}
+                            disabled={capacity === 0 || isDisabled(value)}
+                          />
+                          <p style={{ fontSize: "14px" }}>
+                            {label}
+                            {capacity === 0 && " –– Sold out"}
+                          </p>
+                          {/* <InfoModal header={label} info={detail} /> */}
+                        </label>
+                        {devide && <div className={styles.divider} />}
+                      </span>
                     );
                   })}
               </FormRadioGroup>
