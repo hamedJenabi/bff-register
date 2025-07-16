@@ -199,7 +199,7 @@ export default function Home({ tickets }) {
     <div className={styles.container}>
       <Head>
         <title>Blues Fever 2025</title>
-        <meta name="description" content="BLUES FEVER 2024 Registration" />
+        <meta name="description" content="BLUES FEVER 2025 Registration" />
         <meta
           property="og:image"
           content="https://www.bluesfever.eu/wp-content/uploads/2024/01/bff24_title-finals-2-scaled.jpg"
@@ -218,7 +218,7 @@ export default function Home({ tickets }) {
         />
       </Head>
       <Header
-        title="BLUES FEVER 2024"
+        title="BLUES FEVER 2025"
         menuItems={[
           {
             title: "Home",

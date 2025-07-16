@@ -20,8 +20,8 @@ export default function soldout() {
   return (
     <div className={styles.container}>
       <Head>
-        <title>BLUES FEVER 2024</title>
-        <meta name="description" content="BLUES FEVER 2024 Registration" />
+        <title>BLUES FEVER 2025</title>
+        <meta name="description" content="BLUES FEVER 2025 Registration" />
         <link rel="icon" href="/icon.png" />
 
         <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -32,7 +32,7 @@ export default function soldout() {
         />
       </Head>
       <Header
-        title="BLUES FEVER 2024"
+        title="BLUES FEVER 2025"
         menuItems={[{ title: "Home", link: "https://www.bluesfever.eu/" }]}
       />
       <main className={styles.main}>
