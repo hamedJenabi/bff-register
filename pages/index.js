@@ -131,7 +131,10 @@ export default function Home({ tickets }) {
         voucher: voucher || "",
       }),
     });
-
+    if (res.status === 302) {
+      Router.push("/alreadyRegistered");
+      return;
+    }
     const data = await res.json();
     if (data.url) {
       window.location.href = data.url; // Redirect to Stripe

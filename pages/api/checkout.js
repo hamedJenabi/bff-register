@@ -1,4 +1,5 @@
 import Stripe from "stripe";
+import { getUserByEmailAndName } from "../../db/db";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -7,12 +8,19 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method Not Allowed" });
   }
   const price = req.body.price;
-  // if (
-  //   req.body.voucher === "staff2025bff" ||
-  //   req.body.voucher === "scholar2025bff"
-  // ) {
-  //   price = 0; // Free for staff
-  // }
+  const userswithSameEmail = await getUserByEmailAndName(req.body.user.email);
+  let isAlreadyRegistered = false;
+  if (userswithSameEmail) {
+    isAlreadyRegistered =
+      userswithSameEmail.email + userswithSameEmail.firstname ===
+      req.body.user.email + req.body.user.firstname;
+  }
+  let isSoldOut = false;
+  //******** Check Capacity ********/
+  if (isAlreadyRegistered) {
+    // redirect to alreadyRegistered page
+    return res.status(302).json();
+  }
 
   try {
     const session = await stripe.checkout.sessions.create({
