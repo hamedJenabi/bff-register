@@ -208,7 +208,7 @@ if (isAfterTargetDate("2025-09-15T00:01:00+02:00")) {
   fullpassPriceTemp = 255;
 }
 
-if (isAfterTargetDate("2024-09-15T00:01:00+02:00")) {
+if (isAfterTargetDate("2025-09-15T00:01:00+02:00")) {
   partyPriceTemp = 145;
 }
 
