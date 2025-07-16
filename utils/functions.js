@@ -197,7 +197,7 @@ export const compettionsInfo = [
       "This level is for those who have been dancing Blues since birth, or at least three years. You have attended many international workshops and maybe even teaching in your local scene. Done competitions and reached the final now and then. There will be no audition but we don’t spare you in this level, so please don’t misjudge your ability, for your sake and for your class mates.",
   },
 ];
-let fullpassPriceTemp = 2; // testing purposes
+let fullpassPriceTemp = 235;
 let partyPriceTemp = 135;
 
 if (isAfterTargetDate("2025-08-04T00:12:00+02:00")) {

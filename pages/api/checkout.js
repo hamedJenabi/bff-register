@@ -8,6 +8,16 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method Not Allowed" });
   }
   const price = req.body.price;
+  let grossPrice;
+
+  const percentFee = 0.014; // 1.4% fee
+  const fixedFee = 25; // €0.25 in cents
+  if (price === 0) {
+    grossPrice = 0;
+  } else {
+    grossPrice = Math.round((price + fixedFee) / (1 - percentFee));
+  }
+
   const userswithSameEmail = await getUserByEmailAndName(req.body.user.email);
   let isAlreadyRegistered = false;
   if (userswithSameEmail) {
@@ -24,15 +34,15 @@ export default async function handler(req, res) {
 
   try {
     const session = await stripe.checkout.sessions.create({
-      payment_method_types: ["card"],
+      payment_method_types: ["card", "ideal", "sepa_debit", "sofort", "klarna"],
       line_items: [
         {
           price_data: {
             currency: "eur",
             product_data: {
-              name: "Your BFF Ticket",
+              name: "Your BFF'25 Ticket",
             },
-            unit_amount: price,
+            unit_amount: grossPrice,
           },
           quantity: 1,
         },
