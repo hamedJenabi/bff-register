@@ -33,7 +33,7 @@ export default function soldout() {
       </Head>
       <Header
         title="BLUES FEVER 2024"
-        menuItems={[{ title: "Home", link: "https://thebluesjoint.dance" }]}
+        menuItems={[{ title: "Home", link: "https://www.bluesfever.eu/" }]}
       />
       <main className={styles.main}>
         <div className={styles.content}>
