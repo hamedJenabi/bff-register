@@ -6,10 +6,13 @@ export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method Not Allowed" });
   }
-  let price = req.body.price;
-  if (req.body.voucher === "staff2025bff") {
-    price = 0; // Free for staff
-  }
+  const price = req.body.price;
+  // if (
+  //   req.body.voucher === "staff2025bff" ||
+  //   req.body.voucher === "scholar2025bff"
+  // ) {
+  //   price = 0; // Free for staff
+  // }
 
   try {
     const session = await stripe.checkout.sessions.create({
@@ -19,7 +22,7 @@ export default async function handler(req, res) {
           price_data: {
             currency: "eur",
             product_data: {
-              name: "Your Event Ticket",
+              name: "Your BFF Ticket",
             },
             unit_amount: price,
           },

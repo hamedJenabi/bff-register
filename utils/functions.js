@@ -221,11 +221,14 @@ if (isAfterTargetDate("2024-09-15T00:01:00+02:00")) {
 export const fullpassPrice = fullpassPriceTemp;
 export const partyPrice = partyPriceTemp;
 
-export const getPrice = (requestData, isGroupDiscount) => {
-  const initialPrice =
+export const getPrice = (requestData, isGroupDiscount, voucher = "") => {
+  let initialPrice =
     requestData.ticket === "partyPass" || requestData.ticket === "parentPass"
       ? partyPrice
       : fullpassPrice;
+  if (voucher === "staff2025bff" || voucher === "scholar2025bff") {
+    initialPrice = 0; // Free for staff
+  }
   console.log("initialPrice", isGroupDiscount);
   const ticketPrice = isGroupDiscount
     ? Math.round((initialPrice / 100) * 90)

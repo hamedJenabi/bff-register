@@ -80,7 +80,7 @@ export default function Home({ tickets }) {
       }
       setIsClicked(true);
       const isDiscount = isGroupDiscount(values.email);
-      const totalPrice = getPrice(values, isDiscount); //
+      const totalPrice = getPrice(values, isDiscount, values.voucher); //
 
       const req = {
         ...form.values,
