@@ -356,7 +356,7 @@ export default function Dashboard({ users, tickets }) {
       setUserToShow(users.filter((user) => user["status"] === "canceled"));
     } else if (item === "all") {
       setUserToShow(users);
-    } else if (levelsToShow.some((level) => level.value === item)) {
+    } else if (tickets.some((level) => level.name === item)) {
       setUserToShow(users.filter((user) => user.level === item));
     } else if (item === "shirt") {
       setUserToShow(users.filter((user) => user["shirt"] === "yes"));
@@ -641,7 +641,7 @@ export default function Dashboard({ users, tickets }) {
           >
             <p>All</p>
           </div>
-          <div
+          {/* <div
             onClick={() => handleSideBarClick("registered")}
             className={classNames(styles.sideBarItem, {
               [styles.active]: activeSideBar === "registered",
@@ -672,7 +672,7 @@ export default function Dashboard({ users, tickets }) {
             })}
           >
             <p>waitinglist</p>
-          </div>
+          </div> */}
           <div
             onClick={() => handleSideBarClick("confirmed")}
             className={classNames(styles.sideBarItem, {
@@ -681,17 +681,19 @@ export default function Dashboard({ users, tickets }) {
           >
             <p>confirmed</p>
           </div>
-          {levelsToShow.map((level) => (
-            <div
-              key={level.value}
-              onClick={() => handleSideBarClick(level.value)}
-              className={classNames(styles.sideBarItem, {
-                [styles.active]: activeSideBar === level.value,
-              })}
-            >
-              <p>{titleCase(level.value)}</p>
-            </div>
-          ))}
+          {tickets
+            .sort((a, b) => a.id - b.id)
+            .map((level) => (
+              <div
+                key={level.value}
+                onClick={() => handleSideBarClick(level.name)}
+                className={classNames(styles.sideBarItem, {
+                  [styles.active]: activeSideBar === level.name,
+                })}
+              >
+                <p>{level.name}</p>
+              </div>
+            ))}
           <div
             onClick={() => handleSideBarClick("partyPass")}
             className={classNames(styles.sideBarItem, {
@@ -709,14 +711,14 @@ export default function Dashboard({ users, tickets }) {
             <p>Lunch</p>
           </div>
 
-          <div
+          {/* <div
             onClick={() => handleSideBarClick("theme_class")}
             className={classNames(styles.sideBarItem, {
               [styles.active]: activeSideBar === "theme_class",
             })}
           >
             <p>Themed Classes</p>
-          </div>
+          </div> */}
           <div
             onClick={() => handleSideBarClick("canceled")}
             className={classNames(styles.sideBarItem, {
@@ -733,7 +735,7 @@ export default function Dashboard({ users, tickets }) {
           >
             <p>Capacity</p>
           </div>
-          <div
+          {/* <div
             onClick={() => handleSideBarClick("balance")}
             className={classNames(styles.sideBarItem, {
               [styles.active]: activeSideBar === "balance",
@@ -748,7 +750,7 @@ export default function Dashboard({ users, tickets }) {
             })}
           >
             <p>Final Balance</p>
-          </div>
+          </div> */}
         </div>
         <div className={styles.content}>
           {activeSideBar !== "balance" && (
