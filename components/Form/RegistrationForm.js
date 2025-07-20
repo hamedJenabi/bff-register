@@ -170,7 +170,7 @@ export default function RegistrationForm({ form, tickets, isClicked }) {
             >
               {/* 4 plus pre party */}
               <h3>Full pass </h3>
-              <p>6+ hours classes</p>
+              <p>6 hours classes</p>
               <p>1 free competition</p>
               <p>All 5 Parties</p>
               <p>€{fullpassPrice}</p>
@@ -196,10 +196,8 @@ export default function RegistrationForm({ form, tickets, isClicked }) {
               })}
             >
               <h3>Parent Pass </h3>
-              <p className={styles.infoText}>
-                Two dancers sharing a child-care
-              </p>
-              <p>6+ hours classes</p>
+              <p className={styles.infoText}>Two dancers sharing childcare</p>
+              <p>6 hours classes</p>
               <p>All 5 Parties</p>
               <p>€{partyPrice}</p>
             </div>
@@ -264,6 +262,9 @@ export default function RegistrationForm({ form, tickets, isClicked }) {
                       </span>
                     );
                   })}
+                <p className={styles.infoText}>
+                  *Open to dancers with at least intermediate level experience
+                </p>
               </FormRadioGroup>
             </>
           )}
