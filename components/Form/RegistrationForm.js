@@ -230,7 +230,7 @@ export default function RegistrationForm({ form, tickets, isClicked }) {
                     target="_blank"
                     href="https://www.bluesfever.eu/passes-levels/#level"
                   >
-                    more info here
+                    find the Schedule here
                   </a>
                   <br />
                 </div>
