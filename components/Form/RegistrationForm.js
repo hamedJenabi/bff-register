@@ -264,13 +264,14 @@ export default function RegistrationForm({ form, tickets, isClicked }) {
                     );
                   })}
                 <p className={styles.infoText}>
-                  * Open to dancers with at least intermediate level experience.
-                </p>
-                <p className={styles.infoText}>
-                  ** There will be an audition for advanced track on Friday at
+                  * There will be an audition for advanced track on Friday at
                   13:00 to determine the level of{" "}
                   <strong>advanced 1, advanced 2 and advanced plus</strong>.{" "}
                   <br />
+                </p>
+                <p className={styles.infoText}>
+                  ** Open to dancers with at least intermediate level
+                  experience.
                 </p>
               </FormRadioGroup>
             </>
