@@ -222,8 +222,9 @@ export default function RegistrationForm({ form, tickets, isClicked }) {
               </h3>
               <div className={styles.infoTextWrapper}>
                 <div className={styles.infoText}>
-                  Hey folks, There will be <strong>no audition</strong>,so
-                  please read the level description carefully.{" "}
+                  Hey folks, There will be{" "}
+                  <strong>an audition for advanced track</strong> on Firday at 1
+                  pm.{" "}
                   <a
                     style={{ color: "blue" }}
                     target="_blank"
@@ -263,7 +264,13 @@ export default function RegistrationForm({ form, tickets, isClicked }) {
                     );
                   })}
                 <p className={styles.infoText}>
-                  *Open to dancers with at least intermediate level experience
+                  * Open to dancers with at least intermediate level experience.
+                </p>
+                <p className={styles.infoText}>
+                  ** There will be an audition for advanced track on Friday at
+                  13:00 to determine the level of{" "}
+                  <strong>advanced 1, advanced 2 and advanced plus</strong>.{" "}
+                  <br />
                 </p>
               </FormRadioGroup>
             </>
