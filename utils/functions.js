@@ -228,8 +228,10 @@ export const getPrice = (requestData, isGroupDiscount, voucher = "") => {
       : fullpassPrice;
   if (voucher === "staff2025bff" || voucher === "scholar2025bff") {
     initialPrice = 0; // Free for staff
+  } else if (voucher === "bffdiscount2025") {
+    initialPrice = Math.round((initialPrice / 100) * 90);
   }
-  console.log("initialPrice", isGroupDiscount);
+
   const ticketPrice = isGroupDiscount
     ? Math.round((initialPrice / 100) * 90)
     : initialPrice;

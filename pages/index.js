@@ -259,7 +259,7 @@ export default function Home({ tickets }) {
 export async function getServerSideProps() {
   const { getTickets } = await import("../db/db");
   const tickets = await getTickets();
-  console.log("tickets", tickets);
+
   return {
     props: {
       tickets: tickets,

@@ -27,15 +27,19 @@ import React, { useState, useEffect } from "react";
 
 export default function RegistrationForm({ form, tickets, isClicked }) {
   const [ticketName, setTicketName] = useState("");
+  const isPartyPass = isAfterTargetDate("2025-08-16T00:12:00+02:00");
+
   const handleTicket = (ticket) => {
     if (ticket === 1) {
       form.update("ticket", "fullpass");
     } else if (ticket === 3) {
       form.update("ticket", "parentPass");
     } else {
-      form.update("ticket", "partyPass");
-      form.update("role", "");
-      form.update("level", "");
+      if (isPartyPass) {
+        form.update("ticket", "partyPass");
+        form.update("role", "");
+        form.update("level", "");
+      }
     }
   };
   const isRoleNeeded =
@@ -99,7 +103,7 @@ export default function RegistrationForm({ form, tickets, isClicked }) {
     }
     return ticket;
   });
-  console.log("ticketsWithFollow", ticketsWithFollow);
+
   return (
     <>
       {!isClicked && (
@@ -176,19 +180,22 @@ export default function RegistrationForm({ form, tickets, isClicked }) {
               <p>€{fullpassPrice}</p>
             </div>
 
-            {isAfterTargetDate("2025-08-16T00:12:00+02:00") && (
-              <div
-                onClick={() => handleTicket(2)}
-                className={classNames(styles.card, {
-                  [styles.selected]: form.values.ticket === "partyPass",
-                })}
-              >
-                <h3>Party Pass</h3>
-                <h4>(sold out)</h4>
-                <p>All 5 Parties</p>
-                <p>€{partyPrice}</p>
-              </div>
-            )}
+            {/* {isPartyPass && ( */}
+            <div
+              onClick={() => handleTicket(2)}
+              className={classNames(styles.card, {
+                [styles.selected]: form.values.ticket === "partyPass",
+                [styles.notAvailable]: !isPartyPass,
+              })}
+            >
+              <h3>Party Pass</h3>
+              <p>All 5 Parties</p>
+              <p className={styles.infoText}>
+                Partypass is available after August 16th
+              </p>
+              <p>€{partyPrice}</p>
+            </div>
+            {/* )} */}
             <div
               onClick={() => handleTicket(3)}
               className={classNames(styles.card, {

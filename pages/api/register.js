@@ -97,7 +97,7 @@ export default async function register(req, response) {
   let ticketName =
     requestData.ticket === "partyPass" ? requestData.ticket : requestData.level;
   let template = "";
-  console.log("ticketName", ticketName);
+
   const session = await stripe.checkout.sessions.retrieve(session_id);
   let user_status = "registered";
   if (session.payment_status === "paid") {
@@ -114,7 +114,7 @@ export default async function register(req, response) {
 
   const isGroupDiscount = discounts.some(({ mail }) => mail === req.body.email);
   const totalPrice = getPrice(requestData, isGroupDiscount);
-  // console.log("totalPrice", totalPrice);
+
   ///////   TODO: GET TOTAL PRICE ///////
   const level = getLevelLabel(requestData.level);
   const ticket = getTicketLabel(requestData.ticket);
