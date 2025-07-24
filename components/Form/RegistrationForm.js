@@ -214,6 +214,10 @@ export default function RegistrationForm({ form, tickets, isClicked }) {
               <h4 className={styles.title}>
                 Who is your parent partner? (full name)
               </h4>
+              <p className={styles.infoText}>
+                Parents can team up with each other, Each person must register
+                separately (1 pass per person)
+              </p>
               <FormInput
                 className={styles.input}
                 {...form}
