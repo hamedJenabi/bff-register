@@ -9,12 +9,8 @@ import {
   unstable_FormLabel as FormLabel,
 } from "reakit/Form";
 import SkeletonComponent from "../Skeleton/Skeleton";
-import { useRouter } from "next/router";
 import classNames from "classnames";
-import CheckoutButton from "../CheckoutButton/CheckoutButton";
-import InfoModal from "../InfoModal/InfoModal";
 import {
-  levelsToShow,
   compettionsInfo,
   fullpassPrice,
   partyPrice,
