@@ -231,8 +231,8 @@ export default function RegistrationForm({ form, tickets, isClicked }) {
               <div className={styles.infoTextWrapper}>
                 <div className={styles.infoText}>
                   Hey folks, There will be{" "}
-                  <strong>an audition for advanced track</strong> on Firday at 1
-                  pm.{" "}
+                  <strong>an audition for advanced track</strong> on Friday at
+                  12:30 pm.{" "}
                   <a
                     style={{ color: "blue" }}
                     target="_blank"
@@ -310,7 +310,7 @@ export default function RegistrationForm({ form, tickets, isClicked }) {
                     <p className={styles.infoText}>
                       You choose <strong>"Both"</strong> role if you will attend
                       some classes as LEAD and some as FOLLOW to help balance
-                      out the ration between the two roles.
+                      out the ratio between the two roles.
                     </p>
                   </div>
                 </FormRadioGroup>
@@ -331,7 +331,7 @@ export default function RegistrationForm({ form, tickets, isClicked }) {
               <FormRadio
                 {...form}
                 name="theme_class"
-                value="build_a_chreography"
+                value="build_a_choreography"
               />
               <p>Build a Choreography </p>
             </label> */}
