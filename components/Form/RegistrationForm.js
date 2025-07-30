@@ -186,8 +186,9 @@ export default function RegistrationForm({ form, tickets, isClicked }) {
             >
               <h3>Party Pass</h3>
               <p>All 5 Parties</p>
-              <p className={styles.infoText}>
-                Partypass is available after August 16th
+              <p style={{ textAlign: "center" }} className={styles.infoText}>
+                Partypass spots are available after August 16th and subject to
+                availability.
               </p>
               <p>€{partyPrice}</p>
             </div>
