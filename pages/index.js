@@ -90,31 +90,30 @@ export default function Home({ tickets }) {
         localStorage.setItem("accepted_user", JSON.stringify(req));
       }
 
-      handleCheckout(totalPrice * 100, req, values.voucher);
+      // handleCheckout(totalPrice * 100, req, values.voucher);
 
-      // fetch("/api/register", {
-      //   method: "POST",
-      //   headers: {
-      //     "Content-Type": "application/json",
-      //     "Cache-Control": "no-cache, no-store",
-      //   },
-      //   body: JSON.stringify(req),
-      // })
-      //   .then((response) => {
-      //     if (response.status === 200) {
-      //       localStorage.setItem("accepted_user", JSON.stringify(form.values));
-      //       // Router.push("/accept");
-      //       handleCheckout(totalPrice * 100);
-      //     }
+      fetch("/api/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Cache-Control": "no-cache, no-store",
+        },
+        body: JSON.stringify(req),
+      })
+        .then((response) => {
+          if (response.status === 200) {
+            localStorage.setItem("accepted_user", JSON.stringify(form.values));
+            Router.push("/accept");
+          }
 
-      //     if (response.status === 301) {
-      //       Router.push("/soldout");
-      //     }
-      //     if (response.status === 302) {
-      //       Router.push("/alreadyRegistered");
-      //     }
-      //   })
-      //   .catch((error) => console.log(error));
+          if (response.status === 301) {
+            Router.push("/soldout");
+          }
+          if (response.status === 302) {
+            Router.push("/alreadyRegistered");
+          }
+        })
+        .catch((error) => console.log(error));
     },
   });
   const handleCheckout = async (price, req, voucher) => {

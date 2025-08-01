@@ -90,7 +90,7 @@ export default async function register(req, response) {
     lunch: req.body.lunch,
     terms: req.body.terms,
   };
-  const { session_id } = req.query;
+  // const { session_id } = req.query;
   const { label } = await getTicketByName(requestData.level);
   console.log("label", label);
 
@@ -98,15 +98,15 @@ export default async function register(req, response) {
     requestData.ticket === "partyPass" ? requestData.ticket : requestData.level;
   let template = "";
 
-  const session = await stripe.checkout.sessions.retrieve(session_id);
+  // const session = await stripe.checkout.sessions.retrieve(session_id);
   let user_status = "registered";
-  if (session.payment_status === "paid") {
-    // update ticket capacity in database
-    await updateTicketCapacity(ticketName);
-    user_status = "confirmed";
-    // add confirmation email template to it,
-    template = "d-9a1d3b06c6fb43f69a1ee68b940ebe35";
-  }
+  // if (session.payment_status === "paid") {
+  //   // update ticket capacity in database
+  //   await updateTicketCapacity(ticketName);
+  //   user_status = "confirmed";
+  //   // add confirmation email template to it,
+  //   template = "d-9a1d3b06c6fb43f69a1ee68b940ebe35";
+  // }
 
   // const { id: ticketId } = await getTicketByName(ticketName);
   // const { capacity } = await isTicketAvailable(ticketId);
@@ -119,6 +119,7 @@ export default async function register(req, response) {
   const level = getLevelLabel(requestData.level);
   const ticket = getTicketLabel(requestData.ticket);
   const userswithSameEmail = await getUserByEmailAndName(requestData.email);
+  console.log("userswithSameEmail", userswithSameEmail);
   let isAlreadyRegistered = false;
   if (userswithSameEmail) {
     isAlreadyRegistered =
@@ -131,7 +132,7 @@ export default async function register(req, response) {
     // 302 -> already registered
     response.status(302).json();
   }
-
+  console.log("isAlreadyRegistered", isAlreadyRegistered);
   if (!isAlreadyRegistered) {
     // await updateTicketCapacity(ticketId); TODO - update capacity??
     let user = {
@@ -139,7 +140,7 @@ export default async function register(req, response) {
       price: totalPrice.toString(),
       ...requestData,
     };
-    // template = "d-a3d0a3b2f11f4c0d8c9008e9db9fa07d";
+    template = "d-a3d0a3b2f11f4c0d8c9008e9db9fa07d";
 
     // if (requestData.ticket === "partyPass") {
     //   user = {
