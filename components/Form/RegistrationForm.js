@@ -226,7 +226,7 @@ export default function RegistrationForm({ form, tickets, isClicked }) {
           {isFullPass && (
             <>
               <h3 className={styles.title}>
-                Choose your Track: (classes on Fr/Sat/Sunday)
+                Choose your Track: (Classes are on Fri/Sat/Sun)
               </h3>
               <div className={styles.infoTextWrapper}>
                 <div className={styles.infoText}>
@@ -273,7 +273,7 @@ export default function RegistrationForm({ form, tickets, isClicked }) {
                   })}
                 <p className={styles.infoText}>
                   * There will be an audition for advanced track on Friday at
-                  13:00 to determine the level of{" "}
+                  12:30 to determine the level of{" "}
                   <strong>advanced 1, advanced 2 and advanced plus</strong>.{" "}
                   <br />
                 </p>
