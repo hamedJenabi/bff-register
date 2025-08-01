@@ -170,7 +170,7 @@ export default function RegistrationForm({ form, tickets, isClicked }) {
             >
               {/* 4 plus pre party */}
               <h3>Full pass </h3>
-              <p>6 hours classes</p>
+              <p> 4x1.5h classes (6h)</p>
               <p>1 free competition</p>
               <p>All 5 Parties</p>
               <p>€{fullpassPrice}</p>
@@ -201,7 +201,7 @@ export default function RegistrationForm({ form, tickets, isClicked }) {
             >
               <h3>Parent Pass </h3>
               <p className={styles.infoText}>Two dancers sharing childcare</p>
-              <p>6 hours classes</p>
+              <p> 4x1.5h classes (6h)</p>
               <p>All 5 Parties</p>
               <p>€{partyPrice}</p>
             </div>
@@ -230,16 +230,21 @@ export default function RegistrationForm({ form, tickets, isClicked }) {
               </h3>
               <div className={styles.infoTextWrapper}>
                 <div className={styles.infoText}>
-                  Hey folks, There will be{" "}
-                  <strong>an audition for advanced track</strong> on Friday at
-                  12:30 pm.{" "}
+                  For the Full pass you have two options: <br /> 1. The classic
+                  "level classes" - if you sign up for Advanced level there will
+                  be an audition on Friday at 12.30 pm <br />
+                  OR <br />
+                  2. If you are at least level Intermediate, then you can choose
+                  instead of the classic system one of our Focus tracks. You can
+                  find level description and schedule{" "}
                   <a
                     style={{ color: "blue" }}
                     target="_blank"
                     href="https://www.bluesfever.eu/passes-levels/#level"
                   >
-                    find the Schedule here
+                    here
                   </a>
+                  .
                   <br />
                 </div>
               </div>
