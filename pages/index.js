@@ -227,7 +227,8 @@ export default function Home({ tickets }) {
         ]}
       />
       <main className={styles.main}>
-        {router?.query?.intern === "true" ? (
+        {router?.query?.intern === "true" ||
+        isAfterTargetDate("2025-08-02T12:00:00+02:00") ? (
           <RegistrationForm
             form={form}
             tickets={tickets}
