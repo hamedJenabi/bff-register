@@ -91,8 +91,11 @@ export default async function register(req, response) {
     terms: req.body.terms,
   };
   const { session_id } = req.query;
-  const { label } = await getTicketByName(requestData.level);
-  console.log("label", label);
+  const ticketLabel = await getTicketByName(requestData.level);
+  let label = ticketLabel?.label;
+  if (!label) {
+    label = "";
+  }
 
   let ticketName =
     requestData.ticket === "partyPass" ? requestData.ticket : requestData.level;
