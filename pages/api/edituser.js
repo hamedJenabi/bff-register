@@ -13,6 +13,7 @@ import {
   removeFromCapacity,
   addToWaitingList,
   getTicketByName,
+  updateTicketCapacity,
   addToCapacity,
 } from "../../db/db";
 const getLevelLabelForEmail = (level) => {
@@ -281,6 +282,11 @@ export default async function edituser(req, response) {
         },
       };
       if (!requestData.isGroupApi && !isEditing) {
+        let ticketName =
+          requestData.ticket === "partyPass"
+            ? requestData.ticket
+            : requestData.level;
+        await updateTicketCapacity(ticketName);
         console.log("email SENTSS");
         await sendEmail(msg);
       }
