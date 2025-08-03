@@ -94,9 +94,13 @@ export default async function edituser(req, response) {
     isGroupApi: req.body.isGroupApi,
     price: req.body.price,
   };
-
+  const ticketLabel = await getTicketByName(requestData.level);
+  let label = ticketLabel?.label;
+  if (!label) {
+    label = "";
+  }
   const isGroupDiscount = discounts.some(({ mail }) => mail === req.body.email);
-
+  console.log("requestData", label);
   /***** GET PRICE AND LEVEL */
   const level = titleCase(requestData.level);
   const ticket = getTicketLabel(requestData.ticket);
@@ -134,8 +138,8 @@ export default async function edituser(req, response) {
           firstname: `${requestData.firstname}`,
           lastname: `${requestData.lastname}`,
           country: `${requestData.country}`,
-          role: `${titleCase(requestData.role)}`,
-          level: `${getLevelLabelForEmail(requestData.level)}`,
+          // role: `${titleCase(requestData.role)}`,
+          level: label ?? "",
           ticket: `${ticket}`,
           parent_partner: `${requestData.parent_partner}`,
           themeClass: `${titleCase(requestData.theme_class)}`,
@@ -175,8 +179,7 @@ export default async function edituser(req, response) {
           lastname: `${requestData.lastname}`,
           date: `${requestData.date}`,
           country: `${requestData.country}`,
-          role: `${titleCase(requestData.role)}`,
-          level: `${getLevelLabelForEmail(requestData.level)}`,
+          level: label ?? "",
           ticket: `${ticket}`,
           parent_partner: `${requestData.parent_partner}`,
           themeClass: `- ${titleCase(requestData.theme_class)}`,
@@ -214,8 +217,8 @@ export default async function edituser(req, response) {
           firstname: `${requestData.firstname}`,
           lastname: `${requestData.lastname}`,
           country: `${requestData.country}`,
-          role: `${titleCase(requestData.role)}`,
-          level: `${getLevelLabelForEmail(requestData.level)}`,
+
+          level: label ?? "",
           ticket: `${ticket}`,
           parent_partner: `${requestData.parent_partner}`,
           themeClass: `${titleCase(requestData.theme_class)}`,
@@ -253,8 +256,7 @@ export default async function edituser(req, response) {
           firstname: `${requestData.firstname}`,
           lastname: `${requestData.lastname}`,
           country: `${requestData.country}`,
-          role: `${titleCase(requestData.role)}`,
-          level: `${getLevelLabelForEmail(requestData.level)}`,
+          level: label ?? "",
           ticket: `${ticket}`,
           parent_partner: `${requestData.parent_partner}`,
           themeClass: `${titleCase(requestData.theme_class)}`,
@@ -293,8 +295,7 @@ export default async function edituser(req, response) {
           firstname: `${requestData.firstname}`,
           lastname: `${requestData.lastname}`,
           country: `${requestData.country}`,
-          role: `${titleCase(requestData.role)}`,
-          level: `${getLevelLabelForEmail(requestData.level)}`,
+          level: label ?? "",
           ticket: `${ticket}`,
           parent_partner: `${requestData.parent_partner}`,
           themeClass: `${titleCase(requestData.theme_class)}`,
