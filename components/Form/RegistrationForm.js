@@ -230,6 +230,8 @@ export default function RegistrationForm({ form, tickets, isClicked }) {
               </h3>
               <div className={styles.infoTextWrapper}>
                 <div className={styles.infoText}>
+                  *** Important note: ***
+                  <br />
                   For the Full pass you have two options: <br /> 1. The classic
                   "level classes" - if you sign up for Advanced level there will
                   be an audition on Friday at 12.30 pm <br />
