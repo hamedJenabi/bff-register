@@ -259,7 +259,11 @@ export default function RegistrationForm({ form, tickets, isClicked }) {
                   .map(({ label, name: value, capacity, devide }) => {
                     return (
                       <span key={value}>
-                        <label>
+                        <label
+                          className={classNames({
+                            [styles.disabledLabel]: capacity === 0,
+                          })}
+                        >
                           <FormRadio
                             {...form}
                             name="level"
