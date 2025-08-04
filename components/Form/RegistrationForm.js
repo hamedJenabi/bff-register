@@ -418,8 +418,14 @@ export default function RegistrationForm({ form, tickets, isClicked }) {
                         {...form}
                         name={`${comp}_role`}
                         value="follow"
+                        disabled={comp === "newcomers_mixnmatch"}
                       />
-                      <p>Follow</p>
+                      <p>
+                        Follow{" "}
+                        {comp === "newcomers_mixnmatch" && (
+                          <span>(Fully booked)</span>
+                        )}
+                      </p>
                     </label>
 
                     <label>
@@ -533,6 +539,9 @@ export default function RegistrationForm({ form, tickets, isClicked }) {
           <div className={styles.radioGroup}>
             <h4 className={styles.title}>Do you have a voucher?</h4>
             <FormInput className={styles.input} {...form} name="voucher" />
+            {form.values.voucher === "bffdiscount2025" && (
+              <p className={styles.infoText}>Your voucher has been expired!</p>
+            )}
           </div>
           <div className={styles.checkboxWrapper}>
             <FormCheckbox {...form} name="terms" />

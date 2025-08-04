@@ -204,7 +204,7 @@ export const getPrice = (requestData, isGroupDiscount, voucher = "") => {
   if (voucher === "staff2025bff" || voucher === "scholar2025bff") {
     initialPrice = 0; // Free for staff
   } else if (voucher === "bffdiscount2025") {
-    initialPrice = Math.round((initialPrice / 100) * 90);
+    initialPrice = initialPrice; // No discount applied
   }
 
   const ticketPrice = isGroupDiscount
