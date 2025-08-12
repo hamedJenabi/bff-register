@@ -405,8 +405,10 @@ export default function RegistrationForm({ form, tickets, isClicked }) {
                     name="competitions"
                     key={label}
                     value={value}
+                    disabled={value === "solo_battle"}
                   />{" "}
                   {label}
+                  <span>{value === "solo_battle" && "(Fully booked)"}</span>
                 </label>
               ))}
             </div>
