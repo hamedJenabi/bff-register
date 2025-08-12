@@ -282,6 +282,12 @@ export default function RegistrationForm({ form, tickets, isClicked }) {
                       </span>
                     );
                   })}
+                <FormMessage
+                  className={styles.errorMessage}
+                  {...form}
+                  name="level"
+                  style={{ fontSize: "32px", margin: "10px 0" }}
+                />
                 <p className={styles.infoText}>
                   * There will be an audition for advanced track on Friday at
                   12:30 to determine the level of{" "}
