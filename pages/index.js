@@ -61,7 +61,7 @@ export default function Home({ tickets }) {
       if (!values.terms) {
         errors.terms = "please accept our terms and conditions";
       }
-      if (!values.level) {
+      if (!values.level && values.ticket !== "partyPass") {
         errors.level = "please select your Track";
       }
       if (
