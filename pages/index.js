@@ -18,7 +18,7 @@ import {
 } from "../utils/functions";
 import { unstable_useFormState as useFormState } from "reakit/Form";
 
-export default function Home({ tickets }) {
+export default function Home({ tickets, users }) {
   const [isClicked, setIsClicked] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -235,6 +235,7 @@ export default function Home({ tickets }) {
           <RegistrationForm
             form={form}
             tickets={tickets}
+            users={users}
             isClicked={isClicked}
           />
         ) : (
@@ -261,12 +262,15 @@ export default function Home({ tickets }) {
 }
 
 export async function getServerSideProps() {
-  const { getTickets } = await import("../db/db");
+  const { getTickets, getAllUsers } = await import("../db/db");
+
   const tickets = await getTickets();
+  const users = await getAllUsers();
 
   return {
     props: {
       tickets: tickets,
+      users: users,
     },
   };
 }

@@ -21,9 +21,13 @@ import styles from "./RegistrationForm.module.scss";
 import countries from "../../utils/countries";
 import React, { useState, useEffect } from "react";
 
-export default function RegistrationForm({ form, tickets, isClicked }) {
+export default function RegistrationForm({ form, tickets, users, isClicked }) {
   const [ticketName, setTicketName] = useState("");
   const isPartyPass = isAfterTargetDate("2025-08-16T00:12:00+02:00");
+
+  // check if 60 people has partypass
+  const isPartypassSoldout =
+    users.filter((user) => user.ticket === "partyPass").length >= 60;
 
   const handleTicket = (ticket) => {
     if (ticket === 1) {
@@ -181,16 +185,19 @@ export default function RegistrationForm({ form, tickets, isClicked }) {
               onClick={() => handleTicket(2)}
               className={classNames(styles.card, {
                 [styles.selected]: form.values.ticket === "partyPass",
-                [styles.notAvailable]: !isPartyPass,
+                [styles.notAvailable]: !isPartyPass || isPartypassSoldout,
               })}
             >
               <h3>Party Pass</h3>
               <p>All 5 Parties</p>
-              <p style={{ textAlign: "center" }} className={styles.infoText}>
-                Partypass spots are available after August 16th and subject to
-                availability.
-              </p>
+              {!isPartyPass && (
+                <p style={{ textAlign: "center" }} className={styles.infoText}>
+                  Partypass spots are available after August 16th and subject to
+                  availability.
+                </p>
+              )}
               <p>€{partyPrice}</p>
+              {isPartypassSoldout && <p>(Sold out)</p>}
             </div>
             {/* )} */}
             <div
