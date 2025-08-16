@@ -449,11 +449,15 @@ export default function RegistrationForm({ form, tickets, users, isClicked }) {
                         {...form}
                         name={`${comp}_role`}
                         value="follow"
-                        disabled={comp === "newcomers_mixnmatch"}
+                        disabled={
+                          comp === "newcomers_mixnmatch" ||
+                          comp === "open_mixnmatch"
+                        }
                       />
                       <p>
                         Follow{" "}
-                        {comp === "newcomers_mixnmatch" && (
+                        {(comp === "newcomers_mixnmatch" ||
+                          comp === "open_mixnmatch") && (
                           <span>(Fully booked)</span>
                         )}
                       </p>
