@@ -90,6 +90,12 @@ export default function RegistrationForm({ form, tickets, users, isClicked }) {
   //   value === "latin_blues" ||
   //   value === "stride_strut" ||
 
+  // check  have not more than 42 users have solo_battle in competitions field
+  const soloBattleUsers = users.filter((user) =>
+    user.competitions.includes("solo_battle")
+  );
+  const isSoloBattleSoldOut = soloBattleUsers.length >= 42;
+
   useEffect(() => {
     setTicketName(`${form.values.level}`);
     if (form.values.ticket === "partyPass") {
@@ -412,10 +418,14 @@ export default function RegistrationForm({ form, tickets, users, isClicked }) {
                     name="competitions"
                     key={label}
                     value={value}
-                    disabled={value === "solo_battle"}
+                    disabled={value === "solo_battle" && isSoloBattleSoldOut}
                   />{" "}
                   {label}
-                  <span>{value === "solo_battle" && "(Fully booked)"}</span>
+                  <span>
+                    {value === "solo_battle" &&
+                      isSoloBattleSoldOut &&
+                      "(Fully booked)"}
+                  </span>
                 </label>
               ))}
             </div>
