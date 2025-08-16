@@ -23,7 +23,7 @@ import React, { useState, useEffect } from "react";
 
 export default function RegistrationForm({ form, tickets, users, isClicked }) {
   const [ticketName, setTicketName] = useState("");
-  const isPartyPass = isAfterTargetDate("2025-08-16T00:12:00+02:00");
+  const isPartyPass = isAfterTargetDate("2025-08-16T12:00:00+02:00");
 
   // check if 60 people has partypass
   const isPartypassSoldout =
