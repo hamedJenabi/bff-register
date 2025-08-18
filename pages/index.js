@@ -65,6 +65,27 @@ export default function Home({ tickets, users }) {
         errors.level = "please select your Track";
       }
       if (
+        values.competition === "yes" &&
+        values.competitions.includes("newcomers_mixnmatch") &&
+        !values.newcomers_mixnmatch_role
+      ) {
+        errors.newcomers_mixnmatch_role = "please select your competition role";
+      }
+      if (
+        values.competition === "yes" &&
+        values.competitions.includes("open_mixnmatch") &&
+        !values.open_mixnmatch_role
+      ) {
+        errors.open_mixnmatch_role = "please select your competition role";
+      }
+      if (
+        values.competition === "yes" &&
+        values.competitions.includes("strictly") &&
+        !values.strictly_role
+      ) {
+        errors.strictly_role = "please select your competition role";
+      }
+      if (
         !values.email ||
         !emailRegex.test(values.email.trim().toLowerCase())
       ) {

@@ -398,7 +398,7 @@ export default function RegistrationForm({ form, tickets, users, isClicked }) {
             </label>
             <label>
               <FormRadio {...form} name="competition" value="later" />
-              <p>I will decide later</p>
+              <p>I will decide later (some competitions may be fully booked)</p>
             </label>
           </FormRadioGroup>
 
@@ -468,6 +468,12 @@ export default function RegistrationForm({ form, tickets, users, isClicked }) {
                       <p>Lead</p>
                     </label>
                   </FormRadioGroup>
+                  <FormMessage
+                    className={styles.errorMessage}
+                    {...form}
+                    name={`${comp}_role`}
+                    style={{ fontSize: "22px", margin: "10px 0" }}
+                  />
                 </div>
               ))}
             </>
