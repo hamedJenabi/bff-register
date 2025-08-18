@@ -258,6 +258,7 @@ export default function Home({ tickets, users }) {
             tickets={tickets}
             users={users}
             isClicked={isClicked}
+            intern={router?.query?.intern === "true"}
           />
         ) : (
           <>

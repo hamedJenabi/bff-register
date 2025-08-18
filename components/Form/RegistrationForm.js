@@ -21,7 +21,13 @@ import styles from "./RegistrationForm.module.scss";
 import countries from "../../utils/countries";
 import React, { useState, useEffect } from "react";
 
-export default function RegistrationForm({ form, tickets, users, isClicked }) {
+export default function RegistrationForm({
+  form,
+  tickets,
+  users,
+  isClicked,
+  intern = false,
+}) {
   const [ticketName, setTicketName] = useState("");
   const isPartyPass = isAfterTargetDate("2025-08-16T12:00:00+02:00");
 
@@ -35,7 +41,12 @@ export default function RegistrationForm({ form, tickets, users, isClicked }) {
     } else if (ticket === 3) {
       form.update("ticket", "parentPass");
     } else {
-      if (isPartyPass) {
+      if (isPartyPass && !isPartypassSoldout) {
+        form.update("ticket", "partyPass");
+        form.update("role", "");
+        form.update("level", "");
+      }
+      if (intern) {
         form.update("ticket", "partyPass");
         form.update("role", "");
         form.update("level", "");
@@ -191,7 +202,8 @@ export default function RegistrationForm({ form, tickets, users, isClicked }) {
               onClick={() => handleTicket(2)}
               className={classNames(styles.card, {
                 [styles.selected]: form.values.ticket === "partyPass",
-                [styles.notAvailable]: !isPartyPass || isPartypassSoldout,
+                [styles.notAvailable]:
+                  !isPartyPass || (isPartypassSoldout && !intern),
               })}
             >
               <h3>Party Pass</h3>
