@@ -105,7 +105,7 @@ export default function RegistrationForm({
   const soloBattleUsers = users.filter((user) =>
     user.competitions.includes("solo_battle")
   );
-  const isSoloBattleSoldOut = soloBattleUsers.length >= 42;
+  const isSoloBattleSoldOut = soloBattleUsers.length >= 50;
 
   useEffect(() => {
     setTicketName(`${form.values.level}`);
