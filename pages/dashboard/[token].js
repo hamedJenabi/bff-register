@@ -787,7 +787,7 @@ export default function Dashboard({ users, tickets }) {
                 <option>out</option>
               </select> */}
 
-              <select
+              {/* <select
                 onChange={(e) => setGroupLevel(e.target.value)}
                 className={styles.select}
               >
@@ -799,7 +799,7 @@ export default function Dashboard({ users, tickets }) {
                 onClick={handleGroupChange}
               >
                 Change Group Name
-              </button>
+              </button> */}
 
               {/* <p>Search first name</p>
               <input onChange={(e) => setNameSearch(e.target.value)} /> */}
