@@ -286,7 +286,7 @@ export default async function edituser(req, response) {
           requestData.ticket === "partyPass"
             ? requestData.ticket
             : requestData.level;
-        await updateTicketCapacity(ticketName);
+        // await updateTicketCapacity(ticketName);
         console.log("email SENTSS");
         await sendEmail(msg);
       }
