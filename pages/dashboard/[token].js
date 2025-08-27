@@ -22,6 +22,7 @@ export default function Dashboard({ users, tickets }) {
   const [capacityShow, setCapacityShow] = useState(false);
   const [userToShow, setUserToShow] = useState(users || []);
   const isMobile = useMedia({ maxWidth: "768px" });
+  const today = new Date().toISOString().split("T")[0];
   const totalAmount = users.reduce((acc, user) => {
     return (
       acc +
@@ -828,7 +829,10 @@ export default function Dashboard({ users, tickets }) {
           {activeSideBar === "lastbalance" && <FinalBalanceComponent />}
           {activeSideBar !== "balance" && (
             <div className={styles.downloadButton}>
-              <CSVLink data={usersForCSV} filename={"registration-file.csv"}>
+              <CSVLink
+                data={usersForCSV}
+                filename={`registration-${today}.csv`}
+              >
                 Download CSV
               </CSVLink>
             </div>
