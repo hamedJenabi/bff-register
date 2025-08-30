@@ -410,7 +410,10 @@ export default function RegistrationForm({
             </label>
             <label>
               <FormRadio {...form} name="competition" value="later" />
-              <p>I will decide later (some competitions may be fully booked)</p>
+              <p>
+                I will decide later in November (some competitions may be fully
+                booked)
+              </p>
             </label>
           </FormRadioGroup>
 
