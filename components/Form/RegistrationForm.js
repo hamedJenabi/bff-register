@@ -401,8 +401,8 @@ export default function RegistrationForm({
             name="competition"
           >
             <label>
-              <FormRadio {...form} name="competition" value="yes" />
-              <p>Yes</p>
+              <FormRadio disabled {...form} name="competition" value="yes" />
+              <p>Yes - fully booked</p>
             </label>
             <label>
               <FormRadio {...form} name="competition" value="no" />
