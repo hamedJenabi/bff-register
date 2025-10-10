@@ -251,8 +251,7 @@ export default function Home({ tickets, users }) {
         ]}
       />
       <main className={styles.main}>
-        {router?.query?.intern === "true" ||
-        isAfterTargetDate("2025-08-02T12:00:00+02:00") ? (
+        {router?.query?.intern === "true" ? (
           <RegistrationForm
             form={form}
             tickets={tickets}
@@ -262,7 +261,7 @@ export default function Home({ tickets, users }) {
           />
         ) : (
           <>
-            <h3>Registration starts on August 2nd:) </h3>
+            <h3>we are fully booked :) </h3>
             <br />
             {/* <UrgeWithPleasureComponent /> */}
           </>
