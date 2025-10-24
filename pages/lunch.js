@@ -124,13 +124,12 @@ export default function Home({ tickets, clientID }) {
       <main className={styles.main}>
         {!next && (
           <>
-            {/* <FoodForm
+            <FoodForm
               form={form}
               tickets={tickets}
               isClicked={isClicked}
               clientID={clientID}
-            /> */}
-            <h1> We are fully booked</h1>
+            />
           </>
         )}
         {next && (

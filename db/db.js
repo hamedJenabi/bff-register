@@ -204,10 +204,11 @@ export async function getUserByEmailAndName(email) {
   `;
   return user[0];
 }
-export async function setUserLunchById(id, lunch) {
+export async function setUserLunchById(id, lunch, toPay) {
   await sql`
    UPDATE registrations_23
-    SET lunch = ${lunch}
+    SET lunch = ${lunch},
+    to_pay = ${toPay}
      WHERE id = ${id};
   `;
 }
