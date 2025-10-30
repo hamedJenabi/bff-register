@@ -31,14 +31,14 @@ export default function RegistrationForm({
   const [ticketName, setTicketName] = useState("");
   const isPartyPass = isAfterTargetDate("2025-08-16T12:00:00+02:00");
 
-  // check if 50 people has partypass
+  // check if 90 people has partypass
   const isPartypassSoldout =
-    users.filter((user) => user.ticket === "partyPass").length >= 50;
+    users.filter((user) => user.ticket === "partyPass").length >= 95;
 
   const handleTicket = (ticket) => {
-    if (ticket === 1) {
+    if (ticket === 1 && intern) {
       form.update("ticket", "fullpass");
-    } else if (ticket === 3) {
+    } else if (ticket === 3 && intern) {
       form.update("ticket", "parentPass");
     } else {
       if (isPartyPass && !isPartypassSoldout) {
@@ -187,6 +187,7 @@ export default function RegistrationForm({
               onClick={() => handleTicket(1)}
               className={classNames(styles.card, {
                 [styles.selected]: form.values.ticket === "fullpass",
+                [styles.notAvailable]: !intern,
               })}
             >
               {/* 4 plus pre party */}
@@ -222,6 +223,7 @@ export default function RegistrationForm({
               onClick={() => handleTicket(3)}
               className={classNames(styles.card, {
                 [styles.selected]: form.values.ticket === "parentPass",
+                [styles.notAvailable]: !intern,
               })}
             >
               <h3>Parent Pass </h3>
@@ -394,28 +396,34 @@ export default function RegistrationForm({
           <h3 className={styles.title}>
             Do you want to participate in competitions?
           </h3>
-          <div className={styles.infoTextWrapper}></div>
-          <FormRadioGroup
-            className={styles.radioGroup}
-            {...form}
-            name="competition"
-          >
-            <label>
-              <FormRadio disabled {...form} name="competition" value="yes" />
-              <p>Yes - fully booked</p>
-            </label>
-            <label>
-              <FormRadio {...form} name="competition" value="no" />
-              <p>No</p>
-            </label>
-            <label>
-              <FormRadio {...form} name="competition" value="later" />
-              <p>
-                I will decide later in November (some competitions may be fully
-                booked)
-              </p>
-            </label>
-          </FormRadioGroup>
+          {!intern && (
+            <div className={styles.infoTextWrapper}>
+              <p>Sold out</p>
+            </div>
+          )}
+          {intern && (
+            <FormRadioGroup
+              className={styles.radioGroup}
+              {...form}
+              name="competition"
+            >
+              <label>
+                <FormRadio {...form} name="competition" value="yes" />
+                <p>Yes</p>
+              </label>
+              <label>
+                <FormRadio {...form} name="competition" value="no" />
+                <p>No</p>
+              </label>
+              {/* <label>
+                <FormRadio {...form} name="competition" value="later" />
+                <p>
+                  I will decide later in November (some competitions may be
+                  fully booked)
+                </p>
+              </label> */}
+            </FormRadioGroup>
+          )}
 
           {form.values.competition === "yes" && (
             <div className={styles.radioGroup}>
@@ -464,17 +472,17 @@ export default function RegistrationForm({
                         {...form}
                         name={`${comp}_role`}
                         value="follow"
-                        disabled={
-                          comp === "newcomers_mixnmatch" ||
-                          comp === "open_mixnmatch"
-                        }
+                        // disabled={
+                        //   comp === "newcomers_mixnmatch" ||
+                        //   comp === "open_mixnmatch"
+                        // }
                       />
                       <p>
                         Follow{" "}
-                        {(comp === "newcomers_mixnmatch" ||
+                        {/* {(comp === "newcomers_mixnmatch" ||
                           comp === "open_mixnmatch") && (
                           <span>(Fully booked)</span>
-                        )}
+                        )} */}
                       </p>
                     </label>
 
@@ -519,37 +527,42 @@ export default function RegistrationForm({
               Lunch
             </label>
           </div> */}
-          <h4 className={styles.title}>
-            Wanna have our organic BFF t-shirt? (€25)
-          </h4>
-          <FormRadioGroup
-            className={styles.radioGroup}
-            {...form}
-            name="shirtinfo"
-          >
-            <label>
-              <FormRadio {...form} name="shirtinfo" value="yes" /> <p>Yes</p>
-            </label>
-            <label>
-              <FormRadio {...form} name="shirtinfo" value="no" />
-              <p>No</p>
-            </label>
-          </FormRadioGroup>
-          {form.values.shirtinfo === "yes" && (
+          {intern && (
             <>
-              <h4 className={styles.title}>Choose the T-Shirt size:</h4>
-              <div className={styles.selectWrapper}>
-                <select
-                  onChange={(e) => form.update("tshirt", e.target.value)}
-                  className={styles.select}
-                >
-                  {shirtSize?.map((size) => (
-                    <option value={size} key={size}>
-                      {size}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <h4 className={styles.title}>
+                Wanna have our organic BFF t-shirt? (€25)
+              </h4>
+              <FormRadioGroup
+                className={styles.radioGroup}
+                {...form}
+                name="shirtinfo"
+              >
+                <label>
+                  <FormRadio {...form} name="shirtinfo" value="yes" />{" "}
+                  <p>Yes</p>
+                </label>
+                <label>
+                  <FormRadio {...form} name="shirtinfo" value="no" />
+                  <p>No</p>
+                </label>
+              </FormRadioGroup>
+              {form.values.shirtinfo === "yes" && (
+                <>
+                  <h4 className={styles.title}>Choose the T-Shirt size:</h4>
+                  <div className={styles.selectWrapper}>
+                    <select
+                      onChange={(e) => form.update("tshirt", e.target.value)}
+                      className={styles.select}
+                    >
+                      {shirtSize?.map((size) => (
+                        <option value={size} key={size}>
+                          {size}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </>
+              )}
             </>
           )}
           <h4 className={styles.title}>
