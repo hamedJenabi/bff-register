@@ -206,7 +206,7 @@ export const getPrice = (requestData, isGroupDiscount, voucher = "") => {
   } else if (voucher === "bffdiscount2025") {
     initialPrice = initialPrice; // No discount applied
   } else if (voucher?.includes("freepass25")) {
-    initialPrice = initialPrice - 135;
+    initialPrice = initialPrice - 145;
   }
 
   const ticketPrice = isGroupDiscount
