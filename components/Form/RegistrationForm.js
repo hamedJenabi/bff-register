@@ -33,7 +33,7 @@ export default function RegistrationForm({
 
   // check if 90 people has partypass
   const isPartypassSoldout =
-    users.filter((user) => user.ticket === "partyPass").length >= 95;
+    users.filter((user) => user.ticket === "partyPass").length >= 90;
 
   const handleTicket = (ticket) => {
     if (ticket === 1 && intern) {
