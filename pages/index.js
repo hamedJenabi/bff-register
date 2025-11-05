@@ -21,7 +21,8 @@ import { unstable_useFormState as useFormState } from "reakit/Form";
 export default function Home({ tickets, users }) {
   const [isClicked, setIsClicked] = useState(false);
   const [loading, setLoading] = useState(false);
-
+  const isPartypassSoldout =
+    users.filter((user) => user.ticket === "partyPass").length >= 92;
   const router = useRouter();
 
   const form = useFormState({
@@ -252,7 +253,7 @@ export default function Home({ tickets, users }) {
       />
       <main className={styles.main}>
         {router?.query?.intern === "true" ||
-        isAfterTargetDate("2025-10-31T18:00:00+01:00") ? (
+        (isAfterTargetDate("2025-10-31T18:00:00+01:00") && isPartypassSoldout) ? (
           <RegistrationForm
             form={form}
             tickets={tickets}
