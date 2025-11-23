@@ -100,7 +100,7 @@ export default function Home({ tickets, clientID }) {
         <meta name="description" content="BLUES FEVER 2025 Registration" />
         <meta
           property="og:image"
-          content="https://www.bluesfever.eu/wp-content/uploads/2023/07/bff2023-scaled.jpg"
+          content="https://www.bluesfever.eu/wp-content/uploads/2024/12/bff_title_25.png"
         />
 
         <link rel="icon" href="/icon.png" />

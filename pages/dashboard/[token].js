@@ -807,11 +807,7 @@ export default function Dashboard({ users, tickets }) {
             </div>
           )}
 
-          <button
-            className={styles.statusButton}
-            disabled
-            onClick={handleSendOneMail}
-          >
+          <button className={styles.statusButton} onClick={handleSendOneMail}>
             Send Final email to specific users:
           </button>
           {!capacityShow &&
@@ -838,7 +834,6 @@ export default function Dashboard({ users, tickets }) {
             </div>
           )}
           <button
-            disabled
             style={{ margin: "40px 0" }}
             className={styles.statusButton}
             onClick={handleSendEmail}
