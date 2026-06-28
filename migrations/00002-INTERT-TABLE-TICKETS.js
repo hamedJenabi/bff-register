@@ -1,6 +1,6 @@
 exports.up = async (sql) => {
   await sql`
-	  INSERT INTO tickets_23 (name,label,capacity,waiting_list) VALUES   							
+	  INSERT INTO tickets_26 (name,label,capacity,waiting_list) VALUES   							
 			  ('beg/int_lead', 'Beginner/Intermediate - Mainly Lead', 20, 10),
 			  ('beg/int_follow', 'Beginner/Intermediate - Mainly Follow', 20, 10),
 			  ('int_lead', 'Intermediate - Mainly Lead', 22, 10),
@@ -19,6 +19,6 @@ exports.up = async (sql) => {
 
 exports.down = async (sql) => {
   await sql`
-			  DELETE FROM tickets_23
+			  DELETE FROM tickets_26
 	`;
 };
