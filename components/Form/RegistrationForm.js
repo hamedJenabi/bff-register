@@ -31,14 +31,14 @@ export default function RegistrationForm({
   const [ticketName, setTicketName] = useState("");
   const isPartyPass = isAfterTargetDate("2025-08-16T12:00:00+02:00");
 
-  // check if 90 people has partypass
+  // check if 92 people has partypass
   const isPartypassSoldout =
     users.filter((user) => user.ticket === "partyPass").length >= 92;
 
   const handleTicket = (ticket) => {
-    if (ticket === 1 && intern) {
+    if (ticket === 1) {
       form.update("ticket", "fullpass");
-    } else if (ticket === 3 && intern) {
+    } else if (ticket === 3) {
       form.update("ticket", "parentPass");
     } else {
       if (isPartyPass && !isPartypassSoldout) {
@@ -103,7 +103,7 @@ export default function RegistrationForm({
 
   // check  have not more than 42 users have solo_battle in competitions field
   const soloBattleUsers = users.filter((user) =>
-    user.competitions.includes("solo_battle")
+    user.competitions.includes("solo_battle"),
   );
   const isSoloBattleSoldOut = soloBattleUsers.length >= 45;
 
@@ -187,7 +187,7 @@ export default function RegistrationForm({
               onClick={() => handleTicket(1)}
               className={classNames(styles.card, {
                 [styles.selected]: form.values.ticket === "fullpass",
-                [styles.notAvailable]: !intern,
+                // [styles.notAvailable]: !intern,
               })}
             >
               {/* 4 plus pre party */}
@@ -223,7 +223,7 @@ export default function RegistrationForm({
               onClick={() => handleTicket(3)}
               className={classNames(styles.card, {
                 [styles.selected]: form.values.ticket === "parentPass",
-                [styles.notAvailable]: !intern,
+                // [styles.notAvailable]: !intern,
               })}
             >
               <h3>Parent Pass </h3>
@@ -259,13 +259,7 @@ export default function RegistrationForm({
                 <div className={styles.infoText}>
                   *** Important note: ***
                   <br />
-                  For the Full pass you have two options: <br /> 1. The classic
-                  "level classes" - if you sign up for Advanced level there will
-                  be an audition on Friday at 12.30 pm <br />
-                  OR <br />
-                  2. If you are at least level Intermediate, then you can choose
-                  instead of the classic system one of our Focus tracks. You can
-                  find level description and schedule{" "}
+                  placeholder for telling what we do in themes
                   <a
                     style={{ color: "blue" }}
                     target="_blank"
@@ -305,7 +299,6 @@ export default function RegistrationForm({
                           </p>
                           {/* <InfoModal header={label} info={detail} /> */}
                         </label>
-                        {devide && <div className={styles.divider} />}
                       </span>
                     );
                   })}
@@ -315,16 +308,16 @@ export default function RegistrationForm({
                   name="level"
                   style={{ fontSize: "32px", margin: "10px 0" }}
                 />
-                <p className={styles.infoText}>
+                {/* <p className={styles.infoText}>
                   * There will be an audition for advanced track on Friday at
                   12:30 to determine the level of{" "}
                   <strong>advanced 1, advanced 2 and advanced plus</strong>.{" "}
                   <br />
-                </p>
-                <p className={styles.infoText}>
+                </p> */}
+                {/* <p className={styles.infoText}>
                   ** Open to dancers with at least intermediate level
                   experience.
-                </p>
+                </p> */}
               </FormRadioGroup>
             </>
           )}
@@ -396,34 +389,28 @@ export default function RegistrationForm({
           <h3 className={styles.title}>
             Do you want to participate in competitions?
           </h3>
-          {!intern && (
-            <div className={styles.infoTextWrapper}>
-              <p>Sold out</p>
-            </div>
-          )}
-          {intern && (
-            <FormRadioGroup
-              className={styles.radioGroup}
-              {...form}
-              name="competition"
-            >
-              <label>
-                <FormRadio {...form} name="competition" value="yes" />
-                <p>Yes</p>
-              </label>
-              <label>
-                <FormRadio {...form} name="competition" value="no" />
-                <p>No</p>
-              </label>
-              {/* <label>
+
+          <FormRadioGroup
+            className={styles.radioGroup}
+            {...form}
+            name="competition"
+          >
+            <label>
+              <FormRadio {...form} name="competition" value="yes" />
+              <p>Yes</p>
+            </label>
+            <label>
+              <FormRadio {...form} name="competition" value="no" />
+              <p>No</p>
+            </label>
+            {/* <label>
                 <FormRadio {...form} name="competition" value="later" />
                 <p>
                   I will decide later in November (some competitions may be
                   fully booked)
                 </p>
               </label> */}
-            </FormRadioGroup>
-          )}
+          </FormRadioGroup>
 
           {form.values.competition === "yes" && (
             <div className={styles.radioGroup}>
@@ -501,7 +488,7 @@ export default function RegistrationForm({
               ))}
             </>
           )}
-          {/* <div className={styles.radioGroup}>
+          <div className={styles.radioGroup}>
             <h4 className={styles.title}>
               Which day do you want to have lunch at the Venue? <br />
               (You can choose both days):
@@ -526,43 +513,38 @@ export default function RegistrationForm({
               <FormCheckbox {...form} name="lunch" value="sunday" /> Sunday
               Lunch
             </label>
-          </div> */}
-          {intern && (
+          </div>
+          <h4 className={styles.title}>
+            Wanna have our organic BFF t-shirt? (€25)
+          </h4>
+          <FormRadioGroup
+            className={styles.radioGroup}
+            {...form}
+            name="shirtinfo"
+          >
+            <label>
+              <FormRadio {...form} name="shirtinfo" value="yes" /> <p>Yes</p>
+            </label>
+            <label>
+              <FormRadio {...form} name="shirtinfo" value="no" />
+              <p>No</p>
+            </label>
+          </FormRadioGroup>
+          {form.values.shirtinfo === "yes" && (
             <>
-              <h4 className={styles.title}>
-                Wanna have our organic BFF t-shirt? (€25)
-              </h4>
-              <FormRadioGroup
-                className={styles.radioGroup}
-                {...form}
-                name="shirtinfo"
-              >
-                <label>
-                  <FormRadio {...form} name="shirtinfo" value="yes" />{" "}
-                  <p>Yes</p>
-                </label>
-                <label>
-                  <FormRadio {...form} name="shirtinfo" value="no" />
-                  <p>No</p>
-                </label>
-              </FormRadioGroup>
-              {form.values.shirtinfo === "yes" && (
-                <>
-                  <h4 className={styles.title}>Choose the T-Shirt size:</h4>
-                  <div className={styles.selectWrapper}>
-                    <select
-                      onChange={(e) => form.update("tshirt", e.target.value)}
-                      className={styles.select}
-                    >
-                      {shirtSize?.map((size) => (
-                        <option value={size} key={size}>
-                          {size}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </>
-              )}
+              <h4 className={styles.title}>Choose the T-Shirt size:</h4>
+              <div className={styles.selectWrapper}>
+                <select
+                  onChange={(e) => form.update("tshirt", e.target.value)}
+                  className={styles.select}
+                >
+                  {shirtSize?.map((size) => (
+                    <option value={size} key={size}>
+                      {size}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </>
           )}
           <h4 className={styles.title}>

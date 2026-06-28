@@ -30,6 +30,6 @@ exports.up = async (sql) => {
 
 exports.down = async (sql) => {
   await sql`
-		DROP TABLE registrations_25
+		DROP TABLE registrations_26
 		`;
 };
