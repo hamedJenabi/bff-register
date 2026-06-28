@@ -1,6 +1,7 @@
 @import "./variables";
 html,
 body {
+  display: block !important;
   max-width: 1480px;
   margin: auto;
   background-color: rgb(245, 249, 245);

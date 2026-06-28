@@ -1,150 +1,203 @@
 import Head from "next/head";
-import useMedia from "use-media";
-import Router from "next/router";
-import { useRouter } from "next/router";
-import { CSVLink, CSVDownload } from "react-csv";
-import React, { useState } from "react";
+import Router, { useRouter } from "next/router";
+import { CSVLink } from "react-csv";
+import React, { useEffect, useMemo, useState } from "react";
 import styles from "./Dashboard.module.scss";
-import Header from "../../components/Header/Header.js";
-import classNames from "classnames";
 import {
-  levelsToShow,
-  finalLevelsToShow,
-  groupLevelsToShow,
-  titleCase,
-} from "../../utils/functions";
-import { unstable_FormCheckbox as FormCheckbox } from "reakit/Form";
-import { unstable_useFormState as useFormState } from "reakit/Form";
+  calculateDashboardStats,
+  filterDashboardUsers,
+  formatCurrency,
+  getActiveCountForTicket,
+  getUniqueOptions,
+  MANUAL_STATUS_OPTIONS,
+} from "../../utils/dashboard.mjs";
 
-export default function Dashboard({ users, tickets }) {
-  const [nameSearch, setNameSearch] = useState("");
-  const [activeSideBar, setActiveSideBar] = useState("all");
-  const [capacityShow, setCapacityShow] = useState(false);
-  const [userToShow, setUserToShow] = useState(users || []);
-  const isMobile = useMedia({ maxWidth: "768px" });
-  const today = new Date().toISOString().split("T")[0];
-  const totalAmount = users.reduce((acc, user) => {
-    return (
-      acc +
-      (user.status !== "canceled" && user.status !== "out"
-        ? parseInt(user.price, 10)
-        : 0)
-    );
-  }, 0);
-  const totalAmountList = userToShow.reduce((acc, user) => {
-    return (
-      acc +
-      (user.status !== "canceled" && user.status !== "out"
-        ? parseInt(user.price, 10)
-        : 0)
-    );
-  }, 0);
-  const totalDonation = userToShow.reduce((acc, user) => {
-    return (
-      acc +
-      (user.status !== "canceled" && user.status !== "out" && user.donation
-        ? parseInt(user.donation, 10)
-        : 0)
-    );
-  }, 0);
+const dashboardPath = "/dashboard/fdjhfdskjfhdskjh";
+
+const quickFilters = [
+  { label: "All", value: "all" },
+  { label: "Confirmed", value: "confirmed" },
+  { label: "Waiting list", value: "waitinglist" },
+  { label: "Canceled", value: "canceled" },
+];
+
+const extraFilters = [
+  { label: "All extras", value: "all" },
+  { label: "Lunch", value: "lunch" },
+  { label: "Competition", value: "competition" },
+  { label: "Donation", value: "donation" },
+];
+
+function getStatusClass(status) {
+  const statusClasses = {
+    confirmed: styles.statusConfirmed,
+    registered: styles.statusRegistered,
+    "email-sent": styles.statusSent,
+    reminder: styles.statusReminder,
+    waitinglist: styles.statusWaiting,
+    canceled: styles.statusCanceled,
+    out: styles.statusOut,
+  };
+
+  return statusClasses[status] || styles.statusDefault;
+}
+
+function getListItems(value) {
+  if (!value) {
+    return [];
+  }
+
+  if (Array.isArray(value)) {
+    return value;
+  }
+
+  return String(value)
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+export default function Dashboard({ users, tickets, dbError }) {
   const router = useRouter();
-
-  const form = useFormState({
-    values: {
-      status: "",
-      users: [],
-    },
-
-    onSubmit: (values) => {
-      setIsClicked(true);
-      const req = {
-        ...form.values,
-      };
-    },
+  const [filters, setFilters] = useState({
+    search: "",
+    status: "all",
+    ticket: "all",
+    level: "all",
+    extra: "all",
   });
-  const [status, setStatus] = useState("");
-  const [groupLevel, setGroupLevel] = useState("int1");
-  const [usersToChange, setUsersToChange] = useState([]);
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [bulkStatus, setBulkStatus] = useState("registered");
+  const [capacityDrafts, setCapacityDrafts] = useState(() =>
+    tickets.reduce(
+      (drafts, ticket) => ({
+        ...drafts,
+        [ticket.id]: ticket.capacity,
+      }),
+      {},
+    ),
+  );
+  const [savingTicketId, setSavingTicketId] = useState(null);
+  const [isBulkSaving, setIsBulkSaving] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+  const today = new Date().toISOString().split("T")[0];
 
-  const handleStatusChange = async () => {
-    const idsToChange = form.values.users;
-    let array = [];
-    idsToChange.map((id) => {
-      array.push(users.find((userinfo) => userinfo.id === id));
-    });
+  useEffect(() => {
+    setIsMounted(true);
+    const admin = window.localStorage.getItem("login_admin");
 
-    array.map((item) => {
-      const toEdit = {
-        ...item,
-        firstname: item.firstname,
-        lastname: item.lastname,
-        status: status,
-      };
-      fetch("/api/edituser", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Cache-Control": "no-cache, no-store",
-        },
-        body: JSON.stringify(toEdit),
-      })
-        .then((response) => {
-          if (response.status === 200) {
-            router.reload(window.location.pathname);
-          }
-          if (response.status === 401) {
-            alert("Please write a valid status");
-          }
-        })
-        .catch((error) => console.log(error));
-    });
-    alert("done");
-  };
-  const handleGroupChange = async () => {
-    const idsToChange = form.values.users;
-    let array = [];
-    idsToChange.map((id) => {
-      array.push(users.find((userinfo) => userinfo.id === id));
-    });
+    if (admin !== "true") {
+      Router.push("/login/admin");
+    }
+  }, []);
 
-    array.map((item) => {
-      const toEdit = {
-        ...item,
-        firstname: item.firstname,
-        lastname: item.lastname,
-        isGroupApi: true,
-        level: groupLevel,
-      };
-      fetch("/api/edituser", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Cache-Control": "no-cache, no-store",
-        },
-        body: JSON.stringify(toEdit),
-      })
-        .then((response) => {
-          if (response.status === 200) {
-            router.reload(window.location.pathname);
-          }
-          if (response.status === 401) {
-            alert("Please write a valid status");
-          }
-        })
-        .catch((error) => console.log(error));
-    });
-    alert("done");
+  const stats = useMemo(() => calculateDashboardStats(users), [users]);
+  const filteredUsers = useMemo(
+    () => filterDashboardUsers(users, filters).sort((a, b) => a.id - b.id),
+    [filters, users],
+  );
+  const filteredStats = useMemo(
+    () => calculateDashboardStats(filteredUsers),
+    [filteredUsers],
+  );
+  const ticketOptions = useMemo(() => getUniqueOptions(users, "ticket"), [users]);
+  const levelOptions = useMemo(
+    () =>
+      tickets
+        .slice()
+        .sort((a, b) => a.id - b.id)
+        .map((ticket) => ({ value: ticket.name, label: ticket.label })),
+    [tickets],
+  );
+  const selectedUsers = useMemo(
+    () => users.filter((user) => selectedIds.includes(user.id)),
+    [selectedIds, users],
+  );
+  const allVisibleSelected =
+    filteredUsers.length > 0 &&
+    filteredUsers.every((user) => selectedIds.includes(user.id));
+
+  const updateFilter = (name, value) => {
+    setFilters((currentFilters) => ({
+      ...currentFilters,
+      [name]: value,
+    }));
+    setSelectedIds([]);
   };
 
-  const handleSendEmail = async () => {
-    const confirmedUsers = users.filter((user) => user.status === "confirmed");
+  const handleLogout = () => {
+    window.localStorage.removeItem("login_admin");
+    Router.push("/login/admin");
+  };
 
-    if (
-      confirm("are you sure you want to send emails to all confirmed users?")
-    ) {
-      console.log("ok");
+  const toggleSelected = (id) => {
+    setSelectedIds((currentIds) =>
+      currentIds.includes(id)
+        ? currentIds.filter((selectedId) => selectedId !== id)
+        : [...currentIds, id],
+    );
+  };
 
-      confirmedUsers.map((user) => {
+  const toggleAllVisible = () => {
+    if (allVisibleSelected) {
+      setSelectedIds([]);
+      return;
+    }
+
+    setSelectedIds(filteredUsers.map((user) => user.id));
+  };
+
+  const reloadDashboard = () => router.replace(router.asPath || dashboardPath);
+
+  const handleBulkStatusChange = async () => {
+    if (selectedUsers.length === 0) {
+      alert("Select at least one registration first.");
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Change ${selectedUsers.length} registration(s) to "${bulkStatus}" in the database only?`,
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setIsBulkSaving(true);
+
+    await Promise.all(
+      selectedUsers.map((user) =>
+        fetch("/api/edituser?action=edit", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Cache-Control": "no-cache, no-store",
+          },
+          body: JSON.stringify({
+            ...user,
+            prevStatus: user.status,
+            status: bulkStatus,
+          }),
+        }),
+      ),
+    );
+
+    setIsBulkSaving(false);
+    reloadDashboard();
+  };
+
+  const handleSendEmail = async (targetUsers, message) => {
+    if (targetUsers.length === 0) {
+      alert("No registrations match this email action.");
+      return;
+    }
+
+    if (!window.confirm(message)) {
+      return;
+    }
+
+    await Promise.all(
+      targetUsers.map((user) =>
         fetch("/api/mailall", {
           method: "POST",
           headers: {
@@ -152,720 +205,434 @@ export default function Dashboard({ users, tickets }) {
             "Cache-Control": "no-cache, no-store",
           },
           body: JSON.stringify(user),
-        })
-          .then((response) => {
-            if (response.status === 200) {
-              //               router.reload(window.location.pathname);
-            }
-            if (response.status === 401) {
-              alert("Please write a valid status");
-            }
-          })
-          .catch((error) => console.log(error));
-      });
-    } else {
-      console.log("no");
-    }
+        }),
+      ),
+    );
+
+    alert("Email request sent.");
   };
-  const handleSendOneMail = async () => {
-    const idsToSend = form.values.users;
-    let array = [];
-    idsToSend.map((id) => {
-      array.push(users.find((userinfo) => userinfo.id === id));
+
+  const handleCapacitySave = async (ticket) => {
+    setSavingTicketId(ticket.id);
+
+    const response = await fetch("/api/tickets", {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        ticketId: ticket.id,
+        capacity: Number(capacityDrafts[ticket.id]),
+      }),
     });
-    if (confirm("are you sure you want to send emails to this user?")) {
-      console.log("ok");
-      array.map((item) => {
-        fetch("/api/mailall", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Cache-Control": "no-cache, no-store",
-          },
-          body: JSON.stringify(item),
-        })
-          .then((response) => {
-            if (response.status === 200) {
-              router.reload(window.location.pathname);
-            }
-            if (response.status === 401) {
-              alert("Please write a valid status");
-            }
-          })
-          .catch((error) => console.log(error));
-      });
-    } else {
-      console.log("no");
+
+    setSavingTicketId(null);
+
+    if (response.status !== 200) {
+      const body = await response.json().catch(() => ({}));
+      alert(body.error || "Could not update capacity.");
+      return;
     }
+
+    reloadDashboard();
   };
 
-  const BalanceComponent = () => {
-    const getTicketAmount = (level, role) => {
-      const registerAmount = users.filter(
-        (user) =>
-          user["level"] === level &&
-          user["role"] === role &&
-          user["status"] === "registered"
-      );
-      const ammount = users.filter(
-        (user) =>
-          user["level"] === level &&
-          user["role"] === role &&
-          user["status"] === "email-sent"
-      );
-      const ammountReminder = users.filter(
-        (user) =>
-          user["level"] === level &&
-          user["role"] === role &&
-          user["status"] === "reminder"
-      );
-      const ammountWaiting = users.filter(
-        (user) =>
-          user["level"] === level &&
-          user["role"] === role &&
-          user["status"] === "waitinglist"
-      );
-      const ammountPaid = users.filter(
-        (user) =>
-          user["level"] === level &&
-          user["role"] === role &&
-          user["status"] === "confirmed"
-      );
-      return {
-        registered: registerAmount.length,
-        sent: ammount.length,
-        reminder: ammountReminder.length,
-        waiting: ammountWaiting.length,
-        paid: ammountPaid.length,
-      };
-    };
-
-    return (
-      <div className={styles.balanceComponent}>
-        <div className={styles.ticketRow}>
-          <p>Level</p>
-          <p> Follow</p>
-          <p>Lead</p>
-          <p>Both</p>
-        </div>
-        {finalLevelsToShow.map((lvl) => (
-          <div key={lvl.value} className={styles.ticketRow}>
-            <h4>{lvl.value}</h4>
-            <p>
-              register: {getTicketAmount(lvl.value, "follow").registered} <br />
-              send: {getTicketAmount(lvl.value, "follow").sent}
-              <br />
-              reminder: {getTicketAmount(lvl.value, "follow").reminder}
-              <br />
-              waitinglist: {getTicketAmount(lvl.value, "follow").waiting}
-              <br />
-              confirmed: {getTicketAmount(lvl.value, "follow").paid}
-            </p>
-            <p>
-              register: {getTicketAmount(lvl.value, "lead").registered} <br />
-              send: {getTicketAmount(lvl.value, "lead").sent} <br />
-              reminder: {getTicketAmount(lvl.value, "lead").reminder} <br />
-              waitinglist: {getTicketAmount(lvl.value, "lead").waiting} <br />
-              confirmed: {getTicketAmount(lvl.value, "lead").paid}
-            </p>
-            <p>
-              register: {getTicketAmount(lvl.value, "both").registered} <br />
-              send: {getTicketAmount(lvl.value, "both").sent} <br />
-              reminder: {getTicketAmount(lvl.value, "both").reminder} <br />
-              waitinglist: {getTicketAmount(lvl.value, "both").waiting} <br />
-              confirmed: {getTicketAmount(lvl.value, "both").paid}
-            </p>
-          </div>
-        ))}
-      </div>
-    );
-  };
-  const FinalBalanceComponent = () => {
-    const getTicketAmount = (level, role) => {
-      const registerAmount = users.filter(
-        (user) =>
-          user["level"] === level &&
-          user["role"] === role &&
-          user["status"] === "registered"
-      );
-      const ammount = users.filter(
-        (user) =>
-          user["level"] === level &&
-          user["role"] === role &&
-          user["status"] === "email-sent"
-      );
-      const ammountReminder = users.filter(
-        (user) =>
-          user["level"] === level &&
-          user["role"] === role &&
-          user["status"] === "reminder"
-      );
-      const ammountWaiting = users.filter(
-        (user) =>
-          user["level"] === level &&
-          user["role"] === role &&
-          user["status"] === "waitinglist"
-      );
-      const ammountPaid = users.filter(
-        (user) =>
-          user["level"] === level &&
-          user["role"] === role &&
-          user["status"] === "confirmed"
-      );
-      return {
-        registered: registerAmount.length,
-        sent: ammount.length,
-        reminder: ammountReminder.length,
-        waiting: ammountWaiting.length,
-        paid: ammountPaid.length,
-      };
-    };
-
-    return (
-      <div className={styles.balanceComponent}>
-        <div className={styles.ticketRow}>
-          <p>Level</p>
-          <p> Follow</p>
-          <p>Lead</p>
-          <p>Both</p>
-        </div>
-        {finalLevelsToShow.map((lvl) => (
-          <div key={lvl.value} className={styles.ticketRow}>
-            <h4>{lvl.value}</h4>
-            <p>{getTicketAmount(lvl.value, "follow").paid}</p>
-            <p> {getTicketAmount(lvl.value, "lead").paid}</p>
-            <p> {getTicketAmount(lvl.value, "both").paid}</p>
-          </div>
-        ))}
-      </div>
-    );
-  };
-  if (typeof window !== "undefined") {
-    const admin = localStorage.getItem("login_admin");
-    if (admin !== "true") {
-      Router.push("/login/admin");
-    }
-  }
-
-  const handleSideBarClick = (item) => {
-    if (item !== "capacity") {
-      setCapacityShow(false);
-    }
-    if (item === "out") {
-      setUserToShow(users.filter((user) => user["status"] === "out"));
-    } else if (item === "canceled") {
-      setUserToShow(users.filter((user) => user["status"] === "canceled"));
-    } else if (item === "all") {
-      setUserToShow(users);
-    } else if (tickets.some((level) => level.name === item)) {
-      setUserToShow(users.filter((user) => user.level === item));
-    } else if (item === "shirt") {
-      setUserToShow(users.filter((user) => user["shirt"] === "yes"));
-    } else if (item === "theme_class") {
-      setUserToShow(
-        users.filter(
-          (user) => user["theme_class"] !== "no" && user["theme_class"] !== ""
-        )
-      );
-    } else if (item === "email-sent") {
-      setUserToShow(users.filter((user) => user["status"] === "email-sent"));
-    } else if (item === "reminder") {
-      setUserToShow(users.filter((user) => user["status"] === "reminder"));
-    } else if (item === "lunch") {
-      setUserToShow(users.filter((user) => user["lunch"]));
-    } else if (item === "partyPass") {
-      setUserToShow(users.filter((user) => user["ticket"] === "partyPass"));
-    } else if (item === "confirmed") {
-      setUserToShow(users.filter((user) => user["status"] === "confirmed"));
-    } else if (item === "waitinglist") {
-      setUserToShow(users.filter((user) => user["status"] === "waitinglist"));
-    } else if (item === "registered") {
-      setUserToShow(users.filter((user) => user["status"] === "registered"));
-    } else {
-      setUserToShow(users.filter((user) => user[item] === item));
-    }
-    if (item === "capacity") {
-      setCapacityShow(true);
-    }
-    setActiveSideBar(item);
-  };
-
-  const handleUser = (id) => {
-    Router.push(`/dashboard/user/${id}`);
-  };
-
-  const getToPay = (to_pay, lunch) => {
-    const lunchMoney = lunch?.split(",").length * 12.5 || 0;
-    return Number(to_pay) + lunchMoney;
-  };
-  const usersForCSV = userToShow.map((user) =>
-    user.lunch || user.competition === "later"
-      ? { ...user, to_pay: getToPay(user.to_pay, user.lunch) }
-      : user
-  );
-
-  const renderTableHeader = () => {
-    const header = [
-      "select",
-      "status",
-      "to_pay",
-      "price",
-      "date",
-      "actions",
-      "id",
-      "email",
-      "firstname",
-      "lastname",
-      "ticket",
-      "parent_partner",
-      "role",
-      "level",
-      // "themed class",
-      "competition",
-      "competitions",
-      "Open MnM role",
-      "Newcom. role",
-      "Strictly role",
-      "donation",
-      "tshirt",
-      "lunch",
-      "country",
-      "terms",
-    ];
-    return header.map((key, index) => {
-      return <th key={index}>{key.toUpperCase()}</th>;
-    });
-  };
-
-  //--------- Ticket Component
-  const TicketsComponent = () => {
-    return (
-      <div className={styles.tickets}>
-        <div className={styles.ticketRow}>
-          <p>Level</p>
-          <p>Capacity</p>
-        </div>
-
-        {tickets
-          .sort((a, b) => a.id - b.id)
-          .map((ticket) => (
-            <div key={ticket.name} className={styles.infoRow}>
-              <div className={styles.ticketItem}>
-                <p>{ticket.label}</p>
-              </div>
-              <div className={styles.ticketItem}>
-                <p>{ticket.capacity}</p>
-              </div>
-            </div>
-          ))}
-      </div>
-    );
-  };
-  //--------- Table Data
-
-  const renderTableData = () => {
-    return userToShow
-      .filter((user) =>
-        nameSearch
-          ? user.firstname.toUpperCase().includes(nameSearch.toUpperCase())
-          : true
-      )
-      .sort((a, b) => a.id - b.id)
-      .map(
-        ({
-          id,
-          status,
-          to_pay,
-          price,
-          date,
-          role,
-          firstname,
-          ticket,
-          parent_partner,
-          lastname,
-          country,
-          level,
-          competition,
-          open_mixnmatch_role,
-          newcomers_mixnmatch_role,
-          strictly_role,
-          competitions,
-          tshirt,
-          lunch,
-          donation,
-          email,
-        }) => {
-          // const getToPay = (to_pay, lunch) => {
-          //   const lunchMoney = lunch?.split(",").length * 12.5 || 0;
-          //   return Number(to_pay) + lunchMoney;
-          // };
-          return (
-            <tr
-              key={id}
-              className={classNames(styles.normal, {
-                [styles.confirmed]: status === "confirmed",
-                [styles.canceled]: status === "canceled",
-                [styles.out]: status === "out",
-                [styles.sent]: status === "email-sent",
-                [styles.reminder]: status === "reminder",
-              })}
-            >
-              <td>
-                <label>
-                  <FormCheckbox
-                    style={{ width: "60px" }}
-                    {...form}
-                    name="users"
-                    value={id}
-                  />
-                </label>
-              </td>
-              {/* <td>{getToPay(to_pay, lunch)}</td> */}
-              <td>{status}</td>
-              <td>{to_pay}</td>
-              <td>{price}</td>
-              <td>{date}</td>
-              <td>
-                <button
-                  className={styles.button}
-                  onClick={() => handleUser(id)}
-                >
-                  Edit
-                </button>
-              </td>
-              <td>{id}</td>
-              <td>{email}</td>
-              <td>{firstname}</td>
-              <td>{lastname}</td>
-              <td>{ticket}</td>
-              <td>{parent_partner}</td>
-              <td>{role}</td>
-              <td>{level}</td>
-              {/* <td>{titleCase(theme_class)}</td> */}
-              <td>{competition}</td>
-              <td>
-                {competitions && (
-                  <div style={{ display: "flex", gap: "10px" }}>
-                    {competitions.split(",").map((comp) => (
-                      <p
-                        key={comp}
-                        style={{
-                          border: "1px solid blue",
-                          padding: "1px 2px",
-                          fontSize: "12px",
-                        }}
-                      >
-                        {titleCase(comp)}
-                      </p>
-                    ))}
-                  </div>
-                )}
-              </td>
-              <td>{open_mixnmatch_role}</td>
-              <td>{newcomers_mixnmatch_role}</td>
-              <td>{strictly_role}</td>
-              <td>{donation}</td>
-              <td>{tshirt}</td>
-              <td>
-                {lunch && (
-                  <div style={{ display: "flex", gap: "10px" }}>
-                    {lunch.split(",").map((lunch) => (
-                      <p
-                        key={lunch}
-                        style={{
-                          border: "1px solid blue",
-                          padding: "1px 2px",
-                          fontSize: "12px",
-                        }}
-                      >
-                        {titleCase(lunch)}
-                      </p>
-                    ))}
-                  </div>
-                )}
-              </td>
-
-              <td>{country}</td>
-              <td>Yes</td>
-            </tr>
-          );
-        }
-      );
-  };
   return (
     <div className={styles.container}>
       <Head>
-        <title>BLUES FEVER 2025</title>
+        <title>BFF Registration Dashboard</title>
         <link rel="icon" href="/icon.png" />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Amatic+SC&display=swap"
-          rel="stylesheet"
-        />
       </Head>
-      <Header
-        isAdmin
-        title="BFF DASHBOARD"
-        menuItems={[
-          {
-            title: "LOG OUT ",
-            link: "/login/admin",
-          },
-        ]}
-      />
-      <h3 className={styles.title}>Registrations</h3>
-      <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-        <div className={styles.total}>
-          <p>
-            Total Registrations: {users?.length} = {totalAmount}
-          </p>
-          <p>
-            Selected List:{" "}
-            {
-              userToShow?.filter(
-                (user) => user.status !== "canceled" && user.status !== "out"
-              )?.length
-            }{" "}
-            ={totalAmountList}
-          </p>
-          <p>Donation: {totalDonation}</p>
+
+      <header className={styles.topBar}>
+        <div>
+          <p className={styles.eyebrow}>Blues Fever registration</p>
+          <h1>Dashboard</h1>
         </div>
-      </div>
-      <main className={styles.main}>
-        <div className={styles.sideBar}>
-          <div
-            onClick={() => handleSideBarClick("all")}
-            className={classNames(styles.sideBarItem, {
-              [styles.active]: activeSideBar === "all",
-            })}
-          >
-            <p>All</p>
+        <button className={styles.ghostButton} onClick={handleLogout}>
+          Log out
+        </button>
+      </header>
+
+      <main className={styles.dashboard}>
+        <section className={styles.hero}>
+          <div>
+            <p className={styles.eyebrow}>Live admin control</p>
+            <h2>Manage registrations, capacity, exports, and emails.</h2>
           </div>
-          {/* <div
-            onClick={() => handleSideBarClick("registered")}
-            className={classNames(styles.sideBarItem, {
-              [styles.active]: activeSideBar === "registered",
-            })}
-          >
-            <p>registered</p>
+          <div className={styles.heroMeta}>
+            <span>{filteredUsers.length} shown</span>
+            <span>{selectedIds.length} selected</span>
           </div>
-          <div
-            onClick={() => handleSideBarClick("email-sent")}
-            className={classNames(styles.sideBarItem, {
-              [styles.active]: activeSideBar === "email-sent",
-            })}
-          >
-            <p>email-sent</p>
+        </section>
+
+        {dbError && (
+          <section className={styles.errorPanel}>
+            <strong>Database connection unavailable</strong>
+            <p>
+              The dashboard shell loaded, but live registrations and tickets
+              could not be fetched. Refresh after the database connection is
+              available.
+            </p>
+          </section>
+        )}
+
+        <section className={styles.metricGrid} aria-label="Dashboard summary">
+          <div className={styles.metricCard}>
+            <span>Total</span>
+            <strong>{stats.total}</strong>
+            <p>{filteredStats.total} in current view</p>
           </div>
-          <div
-            onClick={() => handleSideBarClick("reminder")}
-            className={classNames(styles.sideBarItem, {
-              [styles.active]: activeSideBar === "reminder",
-            })}
-          >
-            <p>Reminder</p>
+          <div className={styles.metricCard}>
+            <span>Active spots used</span>
+            <strong>{stats.active}</strong>
+            <p>Excludes waiting list, canceled, and out</p>
           </div>
-          <div
-            onClick={() => handleSideBarClick("waitinglist")}
-            className={classNames(styles.sideBarItem, {
-              [styles.active]: activeSideBar === "waitinglist",
-            })}
-          >
-            <p>waitinglist</p>
-          </div> */}
-          <div
-            onClick={() => handleSideBarClick("confirmed")}
-            className={classNames(styles.sideBarItem, {
-              [styles.active]: activeSideBar === "confirmed",
-            })}
-          >
-            <p>confirmed</p>
+          <div className={styles.metricCard}>
+            <span>Confirmed</span>
+            <strong>{stats.confirmed}</strong>
+            <p>{stats.waitinglist} waiting list</p>
           </div>
-          {tickets
-            .sort((a, b) => a.id - b.id)
-            .map((level) => (
-              <div
-                key={level.value}
-                onClick={() => handleSideBarClick(level.name)}
-                className={classNames(styles.sideBarItem, {
-                  [styles.active]: activeSideBar === level.name,
-                })}
-              >
-                <p>{level.name}</p>
+          <div className={styles.metricCard}>
+            <span>Revenue</span>
+            <strong>{formatCurrency(stats.revenue)}</strong>
+            <p>{formatCurrency(stats.donation)} donations</p>
+          </div>
+        </section>
+
+        <section className={styles.workspace}>
+          <aside className={styles.sidePanel}>
+            <div>
+              <p className={styles.panelLabel}>Quick filters</p>
+              <div className={styles.pillGroup}>
+                {quickFilters.map((filter) => (
+                  <button
+                    key={filter.value}
+                    className={
+                      filters.status === filter.value
+                        ? styles.activePill
+                        : styles.pillButton
+                    }
+                    onClick={() => updateFilter("status", filter.value)}
+                  >
+                    {filter.label}
+                  </button>
+                ))}
               </div>
-            ))}
-          <div
-            onClick={() => handleSideBarClick("partyPass")}
-            className={classNames(styles.sideBarItem, {
-              [styles.active]: activeSideBar === "partyPass",
-            })}
-          >
-            <p>Partypass</p>
-          </div>
-          <div
-            onClick={() => handleSideBarClick("lunch")}
-            className={classNames(styles.sideBarItem, {
-              [styles.active]: activeSideBar === "lunch",
-            })}
-          >
-            <p>Lunch</p>
-          </div>
-
-          {/* <div
-            onClick={() => handleSideBarClick("theme_class")}
-            className={classNames(styles.sideBarItem, {
-              [styles.active]: activeSideBar === "theme_class",
-            })}
-          >
-            <p>Themed Classes</p>
-          </div> */}
-          <div
-            onClick={() => handleSideBarClick("canceled")}
-            className={classNames(styles.sideBarItem, {
-              [styles.active]: activeSideBar === "canceled",
-            })}
-          >
-            <p>Canceled</p>
-          </div>
-          <div
-            onClick={() => handleSideBarClick("capacity")}
-            className={classNames(styles.sideBarItem, {
-              [styles.active]: activeSideBar === "capacity",
-            })}
-          >
-            <p>Capacity</p>
-          </div>
-          {/* <div
-            onClick={() => handleSideBarClick("balance")}
-            className={classNames(styles.sideBarItem, {
-              [styles.active]: activeSideBar === "balance",
-            })}
-          >
-            <p>Balance</p>
-          </div>
-          <div
-            onClick={() => handleSideBarClick("lastbalance")}
-            className={classNames(styles.sideBarItem, {
-              [styles.active]: activeSideBar === "lastbalance",
-            })}
-          >
-            <p>Final Balance</p>
-          </div> */}
-        </div>
-        <div className={styles.content}>
-          {activeSideBar !== "balance" && (
-            <div className={styles.search}>
-              <select
-                onChange={(e) => setStatus(e.target.value)}
-                className={styles.select}
-              >
-                <option>registered</option>
-                <option>email-sent</option>
-                <option>reminder</option>
-                <option>waitinglist</option>
-                <option>confirmed</option>
-                <option>canceled</option>
-                <option>out</option>
-              </select>
-              <button
-                className={styles.statusButton}
-                onClick={handleStatusChange}
-              >
-                Change Status
-              </button>
-
-              {/* <select
-                onChange={(e) => setStatus(e.target.value)}
-                className={styles.select}
-              >
-                <option>registered</option>
-                <option>email-sent</option>
-                <option>reminder</option>
-                <option>waitinglist</option>
-                <option>confirmed</option>
-                <option>canceled</option>
-                <option>out</option>
-              </select> */}
-
-              {/* <select
-                onChange={(e) => setGroupLevel(e.target.value)}
-                className={styles.select}
-              >
-                <option>int1</option>
-                <option>int2</option>
-              </select>
-              <button
-                className={styles.statusButton}
-                onClick={handleGroupChange}
-              >
-                Change Group Name
-              </button> */}
-
-              {/* <p>Search first name</p>
-              <input onChange={(e) => setNameSearch(e.target.value)} /> */}
             </div>
-          )}
 
-          <button className={styles.statusButton} onClick={handleSendOneMail}>
-            Send Final email to specific users:
-          </button>
-          {!capacityShow &&
-            activeSideBar !== "balance" &&
-            activeSideBar !== "lastbalance" && (
+            <div className={styles.bulkBox}>
+              <p className={styles.panelLabel}>Selected registrations</p>
+              <strong>{selectedIds.length}</strong>
+              <select
+                value={bulkStatus}
+                onChange={(event) => setBulkStatus(event.target.value)}
+              >
+                {MANUAL_STATUS_OPTIONS.map((status) => (
+                  <option key={status} value={status}>
+                    {status}
+                  </option>
+                ))}
+              </select>
+              <button
+                className={styles.primaryButton}
+                disabled={isBulkSaving}
+                onClick={handleBulkStatusChange}
+              >
+                {isBulkSaving ? "Saving..." : "Change DB status"}
+              </button>
+              <button
+                className={styles.secondaryButton}
+                onClick={() =>
+                  handleSendEmail(
+                    selectedUsers,
+                    `Send the final email to ${selectedUsers.length} selected registration(s)?`,
+                  )
+                }
+              >
+                Send selected email
+              </button>
+            </div>
+          </aside>
+
+          <section className={styles.mainPanel}>
+            <div className={styles.panelHeader}>
+              <div>
+                <p className={styles.panelLabel}>Registrations</p>
+                <h3>Find, filter, and act</h3>
+              </div>
+              {isMounted ? (
+                <CSVLink
+                  className={styles.secondaryButton}
+                  data={filteredUsers}
+                  filename={`registration-${today}.csv`}
+                >
+                  Export CSV
+                </CSVLink>
+              ) : (
+                <button className={styles.secondaryButton} disabled>
+                  Export CSV
+                </button>
+              )}
+            </div>
+
+            <div className={styles.filterGrid}>
+              <label>
+                Search
+                <input
+                  value={filters.search}
+                  onChange={(event) =>
+                    updateFilter("search", event.target.value)
+                  }
+                  placeholder="Name, email, country, ticket..."
+                />
+              </label>
+              <label>
+                Ticket
+                <select
+                  value={filters.ticket}
+                  onChange={(event) =>
+                    updateFilter("ticket", event.target.value)
+                  }
+                >
+                  <option value="all">All tickets</option>
+                  {ticketOptions.map((ticket) => (
+                    <option key={ticket} value={ticket}>
+                      {ticket}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Track
+                <select
+                  value={filters.level}
+                  onChange={(event) => updateFilter("level", event.target.value)}
+                >
+                  <option value="all">All tracks</option>
+                  {levelOptions.map((level) => (
+                    <option key={level.value} value={level.value}>
+                      {level.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Extras
+                <select
+                  value={filters.extra}
+                  onChange={(event) => updateFilter("extra", event.target.value)}
+                >
+                  {extraFilters.map((filter) => (
+                    <option key={filter.value} value={filter.value}>
+                      {filter.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+
+            <div className={styles.tableShell}>
               <table className={styles.table}>
+                <thead>
+                  <tr>
+                    <th>
+                      <input
+                        aria-label="Select all visible registrations"
+                        checked={allVisibleSelected}
+                        type="checkbox"
+                        onChange={toggleAllVisible}
+                      />
+                    </th>
+                    <th>Status</th>
+                    <th>Attendee</th>
+                    <th>Pass</th>
+                    <th>Money</th>
+                    <th>Extras</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
                 <tbody>
-                  <tr>{renderTableHeader()}</tr>
-                  {renderTableData()}
+                  {filteredUsers.map((user) => {
+                    const extras = [
+                      ...getListItems(user.competitions),
+                      ...getListItems(user.lunch),
+                      user.tshirt,
+                    ].filter(Boolean);
+
+                    return (
+                      <tr key={user.id}>
+                        <td>
+                          <input
+                            aria-label={`Select ${user.firstname} ${user.lastname}`}
+                            checked={selectedIds.includes(user.id)}
+                            type="checkbox"
+                            onChange={() => toggleSelected(user.id)}
+                          />
+                        </td>
+                        <td>
+                          <span
+                            className={`${styles.statusPill} ${getStatusClass(
+                              user.status,
+                            )}`}
+                          >
+                            {user.status}
+                          </span>
+                        </td>
+                        <td>
+                          <div className={styles.attendeeCell}>
+                            <strong>
+                              {user.firstname} {user.lastname}
+                            </strong>
+                            <span>
+                              #{user.id} · {user.email}
+                            </span>
+                            <span>{user.country}</span>
+                          </div>
+                        </td>
+                        <td>
+                          <div className={styles.stackCell}>
+                            <strong>{user.ticket || "No ticket"}</strong>
+                            <span>{user.level || "No track"}</span>
+                            <span>{user.role || "No role"}</span>
+                          </div>
+                        </td>
+                        <td>
+                          <div className={styles.stackCell}>
+                            <strong>{formatCurrency(Number(user.price || 0))}</strong>
+                            <span>To pay: {user.to_pay || "0"}</span>
+                            <span>Donation: {user.donation || "0"}</span>
+                          </div>
+                        </td>
+                        <td>
+                          <div className={styles.chipList}>
+                            {extras.length > 0 ? (
+                              extras.slice(0, 4).map((extra) => (
+                                <span key={`${user.id}-${extra}`}>
+                                  {extra}
+                                </span>
+                              ))
+                            ) : (
+                              <span>No extras</span>
+                            )}
+                          </div>
+                        </td>
+                        <td>
+                          <button
+                            className={styles.tableButton}
+                            onClick={() => Router.push(`/dashboard/user/${user.id}`)}
+                          >
+                            Open
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
-            )}
-          {capacityShow && <TicketsComponent />}
-          {activeSideBar === "balance" && <BalanceComponent />}
-          {activeSideBar === "lastbalance" && <FinalBalanceComponent />}
-          {activeSideBar !== "balance" && (
-            <div className={styles.downloadButton}>
-              <CSVLink
-                data={usersForCSV}
-                filename={`registration-${today}.csv`}
-              >
-                Download CSV
-              </CSVLink>
             </div>
-          )}
-          <button
-            style={{ margin: "40px 0" }}
-            className={styles.statusButton}
-            onClick={handleSendEmail}
-          >
-            Send Email to All confirmed
-          </button>
-        </div>
-      </main>
 
-      <footer className={styles.footer}>
-        <a
-          style={{ width: "auto" }}
-          href="https://hamedjenabi.me"
-          target="_blank"
-          rel="noreferrer"
-        >
-          Powered with love by Hamed
-        </a>
-      </footer>
+            <div className={styles.footerActions}>
+              <button
+                className={styles.secondaryButton}
+                onClick={() =>
+                  handleSendEmail(
+                    users.filter((user) => user.status === "confirmed"),
+                    "Send the final email to all confirmed registrations?",
+                  )
+                }
+              >
+                Send all confirmed email
+              </button>
+            </div>
+          </section>
+        </section>
+
+        <section className={styles.capacityPanel}>
+          <div className={styles.panelHeader}>
+            <div>
+              <p className={styles.panelLabel}>Capacity</p>
+              <h3>Edit remaining spots</h3>
+            </div>
+            <p className={styles.helpText}>
+              This updates the current DB value used by registration availability.
+            </p>
+          </div>
+
+          <div className={styles.capacityGrid}>
+            {tickets
+              .slice()
+              .sort((a, b) => a.id - b.id)
+              .map((ticket) => (
+                <div key={ticket.id} className={styles.capacityRow}>
+                  <div>
+                    <strong>{ticket.label}</strong>
+                    <span>{ticket.name}</span>
+                  </div>
+                  <div>
+                    <span>Active</span>
+                    <strong>{getActiveCountForTicket(users, ticket.name)}</strong>
+                  </div>
+                  <div>
+                    <span>Waiting</span>
+                    <strong>{ticket.waiting_list}</strong>
+                  </div>
+                  <label>
+                    Remaining spots
+                    <input
+                      min="0"
+                      type="number"
+                      value={capacityDrafts[ticket.id] ?? 0}
+                      onChange={(event) =>
+                        setCapacityDrafts((drafts) => ({
+                          ...drafts,
+                          [ticket.id]: event.target.value,
+                        }))
+                      }
+                    />
+                  </label>
+                  <button
+                    className={styles.primaryButton}
+                    disabled={savingTicketId === ticket.id}
+                    onClick={() => handleCapacitySave(ticket)}
+                  >
+                    {savingTicketId === ticket.id ? "Saving..." : "Save"}
+                  </button>
+                </div>
+              ))}
+          </div>
+        </section>
+      </main>
     </div>
   );
 }
 
 export async function getServerSideProps() {
-  const { getAllUsers, getTickets } = await import("../../db/db");
-  const users = await getAllUsers();
+  try {
+    const { getAllUsers, getTickets } = await import("../../db/db");
+    const { withTimeout } = await import("../../utils/serverData");
+    const [users, tickets] = await withTimeout(
+      Promise.all([getAllUsers(), getTickets()]),
+      3000,
+      "Dashboard data request timed out",
+    );
 
-  const tickets = await getTickets();
-  return {
-    props: {
-      users: users,
-      tickets: tickets,
-    },
-  };
+    return {
+      props: {
+        users,
+        tickets,
+        dbError: false,
+      },
+    };
+  } catch (error) {
+    console.error("Could not load dashboard data", error.message);
+
+    return {
+      props: {
+        users: [],
+        tickets: [],
+        dbError: true,
+      },
+    };
+  }
 }

@@ -17,6 +17,15 @@ export async function getTickets() {
       `;
   return tickets;
 }
+export async function updateTicketRemainingCapacity(ticketId, capacity) {
+  const tickets = await sql`
+    UPDATE tickets_26
+    SET capacity = ${capacity}
+    WHERE id = ${ticketId}
+    RETURNING id, name, label, capacity, waiting_list
+    `;
+  return tickets[0];
+}
 export async function updateTicketCapacity(ticketId) {
   await sql`
     UPDATE tickets_26
@@ -162,7 +171,10 @@ export async function updateUserInfo(user, totalPrice) {
     competitions: user.competitions,
     tshirt: user.tshirt,
     price: totalPrice,
-    terms: true,
+    to_pay: user.to_pay,
+    lunch: Array.isArray(user.lunch) ? user.lunch.toString() : user.lunch,
+    donation: user.donation,
+    terms: user.terms === undefined ? true : user.terms,
   };
 
   await sql`
@@ -186,6 +198,9 @@ export async function updateUserInfo(user, totalPrice) {
     "competitions" = ${userData.competitions},
     "tshirt" = ${userData.tshirt},
     "price" = ${userData.price},
+    "to_pay" = ${userData.to_pay || ""},
+    "lunch" = ${userData.lunch || ""},
+    "donation" = ${userData.donation || ""},
     "terms" = ${userData.terms}
   WHERE id = ${user.id}
   `;

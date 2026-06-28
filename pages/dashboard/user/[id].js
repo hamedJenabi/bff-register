@@ -1,143 +1,276 @@
 import Head from "next/head";
 import Link from "next/link";
-import dynamic from "next/dynamic";
-import useMedia from "use-media";
 import Router from "next/router";
-import React, { useEffect } from "react";
-import { unstable_useFormState as useFormState } from "reakit/Form";
+import React, { useEffect, useState } from "react";
 import styles from "./user.module.scss";
-import Header from "../../../components/Header/Header.js";
-const Modal = dynamic(() => import("./Modal"), { ssr: false });
+import { MANUAL_STATUS_OPTIONS } from "../../../utils/dashboard.mjs";
 
-const header = [
-  "status",
-  "price",
-  "id",
-  "email",
-  "firstname",
-  "lastname",
-  "ticket",
-  "parent_partner",
-  "role",
-  "level",
-  "competition",
-  "open_mixnmatch_role",
-  "newcomers_mixnmatch_role",
-  "strictly_role",
-  "tshirt",
-  "competitions",
-  "donation",
-  "lunch",
+const dashboardPath = "/dashboard/fdjhfdskjfhdskjh";
+
+const textFields = [
+  ["firstname", "First name"],
+  ["lastname", "Last name"],
+  ["email", "Email"],
+  ["country", "Country"],
+  ["ticket", "Ticket"],
+  ["level", "Track"],
+  ["role", "Role"],
+  ["parent_partner", "Parent partner"],
+  ["competition", "Competition answer"],
+  ["competitions", "Competitions"],
+  ["open_mixnmatch_role", "Open MixMatch role"],
+  ["newcomers_mixnmatch_role", "Newcomers MixMatch role"],
+  ["strictly_role", "Strictly role"],
+  ["tshirt", "T-shirt"],
+  ["lunch", "Lunch"],
 ];
 
+const moneyFields = [
+  ["price", "Price"],
+  ["to_pay", "To pay"],
+  ["donation", "Donation"],
+];
+
+function normalizeUser(user) {
+  return {
+    id: user.id,
+    status: user.status || "registered",
+    prevStatus: user.status || "registered",
+    firstname: user.firstname || "",
+    lastname: user.lastname || "",
+    email: user.email || "",
+    country: user.country || "",
+    ticket: user.ticket || "",
+    level: user.level || "",
+    role: user.role || "",
+    parent_partner: user.parent_partner || "",
+    competition: user.competition || "",
+    open_mixnmatch_role: user.open_mixnmatch_role || "",
+    newcomers_mixnmatch_role: user.newcomers_mixnmatch_role || "",
+    strictly_role: user.strictly_role || "",
+    competitions: user.competitions || "",
+    price: user.price || "",
+    to_pay: user.to_pay || "",
+    donation: user.donation || "",
+    tshirt: user.tshirt || "",
+    lunch: user.lunch || "",
+    terms: Boolean(user.terms),
+  };
+}
+
 export default function User({ user }) {
-  const isMobile = useMedia({ maxWidth: "768px" });
-  const form = useFormState({
-    values: {
-      id: user.id,
-      status: user.status,
-      prevStatus: user.status,
-      firstname: user.firstname,
-      lastname: user.lastname,
-      email: user.email,
-      country: user.country,
-      level: user.level,
-      ticket: user.ticket,
-      role: user.role,
-      competition: user.competition,
-      open_mixnmatch_role: user.open_mixnmatch_role,
-      newcomers_mixnmatch_role: user.newcomers_mixnmatch_role,
-      strictly_role: user.strictly_role,
-      competitions: user.competitions?.toString(),
-      price: user.price,
-      parent_partner: user.parent_partner,
-      donation: user.donation,
-      tshirt: user.tshirt,
-      lunch: user.lunch,
-      terms: user.terms,
-    },
-    onValidate: (values) => {
-      // noob
-    },
-    onSubmit: () => {
-      fetch("/api/edituser?action=edit", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Cache-Control": "no-cache, no-store",
-        },
-        body: JSON.stringify(form.values),
-      })
-        .then((response) => {
-          if (response.status === 200) {
-            alert("DONE");
-            Router.push("/dashboard/fdjhfdskjfhdskjh");
-          }
-          if (response.status === 401) {
-            alert("Please write a valid status");
-          }
-        })
-        .catch((error) => console.log(error));
-    },
-  });
-  if (typeof window !== "undefined") {
-    const admin = localStorage.getItem("login_admin");
+  const [formValues, setFormValues] = useState(() => normalizeUser(user));
+  const [isSaving, setIsSaving] = useState(false);
+  const [notice, setNotice] = useState("");
+
+  useEffect(() => {
+    const admin = window.localStorage.getItem("login_admin");
+
     if (admin !== "true") {
       Router.push("/login/admin");
     }
-  }
-  const handleClick = (key) => {
-    alert(key);
+  }, []);
+
+  const updateField = (field, value) => {
+    setFormValues((currentValues) => ({
+      ...currentValues,
+      [field]: value,
+    }));
   };
+
+  const saveUser = async (overrides = {}, successMessage = "Saved.") => {
+    setIsSaving(true);
+    setNotice("");
+
+    const payload = {
+      ...formValues,
+      ...overrides,
+      id: user.id,
+      prevStatus: user.status,
+    };
+
+    const response = await fetch("/api/edituser?action=edit", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Cache-Control": "no-cache, no-store",
+      },
+      body: JSON.stringify(payload),
+    });
+
+    setIsSaving(false);
+
+    if (response.status === 200) {
+      setNotice(successMessage);
+      Router.replace(Router.asPath);
+      return;
+    }
+
+    setNotice("Could not save this registration.");
+  };
+
+  const sendEmail = async () => {
+    if (
+      !window.confirm(
+        `Send the final email to ${formValues.firstname} ${formValues.lastname}?`,
+      )
+    ) {
+      return;
+    }
+
+    const response = await fetch("/api/mailall", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Cache-Control": "no-cache, no-store",
+      },
+      body: JSON.stringify(formValues),
+    });
+
+    setNotice(response.status === 200 ? "Email request sent." : "Email failed.");
+  };
+
+  const fullName = `${user.firstname} ${user.lastname}`.trim();
 
   return (
     <div className={styles.container}>
       <Head>
-        <title>BLUES FEVER 2025</title>
-        <meta name="description" content="BLUES FEVER 2025 Registration" />
+        <title>{fullName || "Registration"} · BFF Dashboard</title>
+        <meta name="description" content="Blues Fever registration admin" />
         <link rel="icon" href="/icon.png" />
-
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Amatic+SC&display=swap"
-          rel="stylesheet"
-        />
       </Head>
-      <Header
-        title="BLUES FEVER 2025"
-        menuItems={[{ title: "Home", link: "https://www.bluesfever.eu/" }]}
-      />
-      <main className={styles.main}>
-        <Link className={styles.linkButton} href="/dashboard/fdjhfdskjfhdskjh">
-          Back to Dashboard
+
+      <header className={styles.topBar}>
+        <Link className={styles.backLink} href={dashboardPath}>
+          Back to dashboard
         </Link>
-
-        <p style={{ margin: "10px" }}>
-          Accepted status: 1.registered 2. email-sent 3. confirmed 4.
-          waitinglist 5. canceled
-        </p>
-        <div className={styles.contentWrapper}>
-          {header.map((item) => (
-            <div className={styles.row}>
-              <p>{item}:</p>
-              <p>{user[item]}</p>
-              <Modal user={user} info={item} form={form} />
-            </div>
-          ))}
-        </div>
-      </main>
-
-      <footer className={styles.footer}>
-        <a
-          style={{ width: "auto" }}
-          href="https://hamedjenabi.me"
-          target="_blank"
-          rel="noreferrer"
+        <button
+          className={styles.ghostButton}
+          onClick={() => {
+            window.localStorage.removeItem("login_admin");
+            Router.push("/login/admin");
+          }}
         >
-          Powered with love by Hamed
-        </a>
-      </footer>
+          Log out
+        </button>
+      </header>
+
+      <main className={styles.main}>
+        <section className={styles.hero}>
+          <div>
+            <p className={styles.eyebrow}>Registration #{user.id}</p>
+            <h1>{fullName || "Unnamed attendee"}</h1>
+            <p>{user.email}</p>
+          </div>
+          <span className={styles.statusBadge}>{formValues.status}</span>
+        </section>
+
+        <section className={styles.actions}>
+          <button
+            className={styles.primaryButton}
+            disabled={isSaving}
+            onClick={() => saveUser()}
+          >
+            {isSaving ? "Saving..." : "Save changes"}
+          </button>
+          <button
+            className={styles.secondaryButton}
+            disabled={isSaving}
+            onClick={() =>
+              saveUser({ status: "canceled" }, "Registration canceled in DB.")
+            }
+          >
+            Cancel registration
+          </button>
+          <button
+            className={styles.secondaryButton}
+            disabled={isSaving}
+            onClick={() =>
+              saveUser({ status: "confirmed" }, "Marked confirmed in DB.")
+            }
+          >
+            Mark confirmed
+          </button>
+          {formValues.status === "waitinglist" && (
+            <button
+              className={styles.secondaryButton}
+              disabled={isSaving}
+              onClick={() =>
+                saveUser(
+                  { status: "registered" },
+                  "Moved from waiting list to registered.",
+                )
+              }
+            >
+              Promote to registered
+            </button>
+          )}
+          <button className={styles.ghostButton} onClick={sendEmail}>
+            Send email
+          </button>
+        </section>
+
+        {notice && <p className={styles.notice}>{notice}</p>}
+
+        <section className={styles.formPanel}>
+          <div className={styles.panelHeader}>
+            <div>
+              <p className={styles.eyebrow}>Database-only editor</p>
+              <h2>Attendee details</h2>
+            </div>
+            <p>
+              Status and payment labels here update your app database only. They
+              do not refund, cancel, or mutate Stripe.
+            </p>
+          </div>
+
+          <div className={styles.formGrid}>
+            <label>
+              Status
+              <select
+                value={formValues.status}
+                onChange={(event) => updateField("status", event.target.value)}
+              >
+                {MANUAL_STATUS_OPTIONS.map((status) => (
+                  <option key={status} value={status}>
+                    {status}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            {textFields.map(([field, label]) => (
+              <label key={field}>
+                {label}
+                <input
+                  value={formValues[field]}
+                  onChange={(event) => updateField(field, event.target.value)}
+                />
+              </label>
+            ))}
+
+            {moneyFields.map(([field, label]) => (
+              <label key={field}>
+                {label}
+                <input
+                  inputMode="numeric"
+                  value={formValues[field]}
+                  onChange={(event) => updateField(field, event.target.value)}
+                />
+              </label>
+            ))}
+
+            <label className={styles.checkboxLabel}>
+              <input
+                checked={formValues.terms}
+                type="checkbox"
+                onChange={(event) => updateField("terms", event.target.checked)}
+              />
+              Terms accepted
+            </label>
+          </div>
+        </section>
+      </main>
     </div>
   );
 }
@@ -146,9 +279,10 @@ export async function getServerSideProps({ params }) {
   const { id } = params;
   const { getUserById } = await import("../../../db/db");
   const user = await getUserById(id);
+
   return {
     props: {
-      user: user,
+      user,
     },
   };
 }

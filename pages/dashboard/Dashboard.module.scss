@@ -1,303 +1,461 @@
 @import "../../styles/variables";
 
 .container {
-  background-color: rgb(245, 249, 245);
-  padding: 0 $md;
-  @media (min-width: 600px) {
-    padding: 0 $xl;
-  }
-  input[type="checkbox"] {
-    width: 18px;
-    height: 18px;
-    background: white;
-    border-radius: 5px;
-    border: 1px solid rgb(0, 0, 0);
-  }
-  input[type="checkbox"]:checked {
-    background: rgb(200, 203, 208);
-  }
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top left, rgba(39, 186, 168, 0.18), transparent 36rem),
+    linear-gradient(135deg, #0d1117 0%, #151922 48%, #101317 100%);
+  color: #eef4f1;
 }
 
-.main {
-  min-height: 70vh;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  @media (min-width: 600px) {
-    box-shadow: $boxShadow;
-    border-radius: 5px;
-    flex-direction: row;
-    justify-content: space-between;
-  }
-}
-.canceled {
-  background-color: rgb(196, 54, 52) !important;
-  color: white;
-}
-.out {
-  background-color: rgb(70, 14, 13) !important;
-  color: white;
-}
-.sent {
-  background-color: rgb(51, 189, 129) !important;
-  color: white;
-}
-.total {
-  margin: $xs 0;
-  padding: $xs $md;
-  border: 1px solid turquoise;
-  width: 100%;
-  border-radius: 4px;
-  @media (min-width: 600px) {
-    width: 20%;
-  }
-}
-.sideBar {
+.topBar {
   display: flex;
   justify-content: space-between;
-  width: 100%;
-  height: 50px;
-  margin-bottom: $md;
-  background-color: #40e0d0;
-  overflow: scroll;
-  @media (min-width: 600px) {
-    justify-content: flex-start;
-    margin-bottom: 0;
-    flex-direction: column;
-    border-top-left-radius: 5px;
-    width: 20%;
-    height: 80vh;
-  }
-}
-.sideBarItem {
-  min-width: 180px;
-  display: flex;
   align-items: center;
-  justify-content: center;
-  border: 1px solid rgb(124, 195, 216);
-  padding: $sm;
-  &:hover {
-    background-color: #2a7168;
-    color: white;
-    transition: all 400ms;
-    cursor: pointer;
-  }
-  &.active {
-    background-color: #2a7168;
-    color: white;
-  }
-  @media (min-width: 600px) {
-    border: none;
+  gap: 16px;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 22px 18px;
 
-    border-bottom: 1px solid #44968b;
-    padding: $sm $xl;
+  h1 {
+    color: #ffffff;
+    font-family: $headerFont;
+    font-size: 30px;
+    line-height: 1.1;
   }
-}
-.search {
-  overflow: scroll;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: $sm;
-  // height: 80px;
-  padding: $sm;
-  // input {
-  //   padding: 0 $md;
-  //   height: 60px;
-  //   @include input;
-  //   border: 1px solid $blue;
-  // }
-  @media (min-width: 600px) {
-    flex-direction: row;
-  }
-}
-.content {
-  @include fade-in-fast;
-  border: 1px solid #dce6e5;
-  border-right: none;
-  width: 100%;
-  overflow: scroll;
-  @media (min-width: 600px) {
-    width: 78%;
-    border-top-right-radius: 5px;
-  }
-}
-.table {
-  font-family: $Paragraph;
-  border-collapse: collapse;
-  width: 100%;
-  thead {
-    display: flex;
-  }
-  td,
-  th {
-    border: 1px solid #dddddd;
-    text-align: center;
-    padding: 8px;
-    min-width: 150px;
-  }
-  tr {
-    &:hover {
-      background-color: turquoise;
-      transition: all 400ms;
-    }
-  }
-  tr:nth-child(even) {
-    background-color: #dddddd;
-    &:hover {
-      background-color: turquoise;
-      transition: all 400ms;
-    }
-  }
-}
-.confirmed {
-  background-color: rgb(64, 132, 98) !important;
-}
-.reminder {
-  background-color: rgb(221, 159, 94) !important;
-}
-.button {
-  @include button;
-  width: 100% !important;
-}
-.statusButton {
-  @include button;
-  width: 250px !important;
-  &.disable {
-    color: white;
-    background-color: rgb(196, 54, 52) !important;
-  }
-}
-.downloadButton {
-  @include button;
-  margin-top: $md;
-  width: 180px !important;
-  height: 50px !important;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-.footer {
-  display: flex;
-  flex: 1;
-  padding: 20px 0;
-  border-top: 1px solid #eaeaea;
-  justify-content: center;
-  align-items: center;
 }
 
-.footer a {
-  padding: 2px 10px;
+.dashboard {
+  width: min(1440px, 100%);
+  margin: 0 auto;
+  padding: 0 18px 56px;
 }
 
-.title a {
-  color: #0070f3;
-  text-decoration: none;
-}
-
-.title a:hover,
-.title a:focus,
-.title a:active {
-  text-decoration: underline;
-}
-
-.title {
-  margin: $lg 0;
-  line-height: 1.15;
-  font-size: 4rem;
-}
-
-.title,
-.description {
-  text-align: center;
-}
-.tickets {
+.hero {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  border: 1px solid turquoise;
-  @media (min-width: 600px) {
-    margin: 50px;
-  }
-}
-.balanceComponent {
-  overflow-x: scroll;
-}
-.ticketRow {
-  display: flex;
-  align-items: center;
   justify-content: space-between;
-  padding: $sm 0;
-  width: 100%;
-  &:first-child {
-    background-color: rgb(101, 236, 223);
+  gap: 18px;
+  align-items: flex-end;
+  padding: 34px 0 22px;
+
+  h2 {
+    max-width: 760px;
+    color: #ffffff;
+    font-family: $headerFont;
+    font-size: clamp(32px, 5vw, 62px);
+    line-height: 1.02;
+    letter-spacing: 0;
   }
+}
+
+.heroMeta {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+
+  span {
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 999px;
+    padding: 8px 12px;
+    color: #b9c8c3;
+    font-family: $headerFont;
+    font-size: 13px;
+  }
+}
+
+.eyebrow,
+.panelLabel,
+.helpText {
+  color: #89a39d;
+  font-family: $headerFont;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.helpText {
+  max-width: 420px;
+  text-transform: none;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.metricGrid {
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+  gap: 12px;
+
+  @media (min-width: 720px) {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.errorPanel {
+  display: grid;
+  gap: 8px;
+  border: 1px solid rgba(255, 141, 154, 0.32);
+  border-radius: 8px;
+  background: rgba(255, 141, 154, 0.08);
+  margin-bottom: 16px;
+  padding: 16px 18px;
+
+  strong,
   p {
-    min-width: 100px;
+    font-family: $headerFont;
+    letter-spacing: 0;
   }
-  @media (min-width: 600px) {
-    p {
-      min-width: 340px;
-      text-align: left;
-      padding: 0 $md;
-    }
+
+  strong {
+    color: #ffffff;
+    font-size: 16px;
   }
-}
-.infoRow {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: $sm 0;
-  border-bottom: 1px solid #dce6e5;
-  width: 100%;
-  &:first-child {
-    background-color: rgb(101, 236, 223);
-  }
+
   p {
-    min-width: 100px;
-  }
-  @media (min-width: 600px) {
-    p {
-      min-width: 250px;
-      padding: 0 $md;
-      text-align: left;
-    }
-    h4 {
-      min-width: 170px;
-    }
+    color: #ffc7ce;
+    line-height: 1.5;
   }
 }
 
-.ticketItem {
-  @media (min-width: 600px) {
-    text-align: center;
-    width: 600px;
+.metricCard,
+.sidePanel,
+.mainPanel,
+.capacityPanel {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(18, 24, 31, 0.82);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.22);
+  backdrop-filter: blur(16px);
+}
+
+.metricCard {
+  border-radius: 8px;
+  padding: 18px;
+
+  span,
+  p {
+    color: #9fb1ad;
+    font-family: $headerFont;
+    font-size: 13px;
+    letter-spacing: 0;
+  }
+
+  strong {
+    display: block;
+    margin: 8px 0;
+    color: #ffffff;
+    font-family: $headerFont;
+    font-size: 30px;
+    line-height: 1;
   }
 }
-.select {
-  padding: 5px 15px;
+
+.workspace {
+  display: grid;
+  gap: 16px;
+  margin-top: 16px;
+
+  @media (min-width: 1080px) {
+    grid-template-columns: 280px minmax(0, 1fr);
+  }
+}
+
+.sidePanel,
+.mainPanel,
+.capacityPanel {
+  border-radius: 8px;
+  padding: 18px;
+}
+
+.sidePanel {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  align-self: flex-start;
+}
+
+.pillGroup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.pillButton,
+.activePill,
+.ghostButton,
+.primaryButton,
+.secondaryButton,
+.tableButton {
+  min-height: 40px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 0 14px;
+  font-family: $headerFont;
   font-size: 14px;
-  line-height: 1.3;
-  height: 45px;
-  box-sizing: border-box;
-  border: 1px solid $blue;
-  box-shadow: 0 1px 0 1px rgba(0, 0, 0, 0.04);
-  border-radius: 5px;
-  background-color: transparent;
-  width: 180px;
-  @media (min-width: 700px) {
-    width: 200px;
+  font-weight: 700;
+  letter-spacing: 0;
+  transition: 180ms ease;
+
+  &:hover {
+    cursor: pointer;
+    transform: translateY(-1px);
   }
-  &.countrySelect {
-    border: 1px solid $blue;
-    height: 50px;
-    padding: 12px;
-    margin-top: $xs;
-    @media (min-width: 600px) {
-      height: 60px;
-      width: 420px;
-    }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+    transform: none;
+  }
+}
+
+.pillButton,
+.ghostButton,
+.secondaryButton,
+.tableButton {
+  background: rgba(255, 255, 255, 0.04);
+  color: #dbe7e3;
+}
+
+.activePill,
+.primaryButton {
+  background: #35c9b5;
+  border-color: #35c9b5;
+  color: #061211;
+}
+
+.ghostButton {
+  white-space: nowrap;
+}
+
+.bulkBox {
+  display: grid;
+  gap: 10px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.09);
+
+  strong {
+    color: #ffffff;
+    font-family: $headerFont;
+    font-size: 34px;
+  }
+}
+
+.panelHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 18px;
+
+  h3 {
+    color: #ffffff;
+    font-family: $headerFont;
+    font-size: 24px;
+    line-height: 1.2;
+  }
+}
+
+.filterGrid {
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+
+  @media (min-width: 860px) {
+    grid-template-columns: 1.6fr repeat(3, minmax(150px, 1fr));
+  }
+}
+
+.filterGrid label,
+.capacityRow label {
+  display: grid;
+  gap: 7px;
+  color: #9fb1ad;
+  font-family: $headerFont;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.filterGrid input,
+.filterGrid select,
+.bulkBox select,
+.capacityRow input {
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  background: rgba(8, 12, 17, 0.84);
+  color: #eef4f1;
+  font-family: $headerFont;
+  font-size: 14px;
+  padding: 0 12px;
+}
+
+.tableShell {
+  overflow-x: auto;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+}
+
+.table {
+  width: 100%;
+  min-width: 980px;
+  border-collapse: collapse;
+
+  th,
+  td {
+    padding: 14px 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+    text-align: left;
+    vertical-align: top;
+    font-family: $headerFont;
+  }
+
+  th {
+    color: #8fa39d;
+    background: rgba(255, 255, 255, 0.035);
+    font-size: 12px;
+    letter-spacing: 0;
+    text-transform: uppercase;
+  }
+
+  td {
+    color: #e7efec;
+    font-size: 14px;
+  }
+
+  tbody tr:hover {
+    background: rgba(53, 201, 181, 0.065);
+  }
+}
+
+.attendeeCell,
+.stackCell {
+  display: grid;
+  gap: 5px;
+
+  strong {
+    color: #ffffff;
+  }
+
+  span {
+    color: #9fb1ad;
+    font-size: 13px;
+  }
+}
+
+.chipList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+
+  span {
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.07);
+    color: #dce7e4;
+    padding: 5px 8px;
+    font-family: $headerFont;
+    font-size: 12px;
+  }
+}
+
+.statusPill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  border-radius: 999px;
+  padding: 0 10px;
+  color: #ffffff;
+  font-family: $headerFont;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.statusConfirmed {
+  background: #21866f;
+}
+
+.statusRegistered {
+  background: #3f6fd1;
+}
+
+.statusSent {
+  background: #6d68d8;
+}
+
+.statusReminder {
+  background: #b7791f;
+}
+
+.statusWaiting {
+  background: #7a8492;
+}
+
+.statusCanceled,
+.statusOut {
+  background: #b94152;
+}
+
+.statusDefault {
+  background: #475569;
+}
+
+.footerActions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+.capacityPanel {
+  margin-top: 16px;
+}
+
+.capacityGrid {
+  display: grid;
+  gap: 10px;
+}
+
+.capacityRow {
+  display: grid;
+  gap: 12px;
+  align-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 14px;
+  background: rgba(255, 255, 255, 0.035);
+
+  @media (min-width: 980px) {
+    grid-template-columns: minmax(260px, 1.4fr) 110px 110px 160px 100px;
+  }
+
+  div {
+    display: grid;
+    gap: 5px;
+  }
+
+  strong {
+    color: #ffffff;
+    font-family: $headerFont;
+  }
+
+  span {
+    color: #9fb1ad;
+    font-family: $headerFont;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 760px) {
+  .topBar,
+  .hero,
+  .panelHeader {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .hero h2 {
+    font-size: 36px;
   }
 }

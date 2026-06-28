@@ -131,7 +131,6 @@ export default function RegistrationForm({
             required
             {...form}
             label="First Name"
-            defaultValue={form.values.firstname}
             className={styles.input}
             name="firstname"
             placeholder="first name"
@@ -145,7 +144,6 @@ export default function RegistrationForm({
             {...form}
             required
             label="Last Name"
-            defaultValue={form.values.lastname}
             className={styles.input}
             name="lastname"
             placeholder="last name"
@@ -160,7 +158,6 @@ export default function RegistrationForm({
             required
             label="E-mail"
             className={styles.input}
-            defaultValue={form.values.email}
             name="email"
             placeholder="email"
           />
