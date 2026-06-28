@@ -14,13 +14,13 @@ export default function Home({ tickets }) {
   const isMobile = useMedia({ maxWidth: "768px" });
   let user = null;
   if (typeof window !== "undefined") {
-    user = JSON.parse(localStorage.getItem("accepted"));
+    user = JSON.parse(localStorage.getItem("accepted_user"));
   }
   return (
     <div className={styles.container}>
       <Head>
-        <title>BLUES FEVER 2024</title>
-        <meta name="description" content="BLUES FEVER 2024 Registration" />
+        <title>BLUES FEVER 2025</title>
+        <meta name="description" content="BLUES FEVER 2025 Registration" />
         <link rel="icon" href="/icon.png" />
 
         <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -31,13 +31,13 @@ export default function Home({ tickets }) {
         />
       </Head>
       <Header
-        title="BLUES FEVER 2024"
-        menuItems={[{ title: "Home", link: "https://thebluesjoint.dance" }]}
+        title="BLUES FEVER 2025"
+        menuItems={[{ title: "Home", link: "https://www.bluesfever.eu/" }]}
       />
       <main className={styles.main}>
         <div className={styles.content}>
           <div className={styles.title}>
-            <h3>You are already registered for BFF 2024!</h3>
+            <h3>You are already registered for BFF 2025!</h3>
             <p>Check you email for more information.</p>
           </div>
         </div>

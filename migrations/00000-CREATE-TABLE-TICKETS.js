@@ -11,6 +11,7 @@ exports.up = async (sql) => {
   CREATE TABLE tickets_23(
   id SERIAL PRIMARY KEY, 
   name VARCHAR NOT NULL,
+  label VARCHAR NOT NULL,
   capacity int,
   waiting_list int
   )

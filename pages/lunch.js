@@ -1,7 +1,6 @@
 import Head from "next/head";
 import useMedia from "use-media";
 import Router from "next/router";
-import Checkout from "../components/Checkout/Checkout";
 import React, { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { emailRegex } from "../utils/validate";
@@ -11,7 +10,6 @@ const FoodForm = dynamic(() => import("../components/Form/FoodForm.js"), {
   ssr: false,
 });
 import { unstable_useFormState as useFormState } from "reakit/Form";
-import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
 
 export default function Home({ tickets, clientID }) {
   const isMobile = useMedia({ maxWidth: "768px" });
@@ -20,7 +18,7 @@ export default function Home({ tickets, clientID }) {
   const [priceToPay, setPriceToday] = useState(12.5);
 
   if (typeof window !== "undefined") {
-    localStorage.removeItem("accepted");
+    localStorage.removeItem("accepted_user");
   }
   const form = useFormState({
     values: {
@@ -98,11 +96,11 @@ export default function Home({ tickets, clientID }) {
   return (
     <div className={styles.container}>
       <Head>
-        <title>Blues Fever 2024</title>
-        <meta name="description" content="BLUES FEVER 2024 Registration" />
+        <title>Blues Fever 2025</title>
+        <meta name="description" content="BLUES FEVER 2025 Registration" />
         <meta
           property="og:image"
-          content="https://www.bluesfever.eu/wp-content/uploads/2023/07/bff2023-scaled.jpg"
+          content="https://www.bluesfever.eu/wp-content/uploads/2024/12/bff_title_25.png"
         />
 
         <link rel="icon" href="/icon.png" />
@@ -115,7 +113,7 @@ export default function Home({ tickets, clientID }) {
         />
       </Head>
       <Header
-        title="BLUES FEVER 2024"
+        title="BLUES FEVER 2025"
         menuItems={[
           {
             title: "Home",
@@ -126,13 +124,12 @@ export default function Home({ tickets, clientID }) {
       <main className={styles.main}>
         {!next && (
           <>
-            {/* <FoodForm
+            <FoodForm
               form={form}
               tickets={tickets}
               isClicked={isClicked}
               clientID={clientID}
-            /> */}
-            <h1> We are fully booked</h1>
+            />
           </>
         )}
         {next && (

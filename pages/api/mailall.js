@@ -5,6 +5,7 @@ import {
   finalLevelsToShow,
 } from "../../utils/functions";
 
+import { getTicketByName } from "../../db/db";
 const sgMail = require("@sendgrid/mail");
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
@@ -68,7 +69,11 @@ export default async function mailall(req, response) {
     }
   };
   const ticket = getTicketLabel(requestData.ticket);
-
+  const ticketLabel = await getTicketByName(requestData.level);
+  let label = ticketLabel?.label;
+  if (!label) {
+    label = "";
+  }
   const msg = {
     from: "registration@bluesfever.eu",
     to: `${user.email}`,
@@ -77,8 +82,8 @@ export default async function mailall(req, response) {
       firstname: `${user.firstname}`,
       lastname: `${user.lastname}`,
       country: `${user.country}`,
-      role: `${user.role}`,
-      level: `${getLevelLabelForEmail(user.level)}`,
+      // role: `${user.role}`,
+      level: label ?? "",
       ticket: `${ticket}`,
       lunch: requestData.lunch ? `${requestData.lunch}` : "No",
       themeClass: `${user.theme_class ? titleCase(user.theme_class) : "No"}`,

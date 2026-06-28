@@ -15,13 +15,13 @@ export default function Home({ tickets }) {
   const isMobile = useMedia({ maxWidth: "768px" });
   let user = null;
   if (typeof window !== "undefined") {
-    user = JSON.parse(localStorage.getItem("accepted"));
+    user = JSON.parse(localStorage.getItem("accepted_user"));
   }
 
   return (
     <div className={styles.container}>
       <Head>
-        <title>BLUES FEVER 2024</title>
+        <title>BLUES FEVER 2025</title>
         <meta name="description" content="BLUES FEVER 2023 Registration" />
         <link rel="icon" href="/icon.png" />
 

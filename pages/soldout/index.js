@@ -9,19 +9,19 @@ import Header from "../../components/Header/Header.js";
 export default function soldout() {
   let user = null;
   if (typeof window !== "undefined") {
-    user = JSON.parse(localStorage.getItem("accepted"));
+    user = JSON.parse(localStorage.getItem("accepted_user"));
   }
 
   const handleRemoveLocalStorage = () => {
     if (typeof window !== "undefined") {
-      localStorage.removeItem("accepted");
+      localStorage.removeItem("accepted_user");
     }
   };
   return (
     <div className={styles.container}>
       <Head>
-        <title>BLUES FEVER 2024</title>
-        <meta name="description" content="BLUES FEVER 2024 Registration" />
+        <title>BLUES FEVER 2025</title>
+        <meta name="description" content="BLUES FEVER 2025 Registration" />
         <link rel="icon" href="/icon.png" />
 
         <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -32,8 +32,8 @@ export default function soldout() {
         />
       </Head>
       <Header
-        title="BLUES FEVER 2024"
-        menuItems={[{ title: "Home", link: "https://thebluesjoint.dance" }]}
+        title="BLUES FEVER 2025"
+        menuItems={[{ title: "Home", link: "https://www.bluesfever.eu/" }]}
       />
       <main className={styles.main}>
         <div className={styles.content}>

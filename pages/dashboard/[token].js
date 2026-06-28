@@ -22,6 +22,7 @@ export default function Dashboard({ users, tickets }) {
   const [capacityShow, setCapacityShow] = useState(false);
   const [userToShow, setUserToShow] = useState(users || []);
   const isMobile = useMedia({ maxWidth: "768px" });
+  const today = new Date().toISOString().split("T")[0];
   const totalAmount = users.reduce((acc, user) => {
     return (
       acc +
@@ -356,7 +357,7 @@ export default function Dashboard({ users, tickets }) {
       setUserToShow(users.filter((user) => user["status"] === "canceled"));
     } else if (item === "all") {
       setUserToShow(users);
-    } else if (levelsToShow.some((level) => level.value === item)) {
+    } else if (tickets.some((level) => level.name === item)) {
       setUserToShow(users.filter((user) => user.level === item));
     } else if (item === "shirt") {
       setUserToShow(users.filter((user) => user["shirt"] === "yes"));
@@ -438,36 +439,30 @@ export default function Dashboard({ users, tickets }) {
 
   //--------- Ticket Component
   const TicketsComponent = () => {
-    const ticketToshow = [
-      { name: "Level", capacity: "Capacity", waiting_list: "Waiting List" },
-      ...tickets,
-    ];
     return (
       <div className={styles.tickets}>
         <div className={styles.ticketRow}>
-          <p>Level (both fills the gap)</p>
-          <p>Lead</p>
-          <p>follow</p>
+          <p>Level</p>
+          <p>Capacity</p>
         </div>
 
-        {levelsToShow?.map((ticket) => (
-          <div key={ticket.name} className={styles.ticketRow}>
-            <div className={styles.ticketItem}>
-              <p>{ticket.label}</p>
+        {tickets
+          .sort((a, b) => a.id - b.id)
+          .map((ticket) => (
+            <div key={ticket.name} className={styles.infoRow}>
+              <div className={styles.ticketItem}>
+                <p>{ticket.label}</p>
+              </div>
+              <div className={styles.ticketItem}>
+                <p>{ticket.capacity}</p>
+              </div>
             </div>
-            <div className={styles.ticketItem}>
-              <p>{ticket.lead}</p>
-            </div>
-            <div className={styles.ticketItem}>
-              <p>{ticket.follow}</p>
-            </div>
-          </div>
-        ))}
+          ))}
       </div>
     );
   };
   //--------- Table Data
-  console.log("users", users);
+
   const renderTableData = () => {
     return userToShow
       .filter((user) =>
@@ -600,7 +595,7 @@ export default function Dashboard({ users, tickets }) {
   return (
     <div className={styles.container}>
       <Head>
-        <title>BLUES FEVER 2024</title>
+        <title>BLUES FEVER 2025</title>
         <link rel="icon" href="/icon.png" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" />
@@ -647,7 +642,7 @@ export default function Dashboard({ users, tickets }) {
           >
             <p>All</p>
           </div>
-          <div
+          {/* <div
             onClick={() => handleSideBarClick("registered")}
             className={classNames(styles.sideBarItem, {
               [styles.active]: activeSideBar === "registered",
@@ -678,7 +673,7 @@ export default function Dashboard({ users, tickets }) {
             })}
           >
             <p>waitinglist</p>
-          </div>
+          </div> */}
           <div
             onClick={() => handleSideBarClick("confirmed")}
             className={classNames(styles.sideBarItem, {
@@ -687,17 +682,19 @@ export default function Dashboard({ users, tickets }) {
           >
             <p>confirmed</p>
           </div>
-          {levelsToShow.map((level) => (
-            <div
-              key={level.value}
-              onClick={() => handleSideBarClick(level.value)}
-              className={classNames(styles.sideBarItem, {
-                [styles.active]: activeSideBar === level.value,
-              })}
-            >
-              <p>{titleCase(level.value)}</p>
-            </div>
-          ))}
+          {tickets
+            .sort((a, b) => a.id - b.id)
+            .map((level) => (
+              <div
+                key={level.value}
+                onClick={() => handleSideBarClick(level.name)}
+                className={classNames(styles.sideBarItem, {
+                  [styles.active]: activeSideBar === level.name,
+                })}
+              >
+                <p>{level.name}</p>
+              </div>
+            ))}
           <div
             onClick={() => handleSideBarClick("partyPass")}
             className={classNames(styles.sideBarItem, {
@@ -715,14 +712,14 @@ export default function Dashboard({ users, tickets }) {
             <p>Lunch</p>
           </div>
 
-          <div
+          {/* <div
             onClick={() => handleSideBarClick("theme_class")}
             className={classNames(styles.sideBarItem, {
               [styles.active]: activeSideBar === "theme_class",
             })}
           >
             <p>Themed Classes</p>
-          </div>
+          </div> */}
           <div
             onClick={() => handleSideBarClick("canceled")}
             className={classNames(styles.sideBarItem, {
@@ -739,7 +736,7 @@ export default function Dashboard({ users, tickets }) {
           >
             <p>Capacity</p>
           </div>
-          <div
+          {/* <div
             onClick={() => handleSideBarClick("balance")}
             className={classNames(styles.sideBarItem, {
               [styles.active]: activeSideBar === "balance",
@@ -754,7 +751,7 @@ export default function Dashboard({ users, tickets }) {
             })}
           >
             <p>Final Balance</p>
-          </div>
+          </div> */}
         </div>
         <div className={styles.content}>
           {activeSideBar !== "balance" && (
@@ -791,7 +788,7 @@ export default function Dashboard({ users, tickets }) {
                 <option>out</option>
               </select> */}
 
-              <select
+              {/* <select
                 onChange={(e) => setGroupLevel(e.target.value)}
                 className={styles.select}
               >
@@ -803,7 +800,7 @@ export default function Dashboard({ users, tickets }) {
                 onClick={handleGroupChange}
               >
                 Change Group Name
-              </button>
+              </button> */}
 
               {/* <p>Search first name</p>
               <input onChange={(e) => setNameSearch(e.target.value)} /> */}
@@ -828,7 +825,10 @@ export default function Dashboard({ users, tickets }) {
           {activeSideBar === "lastbalance" && <FinalBalanceComponent />}
           {activeSideBar !== "balance" && (
             <div className={styles.downloadButton}>
-              <CSVLink data={usersForCSV} filename={"registration-file.csv"}>
+              <CSVLink
+                data={usersForCSV}
+                filename={`registration-${today}.csv`}
+              >
                 Download CSV
               </CSVLink>
             </div>

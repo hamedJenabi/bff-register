@@ -4,9 +4,9 @@ import useMedia from "use-media";
 import Router, { useRouter } from "next/router";
 import React, { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
-import { titleCase } from "../../utils/functions";
+import { titleCase } from "../../utils/functions.js";
 
-import styles from "./accept.module.scss";
+import styles from "./cancel.module.scss";
 import Header from "../../components/Header/Header.js";
 
 import { unstable_useFormState as useFormState } from "reakit/Form";
@@ -15,40 +15,8 @@ export default function Home({ tickets }) {
   const isMobile = useMedia({ maxWidth: "768px" });
   const router = useRouter();
   const { session_id } = router.query;
-  const [paymentInfo, setPaymentInfo] = useState(null);
+
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (!session_id) return;
-    let user = null;
-    if (typeof window !== "undefined") {
-      user = JSON.parse(localStorage.getItem("accepted_user"));
-    }
-    if (!user) {
-      return;
-    }
-
-    fetch(`/api/register?session_id=${session_id}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Cache-Control": "no-cache, no-store",
-      },
-      body: JSON.stringify(user),
-    })
-      .then((response) => {
-        if (typeof window !== "undefined") {
-          localStorage.removeItem("accepted_user");
-        }
-        if (response.status === 301) {
-          Router.push("/soldout");
-        }
-        if (response.status === 302) {
-          Router.push("/alreadyRegistered");
-        }
-      })
-      .catch((error) => console.log(error));
-  }, [session_id]);
 
   return (
     <div className={styles.container}>
@@ -70,12 +38,17 @@ export default function Home({ tickets }) {
       <main className={styles.main}>
         <div className={styles.content}>
           <div className={styles.title}>
-            <h3>Thank you for registering!</h3>
+            <h3>You've cancelled your registration</h3>
+            <br />
             <br />
             <p>
-              Please note that your registration confirmation e-mail may end up
-              in your <b>junk mail or promotions folder</b>.
+              your registration is NOT completed. If you want to register again,
+              please click the button below.
             </p>
+            <Link href="/" className={styles.button}>
+              Register Again
+            </Link>
+            <br />
           </div>
         </div>
       </main>

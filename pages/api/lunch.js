@@ -7,13 +7,22 @@ export default async function lunch(req, response) {
     lastname: req.body.lastname,
     lunch: req.body.lunch.toString(),
   };
-  const userToUpdate = await getConfirmedUserByEmailAndName(requestData.email);
+  const toPay = req.body.lunch.length * 15;
+
+  const userToUpdate = await getConfirmedUserByEmailAndName(
+    requestData.email,
+    requestData.firstname
+  );
   if (!userToUpdate) {
     response.status(404).json();
     return;
   }
   if (userToUpdate) {
-    await setUserLunchById(userToUpdate.id, requestData.lunch);
+    await setUserLunchById(
+      userToUpdate.id,
+      requestData.lunch,
+      toPay.toString()
+    );
     response.status(200).json();
   }
 }

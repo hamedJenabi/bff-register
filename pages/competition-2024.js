@@ -18,7 +18,7 @@ export default function Home({ tickets, clientID }) {
   const [priceToPay, setPriceToday] = useState(12.5);
 
   if (typeof window !== "undefined") {
-    localStorage.removeItem("accepted");
+    localStorage.removeItem("accepted_user");
   }
   const form = useFormState({
     values: {
@@ -97,8 +97,8 @@ export default function Home({ tickets, clientID }) {
   return (
     <div className={styles.container}>
       <Head>
-        <title>Blues Fever 2024</title>
-        <meta name="description" content="BLUES FEVER 2024 Registration" />
+        <title>Blues Fever 2025</title>
+        <meta name="description" content="BLUES FEVER 2025 Registration" />
         <meta
           property="og:image"
           content="https://www.bluesfever.eu/wp-content/uploads/2023/07/bff2023-scaled.jpg"
@@ -114,7 +114,7 @@ export default function Home({ tickets, clientID }) {
         />
       </Head>
       <Header
-        title="BLUES FEVER 2024"
+        title="BLUES FEVER 2025"
         menuItems={[
           {
             title: "Home",

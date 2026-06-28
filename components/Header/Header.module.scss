@@ -68,17 +68,17 @@
   }
 }
 .title {
-  font-family: "Amatic SC", Poiret One, Roboto, -apple-system,
-    BlinkMacSystemFont, Segoe UI, Roboto, Oxygen, Ubuntu, Cantarell, Fira Sans,
-    Droid Sans, Helvetica Neue, sans-serif;
-  font-size: 32px !important;
+  font-family: "Poiret One", Roboto, -apple-system, BlinkMacSystemFont, Segoe UI,
+    Roboto, Oxygen, Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue,
+    sans-serif;
+  font-size: 22px !important;
   color: $navy;
   opacity: 0;
   width: 350px;
   padding-top: $xs;
   @media (min-width: $breakpointLg) {
     width: 500px;
-    font-size: 55px !important;
+    font-size: 35px !important;
   }
   &.visibleTitle {
     opacity: 1;

@@ -18,12 +18,11 @@ import {
 } from "../utils/functions";
 import { unstable_useFormState as useFormState } from "reakit/Form";
 
-export default function Home({ tickets }) {
+export default function Home({ tickets, users }) {
   const [isClicked, setIsClicked] = useState(false);
-
-  if (typeof window !== "undefined") {
-    localStorage.removeItem("accepted");
-  }
+  const [loading, setLoading] = useState(false);
+  const isPartypassSoldout =
+    users.filter((user) => user.ticket === "partyPass").length >= 92;
   const router = useRouter();
 
   const form = useFormState({
@@ -48,6 +47,7 @@ export default function Home({ tickets }) {
       donation: "",
       donation_amount: "",
       lunch: "",
+      voucher: "",
       terms: false,
     },
 
@@ -61,6 +61,30 @@ export default function Home({ tickets }) {
       }
       if (!values.terms) {
         errors.terms = "please accept our terms and conditions";
+      }
+      if (!values.level && values.ticket !== "partyPass") {
+        errors.level = "please select your Track";
+      }
+      if (
+        values.competition === "yes" &&
+        values.competitions.includes("newcomers_mixnmatch") &&
+        !values.newcomers_mixnmatch_role
+      ) {
+        errors.newcomers_mixnmatch_role = "please select your competition role";
+      }
+      if (
+        values.competition === "yes" &&
+        values.competitions.includes("open_mixnmatch") &&
+        !values.open_mixnmatch_role
+      ) {
+        errors.open_mixnmatch_role = "please select your competition role";
+      }
+      if (
+        values.competition === "yes" &&
+        values.competitions.includes("strictly") &&
+        !values.strictly_role
+      ) {
+        errors.strictly_role = "please select your competition role";
       }
       if (
         !values.email ||
@@ -81,38 +105,67 @@ export default function Home({ tickets }) {
       }
       setIsClicked(true);
       const isDiscount = isGroupDiscount(values.email);
-      const totalPrice = getPrice(values, isDiscount); //
+      const totalPrice = getPrice(values, isDiscount, values.voucher); //
 
       const req = {
         ...form.values,
         totalPrice,
       };
+      if (typeof window !== "undefined") {
+        localStorage.setItem("accepted_user", JSON.stringify(req));
+      }
 
-      fetch("/api/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Cache-Control": "no-cache, no-store",
-        },
-        body: JSON.stringify(req),
-      })
-        .then((response) => {
-          if (response.status === 200) {
-            localStorage.setItem("accepted", JSON.stringify(form.values));
-            Router.push("/accept");
-          }
+      handleCheckout(totalPrice * 100, req, values.voucher);
 
-          if (response.status === 301) {
-            Router.push("/soldout");
-          }
-          if (response.status === 302) {
-            Router.push("/alreadyRegistered");
-          }
-        })
-        .catch((error) => console.log(error));
+      // fetch("/api/register", {
+      //   method: "POST",
+      //   headers: {
+      //     "Content-Type": "application/json",
+      //     "Cache-Control": "no-cache, no-store",
+      //   },
+      //   body: JSON.stringify(req),
+      // })
+      //   .then((response) => {
+      //     if (response.status === 200) {
+      //       localStorage.setItem("accepted_user", JSON.stringify(form.values));
+      //       // Router.push("/accept");
+      //       handleCheckout(totalPrice * 100);
+      //     }
+
+      //     if (response.status === 301) {
+      //       Router.push("/soldout");
+      //     }
+      //     if (response.status === 302) {
+      //       Router.push("/alreadyRegistered");
+      //     }
+      //   })
+      //   .catch((error) => console.log(error));
     },
   });
-
+  const handleCheckout = async (price, req, voucher) => {
+    setLoading(true);
+    const res = await fetch("/api/checkout", {
+      method: "POST",
+      // add price
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        price: price,
+        user: req,
+        voucher: voucher || "",
+      }),
+    });
+    if (res.status === 302) {
+      Router.push("/alreadyRegistered");
+      return;
+    }
+    const data = await res.json();
+    if (data.url) {
+      window.location.href = data.url; // Redirect to Stripe
+    }
+    setLoading(false);
+  };
   const isAfterTargetDateValue = isAfterTargetDate("2024-07-07T19:00:00+02:00");
 
   const targetDate = new Date("2024-07-07T19:00:00+02:00").getTime();
@@ -170,11 +223,11 @@ export default function Home({ tickets }) {
   return (
     <div className={styles.container}>
       <Head>
-        <title>Blues Fever 2024</title>
-        <meta name="description" content="BLUES FEVER 2024 Registration" />
+        <title>Blues Fever 2025</title>
+        <meta name="description" content="BLUES FEVER 2025 Registration" />
         <meta
           property="og:image"
-          content="https://www.bluesfever.eu/wp-content/uploads/2024/01/bff24_title-finals-2-scaled.jpg"
+          content="https://www.bluesfever.eu/wp-content/uploads/2024/12/bff_title_25.png"
         />
 
         <link rel="icon" href="/icon.png" />
@@ -190,7 +243,7 @@ export default function Home({ tickets }) {
         />
       </Head>
       <Header
-        title="BLUES FEVER 2024"
+        title="BLUES FEVER 2025"
         menuItems={[
           {
             title: "Home",
@@ -199,15 +252,18 @@ export default function Home({ tickets }) {
         ]}
       />
       <main className={styles.main}>
-        {router?.query?.intern === "true" ? (
+        {router?.query?.intern === "true" ||
+        (isAfterTargetDate("2025-10-31T18:00:00+01:00") && !isPartypassSoldout) ? (
           <RegistrationForm
             form={form}
             tickets={tickets}
+            users={users}
             isClicked={isClicked}
+            intern={router?.query?.intern === "true"}
           />
         ) : (
           <>
-            <h3>Registration starts on August 2nd:) </h3>
+            <h3>we are fully booked :) </h3>
             <br />
             {/* <UrgeWithPleasureComponent /> */}
           </>
@@ -229,12 +285,15 @@ export default function Home({ tickets }) {
 }
 
 export async function getServerSideProps() {
-  const { getTickets } = await import("../db/db");
+  const { getTickets, getAllUsers } = await import("../db/db");
+
   const tickets = await getTickets();
+  const users = await getAllUsers();
 
   return {
     props: {
       tickets: tickets,
+      users: users,
     },
   };
 }
