@@ -4,6 +4,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "test": "node test/dashboard-utils.test.mjs",
     "start": "next start -p ${PORT:-\"3000\"}",
     "lint": "next lint",
     "migrate": "dotenv ley",

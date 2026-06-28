@@ -8,7 +8,7 @@
 
 exports.up = async (sql) => {
   await sql`
-  CREATE TABLE tickets_23(
+  CREATE TABLE tickets_26(
   id SERIAL PRIMARY KEY, 
   name VARCHAR NOT NULL,
   label VARCHAR NOT NULL,
@@ -20,6 +20,6 @@ exports.up = async (sql) => {
 
 exports.down = async (sql) => {
   await sql`
-	  DROP TABLE tickets_23
+	  DROP TABLE tickets_26
 	  `;
 };

@@ -18,7 +18,7 @@ import {
 } from "../utils/functions";
 import { unstable_useFormState as useFormState } from "reakit/Form";
 
-export default function Home({ tickets, users }) {
+export default function Home({ tickets, users, dbError }) {
   const [isClicked, setIsClicked] = useState(false);
   const [loading, setLoading] = useState(false);
   const isPartypassSoldout =
@@ -231,16 +231,6 @@ export default function Home({ tickets, users }) {
         />
 
         <link rel="icon" href="/icon.png" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300&display=swap"
-          rel="stylesheet"
-        ></link>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Amatic+SC&display=swap"
-          rel="stylesheet"
-        />
       </Head>
       <Header
         title="BLUES FEVER 2025"
@@ -252,8 +242,25 @@ export default function Home({ tickets, users }) {
         ]}
       />
       <main className={styles.main}>
-        {router?.query?.intern === "true" ||
-        (isAfterTargetDate("2025-10-31T18:00:00+01:00") && !isPartypassSoldout) ? (
+        <section className={styles.hero}>
+          <p className={styles.eyebrow}>Blues Fever registration</p>
+          <h1>Choose your pass and complete your registration.</h1>
+          <p>
+            Pick your ticket, add workshops or extras, then continue securely to
+            Stripe checkout.
+          </p>
+        </section>
+        {dbError ? (
+          <section className={styles.errorPanel}>
+            <h2>Registration is temporarily unavailable.</h2>
+            <p>
+              We could not load the current ticket availability. Please refresh
+              in a moment before continuing to checkout.
+            </p>
+          </section>
+        ) : router?.query?.intern === "true" ||
+          (isAfterTargetDate("2025-10-31T18:00:00+01:00") &&
+            !isPartypassSoldout) ? (
           <RegistrationForm
             form={form}
             tickets={tickets}
@@ -285,15 +292,32 @@ export default function Home({ tickets, users }) {
 }
 
 export async function getServerSideProps() {
-  const { getTickets, getAllUsers } = await import("../db/db");
+  try {
+    const { getTickets, getAllUsers } = await import("../db/db");
+    const { withTimeout } = await import("../utils/serverData");
 
-  const tickets = await getTickets();
-  const users = await getAllUsers();
+    const [tickets, users] = await withTimeout(
+      Promise.all([getTickets(), getAllUsers()]),
+      3000,
+      "Registration data request timed out",
+    );
 
-  return {
-    props: {
-      tickets: tickets,
-      users: users,
-    },
-  };
+    return {
+      props: {
+        tickets: tickets,
+        users: users,
+        dbError: false,
+      },
+    };
+  } catch (error) {
+    console.error("Could not load registration data", error.message);
+
+    return {
+      props: {
+        tickets: [],
+        users: [],
+        dbError: true,
+      },
+    };
+  }
 }

@@ -1,103 +1,93 @@
 @import "../../styles/variables";
+
 .container {
-  height: 70px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
   display: flex;
   align-items: center;
-  z-index: 1000;
   width: 100%;
-  padding: 30px 12px;
-  position: sticky;
-  background-color: rgb(245, 249, 245);
-  transition: transform 500ms;
-  top: 0;
-  box-shadow: none;
-  border-bottom: 1px solid #eaeaea;
+  min-height: 72px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+  background: rgba(13, 17, 23, 0.86);
+  color: #eef4f1;
+  backdrop-filter: blur(14px);
+  transition: transform 300ms ease, box-shadow 300ms ease;
 
-  z-index: 100;
   &.unfix {
-    transform: translateY(0);
-    border-radius: 3px;
-    box-shadow: $boxShadow;
-    border-bottom: none;
+    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.18);
   }
+
   &.fix {
-    transform: translateY(15px);
-  }
-  @media (min-width: $breakpointLg) {
-    justify-content: space-between;
-    height: 90px;
-    &.unfix {
-      box-shadow: $boxShadow;
-      border-radius: 3px;
-      border-bottom: none;
-    }
-    &.fix {
-      transform: translateY(25px);
-    }
+    transform: translateY(0);
   }
 }
+
 .menuItems {
-  display: flex;
-  width: 100%;
-  @media (min-width: $breakpointMd) {
-  }
-}
-.linkWrapper {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  width: min(1120px, 100%);
+  margin: 0 auto;
+  padding: 0 18px;
+}
+
+.linkWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
   width: 100%;
-  @media (min-width: $breakpointLg) {
-    padding-right: sm;
-    justify-content: space-evenly;
-    padding: 0 $lg;
-  }
+
   a {
     text-align: center;
-    padding: 0 16px;
-    line-height: 40px;
-    font-size: $smallFont;
+    line-height: 38px;
+    font-size: 15px;
   }
 }
-.iconWrapper {
-  display: flex;
 
-  margin: 0;
-  @media (min-width: $breakpointLg) {
-    margin: 0 40px;
-  }
-}
 .title {
-  font-family: "Poiret One", Roboto, -apple-system, BlinkMacSystemFont, Segoe UI,
-    Roboto, Oxygen, Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue,
-    sans-serif;
-  font-size: 22px !important;
-  color: $navy;
-  opacity: 0;
-  width: 350px;
-  padding-top: $xs;
-  @media (min-width: $breakpointLg) {
-    width: 500px;
-    font-size: 35px !important;
-  }
+  width: auto;
+  min-width: 220px;
+  color: #ffffff;
+  font-family: $headerFont;
+  font-size: 17px !important;
+  font-weight: 800;
+  letter-spacing: 0;
+  opacity: 1;
+
   &.visibleTitle {
     opacity: 1;
   }
 }
 
 .menuItem {
-  font-family: Poiret One, Roboto, -apple-system, BlinkMacSystemFont, Segoe UI,
-    Roboto, Oxygen, Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue,
-    sans-serif;
-  font-size: 22px;
-  padding: 0 $xxs;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  color: #dbe7e3;
+  font-family: $headerFont;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0;
+  padding: 0 14px;
+  transition: 180ms ease;
+
   &:hover {
+    background: rgba(53, 201, 181, 0.12);
+    border-color: rgba(53, 201, 181, 0.6);
     cursor: pointer;
   }
 }
+
+.iconWrapper {
+  display: flex;
+  margin: 0;
+}
+
 .logo {
   width: 30px;
   margin-left: 10px;
+
   &:hover {
     cursor: pointer;
   }
