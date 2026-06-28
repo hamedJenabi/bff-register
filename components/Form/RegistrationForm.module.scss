@@ -110,6 +110,17 @@
   appearance: none;
 }
 
+.voucherInput {
+  display: block;
+  width: 100% !important;
+  height: auto !important;
+  min-height: 54px;
+
+  @media (min-width: 760px) {
+    max-width: 520px;
+  }
+}
+
 .countrySelect {
   margin-top: 0;
 }

@@ -586,7 +586,12 @@ export default function RegistrationForm({
           )}
           <div className={styles.radioGroup}>
             <h4 className={styles.title}>Do you have a voucher?</h4>
-            <FormInput className={styles.input} {...form} name="voucher" />
+            <FormInput
+              className={classNames(styles.input, styles.voucherInput)}
+              {...form}
+              name="voucher"
+              placeholder="Enter voucher code"
+            />
             {form.values.voucher === "bffdiscount2025" && (
               <p className={styles.infoText}>Your voucher has been expired!</p>
             )}
