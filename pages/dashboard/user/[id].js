@@ -93,19 +93,12 @@ export default function User({ user }) {
   return (
     <div className={styles.container}>
       <Head>
-        <title>BLUES FEVER 2025</title>
-        <meta name="description" content="BLUES FEVER 2025 Registration" />
+        <title>BLUES FEVER 2026</title>
+        <meta name="description" content="BLUES FEVER 2026 Registration" />
         <link rel="icon" href="/icon.png" />
-
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Amatic+SC&display=swap"
-          rel="stylesheet"
-        />
       </Head>
       <Header
-        title="BLUES FEVER 2025"
+        title="BLUES FEVER 2026"
         menuItems={[{ title: "Home", link: "https://www.bluesfever.eu/" }]}
       />
       <main className={styles.main}>

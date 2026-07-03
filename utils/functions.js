@@ -1,9 +1,9 @@
 export const titleCase = (s) =>
   s?.replace(/^_*(.)|_+(.)/g, (s, c, d) =>
-    c ? c.toUpperCase() : " " + d.toUpperCase()
+    c ? c.toUpperCase() : " " + d.toUpperCase(),
   );
 
-export const levelsToShow = [
+export const levelsToShow_old = [
   {
     label: "Beginner/Intermediate",
     value: "beg/int",
@@ -178,19 +178,19 @@ export const compettionsInfo = [
       "This level is for those who have been dancing Blues since birth, or at least three years. You have attended many international workshops and maybe even teaching in your local scene. Done competitions and reached the final now and then. There will be no audition but we don’t spare you in this level, so please don’t misjudge your ability, for your sake and for your class mates.",
   },
 ];
-let fullpassPriceTemp = 235;
-let partyPriceTemp = 135;
+let fullpassPriceTemp = 265;
+let partyPriceTemp = 145;
 
-if (isAfterTargetDate("2025-08-04T00:12:00+02:00")) {
-  fullpassPriceTemp = 245;
+if (isAfterTargetDate("2026-08-03T00:12:00+02:00")) {
+  fullpassPriceTemp = 265;
 }
 
-if (isAfterTargetDate("2025-09-15T00:01:00+02:00")) {
-  fullpassPriceTemp = 255;
+if (isAfterTargetDate("2026-09-15T00:01:00+02:00")) {
+  fullpassPriceTemp = 285;
 }
 
-if (isAfterTargetDate("2025-09-15T00:01:00+02:00")) {
-  partyPriceTemp = 145;
+if (isAfterTargetDate("2026-09-15T00:01:00+02:00")) {
+  partyPriceTemp = 165;
 }
 
 export const fullpassPrice = fullpassPriceTemp;

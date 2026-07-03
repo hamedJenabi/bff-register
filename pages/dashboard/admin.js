@@ -101,7 +101,7 @@ export default function Dashboard({ users, tickets }) {
       .filter((user) =>
         nameSearch
           ? user.firstname.toUpperCase().includes(nameSearch.toUpperCase())
-          : true
+          : true,
       )
       .sort((a, b) => a.id - b.id)
       .map(
@@ -147,20 +147,14 @@ export default function Dashboard({ users, tickets }) {
               <td>Yes</td>
             </tr>
           );
-        }
+        },
       );
   };
   return (
     <div className={styles.container}>
       <Head>
-        <title>BLUES FEVER 2025</title>
+        <title>BLUES FEVER 2026</title>
         <link rel="icon" href="/icon.png" />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Amatic+SC&display=swap"
-          rel="stylesheet"
-        />
       </Head>
       <Header
         isAdmin

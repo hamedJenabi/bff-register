@@ -11,6 +11,8 @@ import Header from "../../components/Header/Header.js";
 
 import { unstable_useFormState as useFormState } from "reakit/Form";
 
+const REGISTRATION_DRAFT_STORAGE_KEY = "bff_registration_draft";
+
 export default function Home({ tickets }) {
   const isMobile = useMedia({ maxWidth: "768px" });
   const router = useRouter();
@@ -39,6 +41,7 @@ export default function Home({ tickets }) {
       .then((response) => {
         if (typeof window !== "undefined") {
           localStorage.removeItem("accepted_user");
+          localStorage.removeItem(REGISTRATION_DRAFT_STORAGE_KEY);
         }
         if (response.status === 301) {
           Router.push("/soldout");
@@ -53,15 +56,9 @@ export default function Home({ tickets }) {
   return (
     <div className={styles.container}>
       <Head>
-        <title>BLUES FEVER 2025</title>
+        <title>BLUES FEVER 2026</title>
         <meta name="description" content="BLUES FEVER 2023 Registration" />
         <link rel="icon" href="/icon.png" />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Amatic+SC&display=swap"
-          rel="stylesheet"
-        />
       </Head>
       <Header
         title="BLUES FEVER 2023"

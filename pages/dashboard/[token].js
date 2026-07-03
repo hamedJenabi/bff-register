@@ -205,31 +205,31 @@ export default function Dashboard({ users, tickets }) {
         (user) =>
           user["level"] === level &&
           user["role"] === role &&
-          user["status"] === "registered"
+          user["status"] === "registered",
       );
       const ammount = users.filter(
         (user) =>
           user["level"] === level &&
           user["role"] === role &&
-          user["status"] === "email-sent"
+          user["status"] === "email-sent",
       );
       const ammountReminder = users.filter(
         (user) =>
           user["level"] === level &&
           user["role"] === role &&
-          user["status"] === "reminder"
+          user["status"] === "reminder",
       );
       const ammountWaiting = users.filter(
         (user) =>
           user["level"] === level &&
           user["role"] === role &&
-          user["status"] === "waitinglist"
+          user["status"] === "waitinglist",
       );
       const ammountPaid = users.filter(
         (user) =>
           user["level"] === level &&
           user["role"] === role &&
-          user["status"] === "confirmed"
+          user["status"] === "confirmed",
       );
       return {
         registered: registerAmount.length,
@@ -286,31 +286,31 @@ export default function Dashboard({ users, tickets }) {
         (user) =>
           user["level"] === level &&
           user["role"] === role &&
-          user["status"] === "registered"
+          user["status"] === "registered",
       );
       const ammount = users.filter(
         (user) =>
           user["level"] === level &&
           user["role"] === role &&
-          user["status"] === "email-sent"
+          user["status"] === "email-sent",
       );
       const ammountReminder = users.filter(
         (user) =>
           user["level"] === level &&
           user["role"] === role &&
-          user["status"] === "reminder"
+          user["status"] === "reminder",
       );
       const ammountWaiting = users.filter(
         (user) =>
           user["level"] === level &&
           user["role"] === role &&
-          user["status"] === "waitinglist"
+          user["status"] === "waitinglist",
       );
       const ammountPaid = users.filter(
         (user) =>
           user["level"] === level &&
           user["role"] === role &&
-          user["status"] === "confirmed"
+          user["status"] === "confirmed",
       );
       return {
         registered: registerAmount.length,
@@ -364,8 +364,8 @@ export default function Dashboard({ users, tickets }) {
     } else if (item === "theme_class") {
       setUserToShow(
         users.filter(
-          (user) => user["theme_class"] !== "no" && user["theme_class"] !== ""
-        )
+          (user) => user["theme_class"] !== "no" && user["theme_class"] !== "",
+        ),
       );
     } else if (item === "email-sent") {
       setUserToShow(users.filter((user) => user["status"] === "email-sent"));
@@ -401,7 +401,7 @@ export default function Dashboard({ users, tickets }) {
   const usersForCSV = userToShow.map((user) =>
     user.lunch || user.competition === "later"
       ? { ...user, to_pay: getToPay(user.to_pay, user.lunch) }
-      : user
+      : user,
   );
 
   const renderTableHeader = () => {
@@ -468,7 +468,7 @@ export default function Dashboard({ users, tickets }) {
       .filter((user) =>
         nameSearch
           ? user.firstname.toUpperCase().includes(nameSearch.toUpperCase())
-          : true
+          : true,
       )
       .sort((a, b) => a.id - b.id)
       .map(
@@ -589,20 +589,14 @@ export default function Dashboard({ users, tickets }) {
               <td>Yes</td>
             </tr>
           );
-        }
+        },
       );
   };
   return (
     <div className={styles.container}>
       <Head>
-        <title>BLUES FEVER 2025</title>
+        <title>BLUES FEVER 2026</title>
         <link rel="icon" href="/icon.png" />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Amatic+SC&display=swap"
-          rel="stylesheet"
-        />
       </Head>
       <Header
         isAdmin
@@ -624,7 +618,7 @@ export default function Dashboard({ users, tickets }) {
             Selected List:{" "}
             {
               userToShow?.filter(
-                (user) => user.status !== "canceled" && user.status !== "out"
+                (user) => user.status !== "canceled" && user.status !== "out",
               )?.length
             }{" "}
             ={totalAmountList}

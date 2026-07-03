@@ -6,10 +6,9 @@ import React, { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { emailRegex } from "../utils/validate";
 import styles from "../styles/Home.module.scss";
-import Header from "../components/Header/Header.js";
 const RegistrationForm = dynamic(
   () => import("../components/Form/RegistrationForm.js"),
-  { ssr: false }
+  { ssr: false },
 );
 import {
   getPrice,
@@ -17,6 +16,8 @@ import {
   isAfterTargetDate,
 } from "../utils/functions";
 import { unstable_useFormState as useFormState } from "reakit/Form";
+
+const REGISTRATION_DRAFT_STORAGE_KEY = "bff_registration_draft";
 
 export default function Home({ tickets, users }) {
   const [isClicked, setIsClicked] = useState(false);
@@ -162,6 +163,9 @@ export default function Home({ tickets, users }) {
     }
     const data = await res.json();
     if (data.url) {
+      if (typeof window !== "undefined") {
+        localStorage.removeItem(REGISTRATION_DRAFT_STORAGE_KEY);
+      }
       window.location.href = data.url; // Redirect to Stripe
     }
     setLoading(false);
@@ -223,37 +227,19 @@ export default function Home({ tickets, users }) {
   return (
     <div className={styles.container}>
       <Head>
-        <title>Blues Fever 2025</title>
-        <meta name="description" content="BLUES FEVER 2025 Registration" />
+        <title>BLUES FEVER 2026</title>
+        <meta name="description" content="BLUES FEVER 2026 Registration" />
         <meta
           property="og:image"
           content="https://www.bluesfever.eu/wp-content/uploads/2024/12/bff_title_25.png"
         />
 
         <link rel="icon" href="/icon.png" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300&display=swap"
-          rel="stylesheet"
-        ></link>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Amatic+SC&display=swap"
-          rel="stylesheet"
-        />
       </Head>
-      <Header
-        title="BLUES FEVER 2025"
-        menuItems={[
-          {
-            title: "Home",
-            link: "https://bluesfever.eu/",
-          },
-        ]}
-      />
       <main className={styles.main}>
         {router?.query?.intern === "true" ||
-        (isAfterTargetDate("2025-10-31T18:00:00+01:00") && !isPartypassSoldout) ? (
+        (isAfterTargetDate("2026-08-01T12:00:00+01:00") &&
+          !isPartypassSoldout) ? (
           <RegistrationForm
             form={form}
             tickets={tickets}
@@ -263,7 +249,7 @@ export default function Home({ tickets, users }) {
           />
         ) : (
           <>
-            <h3>we are fully booked :) </h3>
+            <h3>Registration starts on August 1st, 2026 :) </h3>
             <br />
             {/* <UrgeWithPleasureComponent /> */}
           </>

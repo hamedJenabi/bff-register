@@ -2,22 +2,17 @@
 
 .container {
   padding: 0;
-  @media (min-width: 600px) {
-    padding: 0 2rem;
-  }
+  min-height: 100vh;
 }
 
 .main {
   min-height: 100vh;
-  padding: 4rem 2rem;
+  padding: 0;
   flex: 1;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  @media (min-width: 600px) {
-    padding: 4rem 0;
-  }
+  justify-content: flex-start;
+  align-items: stretch;
 }
 .paypal {
   width: 100%;
@@ -34,13 +29,18 @@
   display: flex;
   flex: 1;
   padding: 20px 0;
-  border-top: 1px solid #eaeaea;
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
   justify-content: center;
   align-items: center;
+  background: #08090d;
+  color: #f7f0e7;
 }
 
 .footer a {
+  color: #f7f0e7;
   padding: 2px 10px;
+  text-decoration: underline;
+  text-underline-offset: 4px;
 }
 
 .title a {
@@ -76,8 +76,7 @@
   border-radius: 5px;
   padding: 0.75rem;
   font-size: 1.1rem;
-  font-family: Menlo, Monaco, Lucida Console, Liberation Mono, DejaVu Sans Mono,
-    Bitstream Vera Sans Mono, Courier New, monospace;
+  font-family: "Open Sans", sans-serif;
 }
 
 .grid {
