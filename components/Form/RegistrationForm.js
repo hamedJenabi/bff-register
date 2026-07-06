@@ -119,7 +119,7 @@ export default function RegistrationForm({
     "open_mixnmatch",
   ].filter((comp) => selectedCompetitions.includes(comp));
 
-  const isPartyPass = isAfterTargetDate("2025-08-16T12:00:00+02:00");
+  const isPartyPass = isAfterTargetDate("2026-08-14T12:00:00+02:00");
   const isPartypassSoldout =
     users.filter((user) => user.ticket === "partyPass").length >= 92;
   const isFullPass =
@@ -207,17 +207,17 @@ export default function RegistrationForm({
   }, [draftLoaded, values]);
 
   const selectTicket = (ticket) => {
-    if (ticket === "fullpass" && !canChooseFullPass) {
-      return;
-    }
+    // if (ticket === "fullpass") {
 
-    if (ticket === "parentPass" && !canChooseParentPass) {
-      return;
-    }
+    // }
 
-    if (ticket === "partyPass" && !canChoosePartyPass) {
-      return;
-    }
+    // if (ticket === "parentPass") {
+    //   return;
+    // }
+
+    // if (ticket === "partyPass" && !canChoosePartyPass) {
+    //   return;
+    // }
 
     form.update("ticket", ticket);
 
@@ -270,6 +270,15 @@ export default function RegistrationForm({
           ? selectedCompetitionLabels.join(", ")
           : values.competition === "no"
             ? "No competitions"
+            : "Optional",
+    },
+    {
+      label: "T-shirt",
+      value:
+        values.shirtinfo === "yes"
+          ? values.tshirt || "Choose a size"
+          : values.shirtinfo === "no"
+            ? "No T-shirt"
             : "Optional",
     },
     {
@@ -376,7 +385,7 @@ export default function RegistrationForm({
         <button
           type="button"
           onClick={() => selectTicket("fullpass")}
-          disabled={!canChooseFullPass}
+          // disabled={!canChooseFullPass}
           aria-pressed={values.ticket === "fullpass"}
           className={classNames(styles.card, {
             [styles.selected]: values.ticket === "fullpass",
@@ -384,7 +393,7 @@ export default function RegistrationForm({
           })}
         >
           <h3>Full pass </h3>
-          <p> 4x1.5h classes (6h)</p>
+          <p> Pick any class (6h)</p>
           <p>1 free competition</p>
           <p>All 5 Parties</p>
           <strong className={styles.price}>€{fullpassPrice}</strong>
@@ -404,7 +413,7 @@ export default function RegistrationForm({
           <p>All 5 Parties</p>
           {!isPartyPass && (
             <span className={styles.infoText}>
-              Partypass spots are available after August 16th and subject to
+              Partypass spots are available after August 14th and subject to
               availability.
             </span>
           )}
@@ -415,7 +424,7 @@ export default function RegistrationForm({
         <button
           type="button"
           onClick={() => selectTicket("parentPass")}
-          disabled={!canChooseParentPass}
+          // disabled={!canChooseParentPass}
           aria-pressed={values.ticket === "parentPass"}
           className={classNames(styles.card, {
             [styles.selected]: values.ticket === "parentPass",
@@ -424,7 +433,7 @@ export default function RegistrationForm({
         >
           <h3>Parent Pass </h3>
           <p>Two dancers sharing childcare</p>
-          <p> 4x1.5h classes (6h)</p>
+          <p> Pick any class (6h)</p>
           <p>All 5 Parties</p>
           <strong className={styles.price}>€{partyPrice}</strong>
         </button>
@@ -703,7 +712,7 @@ export default function RegistrationForm({
         </h2>
       </div>
       <FormInput className={styles.input} {...form} name="voucher" />
-      {values.voucher === "bffdiscount2025" && (
+      {values.voucher === "bffdiscount2026" && (
         <p className={styles.infoText}>Your voucher has been expired!</p>
       )}
 
@@ -752,7 +761,7 @@ export default function RegistrationForm({
         <header className={styles.eventHeader}>
           <img
             className={styles.eventArt}
-            src="/title.jpg"
+            src="/title.png"
             alt=""
             aria-hidden="true"
           />
@@ -773,7 +782,7 @@ export default function RegistrationForm({
               {renderPassSection()}
               {isFullPass && renderTrackSection()}
               {renderCompetitionSection()}
-              {intern && renderShirtSection()}
+              {renderShirtSection()}
               {renderDonationSection()}
               {renderVoucherSection()}
             </div>

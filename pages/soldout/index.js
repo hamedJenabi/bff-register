@@ -3,7 +3,7 @@ import Link from "next/link";
 import Router from "next/router";
 import React, { useState } from "react";
 
-import styles from "./soldout.module.scss";
+import styles from "../../styles/StatusPage.module.scss";
 import Header from "../../components/Header/Header.js";
 
 export default function soldout() {
@@ -31,7 +31,7 @@ export default function soldout() {
       <main className={styles.main}>
         <div className={styles.content}>
           <div className={styles.title}>
-            <h3>Thank you for your registration!</h3>
+            <h3>Thanks for trying to register for Blues Fever 2026.</h3>
             <p>Unfortunately, all the spots are fully booked.</p>
           </div>
           <div className={styles.button}>

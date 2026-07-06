@@ -6,7 +6,7 @@ import React, { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { titleCase } from "../../utils/functions";
 
-import styles from "./accept.module.scss";
+import styles from "../../styles/StatusPage.module.scss";
 import Header from "../../components/Header/Header.js";
 
 import { unstable_useFormState as useFormState } from "reakit/Form";
@@ -22,17 +22,17 @@ export default function Home({ tickets }) {
     <div className={styles.container}>
       <Head>
         <title>BLUES FEVER 2026</title>
-        <meta name="description" content="BLUES FEVER 2023 Registration" />
+        <meta name="description" content="BLUES FEVER 2026 Registration" />
         <link rel="icon" href="/icon.png" />
       </Head>
       <Header
-        title="BLUES FEVER 2023"
-        menuItems={[{ title: "Home", link: "" }]}
+        title="BLUES FEVER 2026"
+        menuItems={[{ title: "Home", link: "https://www.bluesfever.eu/" }]}
       />
       <main className={styles.main}>
         <div className={styles.content}>
           <div className={styles.title}>
-            <h3>Thank you for your Purchase!</h3>
+            <h3>Thank you for your lunch purchase!</h3>
           </div>
         </div>
       </main>

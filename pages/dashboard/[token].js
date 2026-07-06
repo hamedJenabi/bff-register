@@ -464,12 +464,24 @@ export default function Dashboard({ users, tickets }) {
   //--------- Table Data
 
   const renderTableData = () => {
+    const searchQuery = nameSearch.trim().toLowerCase();
+
     return userToShow
-      .filter((user) =>
-        nameSearch
-          ? user.firstname.toUpperCase().includes(nameSearch.toUpperCase())
-          : true,
-      )
+      .filter((user) => {
+        if (!searchQuery) {
+          return true;
+        }
+
+        return [
+          user.firstname,
+          user.lastname,
+          user.email,
+          user.ticket,
+          user.level,
+          user.status,
+          user.country,
+        ].some((value) => String(value || "").toLowerCase().includes(searchQuery));
+      })
       .sort((a, b) => a.id - b.id)
       .map(
         ({
@@ -609,7 +621,7 @@ export default function Dashboard({ users, tickets }) {
         ]}
       />
       <h3 className={styles.title}>Registrations</h3>
-      <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+      <div className={styles.dashboardHeader}>
         <div className={styles.total}>
           <p>
             Total Registrations: {users?.length} = {totalAmount}
@@ -750,24 +762,38 @@ export default function Dashboard({ users, tickets }) {
         <div className={styles.content}>
           {activeSideBar !== "balance" && (
             <div className={styles.search}>
-              <select
-                onChange={(e) => setStatus(e.target.value)}
-                className={styles.select}
-              >
-                <option>registered</option>
-                <option>email-sent</option>
-                <option>reminder</option>
-                <option>waitinglist</option>
-                <option>confirmed</option>
-                <option>canceled</option>
-                <option>out</option>
-              </select>
-              <button
-                className={styles.statusButton}
-                onClick={handleStatusChange}
-              >
-                Change Status
-              </button>
+              <label className={styles.searchField}>
+                <span>Search registrations</span>
+                <input
+                  value={nameSearch}
+                  onChange={(e) => setNameSearch(e.target.value)}
+                  placeholder="Name, email, ticket, level, status..."
+                />
+              </label>
+
+              <div className={styles.bulkActions}>
+                <label className={styles.controlField}>
+                  <span>Bulk status</span>
+                  <select
+                    onChange={(e) => setStatus(e.target.value)}
+                    className={styles.select}
+                  >
+                    <option>registered</option>
+                    <option>email-sent</option>
+                    <option>reminder</option>
+                    <option>waitinglist</option>
+                    <option>confirmed</option>
+                    <option>canceled</option>
+                    <option>out</option>
+                  </select>
+                </label>
+                <button
+                  className={styles.statusButton}
+                  onClick={handleStatusChange}
+                >
+                  Change Status
+                </button>
+              </div>
 
               {/* <select
                 onChange={(e) => setStatus(e.target.value)}

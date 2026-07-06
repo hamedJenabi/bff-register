@@ -5,7 +5,7 @@ import Router from "next/router";
 import React, { useState } from "react";
 import dynamic from "next/dynamic";
 
-import styles from "./alreadyRegistered.module.scss";
+import styles from "../../styles/StatusPage.module.scss";
 import Header from "../../components/Header/Header.js";
 
 import { unstable_useFormState as useFormState } from "reakit/Form";
@@ -30,8 +30,8 @@ export default function Home({ tickets }) {
       <main className={styles.main}>
         <div className={styles.content}>
           <div className={styles.title}>
-            <h3>You are already registered for BFF 2025!</h3>
-            <p>Check you email for more information.</p>
+            <h3>You are already registered for BFF 2026!</h3>
+            <p>Check your email for more information.</p>
           </div>
         </div>
       </main>

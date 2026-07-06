@@ -4,7 +4,7 @@ import useMedia from "use-media";
 import Router from "next/router";
 import React, { useState } from "react";
 
-import styles from "./waitinglist.module.scss";
+import styles from "../../styles/StatusPage.module.scss";
 import Header from "../../components/Header/Header.js";
 
 export default function Home() {
@@ -27,7 +27,7 @@ export default function Home() {
       <main className={styles.main}>
         <div className={styles.content}>
           <div className={styles.title}>
-            <h3>Thank you for your registration!</h3>
+            <h3>Thank you for your Blues Fever 2026 registration!</h3>
 
             <p>
               Unfortunately, all the spots are fully booked, so we put you on

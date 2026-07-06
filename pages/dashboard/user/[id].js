@@ -112,7 +112,7 @@ export default function User({ user }) {
         </p>
         <div className={styles.contentWrapper}>
           {header.map((item) => (
-            <div className={styles.row}>
+            <div className={styles.row} key={item}>
               <p>{item}:</p>
               <p>{user[item]}</p>
               <Modal user={user} info={item} form={form} />

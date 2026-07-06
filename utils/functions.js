@@ -52,7 +52,7 @@ export const levelsToShow_old = [
       "You consistently demonstrate, describe, and differentiate between a range of styles and movements, while maintaining blues aesthetic. You include some layered movements. You can observe and work out movement execution. You may teach blues at your local scene and do lots of international workshops.",
   },
 ];
-
+export const levelsToShow = [];
 export const finalLevelsToShow = [
   {
     label: "Beginner/Intermediate",
@@ -178,7 +178,7 @@ export const compettionsInfo = [
       "This level is for those who have been dancing Blues since birth, or at least three years. You have attended many international workshops and maybe even teaching in your local scene. Done competitions and reached the final now and then. There will be no audition but we don’t spare you in this level, so please don’t misjudge your ability, for your sake and for your class mates.",
   },
 ];
-let fullpassPriceTemp = 265;
+let fullpassPriceTemp = 245;
 let partyPriceTemp = 145;
 
 if (isAfterTargetDate("2026-08-03T00:12:00+02:00")) {
@@ -201,11 +201,12 @@ export const getPrice = (requestData, isGroupDiscount, voucher = "") => {
     requestData.ticket === "partyPass" || requestData.ticket === "parentPass"
       ? partyPrice
       : fullpassPrice;
-  if (voucher === "staff2025bff" || voucher === "scholar2025bff") {
+  if (voucher === "staff2026bff" || voucher === "scholar2026bff") {
     initialPrice = 0; // Free for staff
-  } else if (voucher === "bffdiscount2025") {
-    initialPrice = initialPrice; // No discount applied
-  } else if (voucher?.includes("freepass25")) {
+  } else if (voucher === "bffdiscount2026") {
+    // 10 % discount for bffdiscount2026
+    initialPrice = Math.round((initialPrice / 100) * 90);
+  } else if (voucher?.includes("freepass26")) {
     initialPrice = initialPrice - 145;
   }
 
