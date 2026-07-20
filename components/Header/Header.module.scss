@@ -7,17 +7,18 @@
   width: 100%;
   padding: 30px 12px;
   position: sticky;
-  background-color: rgb(245, 249, 245);
+  background: #4a0a1a;
+  color: #fff7f4;
   transition: transform 500ms;
   top: 0;
-  box-shadow: none;
-  border-bottom: 1px solid #eaeaea;
+  box-shadow: 0 12px 36px rgba(31, 3, 12, 0.24);
+  border-bottom: 1px solid rgba(255, 232, 239, 0.18);
 
   z-index: 100;
   &.unfix {
     transform: translateY(0);
     border-radius: 3px;
-    box-shadow: $boxShadow;
+    box-shadow: 0 18px 48px rgba(31, 3, 12, 0.36);
     border-bottom: none;
   }
   &.fix {
@@ -27,7 +28,7 @@
     justify-content: space-between;
     height: 90px;
     &.unfix {
-      box-shadow: $boxShadow;
+      box-shadow: 0 18px 48px rgba(31, 3, 12, 0.36);
       border-radius: 3px;
       border-bottom: none;
     }
@@ -70,7 +71,7 @@
 .title {
   font-family: $openSans;
   font-size: 22px !important;
-  color: $navy;
+  color: #fff7f4;
   opacity: 0;
   width: 350px;
   padding-top: $xs;
@@ -86,9 +87,12 @@
 .menuItem {
   font-family: $openSans;
   font-size: 22px;
+  color: #fff7f4;
   padding: 0 $xxs;
+
   &:hover {
     cursor: pointer;
+    color: #e6bdc8;
   }
 }
 .logo {

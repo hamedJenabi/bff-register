@@ -1,22 +1,27 @@
 @import "./variables";
 
 .container {
-  --page-bg: #08090d;
-  --panel: rgba(18, 21, 29, 0.92);
-  --panel-soft: rgba(255, 255, 255, 0.06);
-  --text: #f7f0e7;
-  --muted: #c6b9ac;
-  --line: rgba(255, 255, 255, 0.14);
-  --accent: #d8a34b;
-  --accent-strong: #f0c56d;
+  --page-bg: #4a0a1a;
+  --panel: rgba(45, 5, 16, 0.94);
+  --panel-soft: rgba(141, 19, 50, 0.14);
+  --text: #fff7f4;
+  --muted: #e6bdc8;
+  --line: rgba(255, 232, 239, 0.18);
+  --accent: #8d1332;
+  --accent-strong: #d75373;
   min-height: 100vh;
   background:
     radial-gradient(
-      circle at 16% 12%,
-      rgba(216, 163, 75, 0.16),
+      circle at 14% 10%,
+      rgba(141, 19, 50, 0.38),
       transparent 30%
     ),
-    linear-gradient(140deg, var(--page-bg), #12151d 50%, #0c1515);
+    radial-gradient(
+      circle at 88% 0%,
+      rgba(255, 247, 244, 0.08),
+      transparent 24%
+    ),
+    linear-gradient(140deg, #25030d, var(--page-bg) 52%, #1b030a);
   color: var(--text);
 }
 
@@ -33,8 +38,12 @@
   width: min(100%, 720px);
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: linear-gradient(135deg, var(--panel), rgba(255, 255, 255, 0.03));
-  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.32);
+  background: linear-gradient(
+    135deg,
+    var(--panel),
+    rgba(141, 19, 50, 0.12)
+  );
+  box-shadow: 0 24px 70px rgba(31, 3, 12, 0.46);
   padding: 24px;
 
   @media (min-width: 720px) {
@@ -107,7 +116,7 @@
   border: 1px solid var(--accent);
   border-radius: 6px;
   background: var(--accent);
-  color: #111418;
+  color: var(--text);
   font-family: $headerFont;
   font-size: 14px;
   font-weight: 800;
@@ -131,7 +140,7 @@
   align-items: center;
   border-top: 1px solid var(--line);
   padding: 20px 0;
-  background: #08090d;
+  background: var(--page-bg);
 }
 
 .footer a {
