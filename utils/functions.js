@@ -207,7 +207,7 @@ export const getPrice = (requestData, isGroupDiscount, voucher = "") => {
     // 10 % discount for bffdiscount2026
     initialPrice = Math.round((initialPrice / 100) * 90);
   } else if (voucher?.includes("freepass26")) {
-    initialPrice = initialPrice - 145;
+    initialPrice = initialPrice - partyPriceTemp; // Free for freepass26
   }
 
   const ticketPrice = isGroupDiscount
@@ -218,14 +218,14 @@ export const getPrice = (requestData, isGroupDiscount, voucher = "") => {
     requestData.competition === "yes"
       ? requestData.competitions?.length * 10
       : 0;
-  const theme_class =
-    requestData.theme_class === "no" || requestData.theme_class === "" ? 0 : 45;
-  const fullPassdiscount =
-    requestData.ticket === "fullpass" &&
-    requestData.competition === "yes" &&
-    requestData.competitions?.length > 0
-      ? -10
-      : 0;
+  // const theme_class =
+  // requestData.theme_class === "no" || requestData.theme_class === "" ? 0 : 45;
+  // const fullPassdiscount =
+  //   requestData.ticket === "fullpass" &&
+  //   requestData.competition === "yes" &&
+  //   requestData.competitions?.length > 0
+  //     ? -10
+  //     : 0;
   const donationAmount = requestData.donation_amount
     ? parseInt(requestData.donation_amount)
     : 0;
@@ -233,13 +233,7 @@ export const getPrice = (requestData, isGroupDiscount, voucher = "") => {
   const lunchMoney = requestData.lunch?.length * 15 || 0;
 
   const totalPrice =
-    ticketPrice +
-    donationAmount +
-    tshirtPrice +
-    competitions +
-    theme_class +
-    lunchMoney +
-    fullPassdiscount;
+    ticketPrice + donationAmount + tshirtPrice + competitions + lunchMoney;
 
   return totalPrice;
 };
