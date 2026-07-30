@@ -543,7 +543,7 @@ export default function RegistrationForm({
         email about the registration by then.
       </p>
       {/* {!intern && <p className={styles.infoText}>Sold out</p>} */}
-      {intern && (
+      {/* {intern && (
         <FormRadioGroup
           className={styles.radioGroup}
           {...form}
@@ -558,9 +558,9 @@ export default function RegistrationForm({
             <p>No</p>
           </label>
         </FormRadioGroup>
-      )}
+      )} */}
 
-      {values.competition === "yes" && (
+      {/* {values.competition === "yes" && (
         <div className={styles.radioGroup}>
           <h3 className={styles.title}>
             Choose your contests:
@@ -586,7 +586,7 @@ export default function RegistrationForm({
             </label>
           ))}
         </div>
-      )}
+      )} */}
 
       {values.competition === "yes" &&
         roleNeededComps.map((comp) => (
