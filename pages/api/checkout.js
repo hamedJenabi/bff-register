@@ -47,7 +47,7 @@ export default async function handler(req, res) {
           price_data: {
             currency: "eur",
             product_data: {
-              name: "Your BFF'25 Ticket - plus 1.4% stripe fee",
+              name: "Your BFF'26 Ticket - plus 1.4% stripe fee",
             },
             unit_amount: grossPrice,
           },

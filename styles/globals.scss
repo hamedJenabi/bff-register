@@ -26,6 +26,9 @@ body {
 }
 
 body[data-bff-theme="dark"] {
+  width: 100%;
+  max-width: none;
+  margin: 0;
   background-color: #4a0a1a;
 }
 

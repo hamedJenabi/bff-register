@@ -389,7 +389,7 @@ export default function RegistrationForm({
           aria-pressed={values.ticket === "fullpass"}
           className={classNames(styles.card, {
             [styles.selected]: values.ticket === "fullpass",
-            [styles.notAvailable]: !canChooseFullPass,
+            // [styles.notAvailable]: !canChooseFullPass,
           })}
         >
           <h3>Full pass </h3>
@@ -413,7 +413,7 @@ export default function RegistrationForm({
           <p>All 5 Parties</p>
           {!isPartyPass && (
             <span className={styles.infoText}>
-              Partypass spots are available after August 14th and subject to
+              Partypass spots are available after September 1st and subject to
               availability.
             </span>
           )}
@@ -428,7 +428,7 @@ export default function RegistrationForm({
           aria-pressed={values.ticket === "parentPass"}
           className={classNames(styles.card, {
             [styles.selected]: values.ticket === "parentPass",
-            [styles.notAvailable]: !canChooseParentPass,
+            // [styles.notAvailable]: !canChooseParentPass,
           })}
         >
           <h3>Parent Pass </h3>
@@ -461,7 +461,7 @@ export default function RegistrationForm({
     >
       <div className={styles.panelHeader}>
         <h2 id="track-section-title" className={styles.title}>
-          Choose your Track: (Classes are on Fri/Sat/Sun)
+          Choose your Role: (Classes are on Fri/Sat/Sun)
         </h2>
       </div>
 
@@ -535,11 +535,14 @@ export default function RegistrationForm({
     >
       <div className={styles.panelHeader}>
         <h2 id="competition-section-title" className={styles.title}>
-          Do you want to participate in competitions?
+          Info about competitions:
         </h2>
       </div>
-
-      {!intern && <p className={styles.infoText}>Sold out</p>}
+      <p className={styles.infoText}>
+        You can register for competitions end of October. we will send you an
+        email about the registration by then.
+      </p>
+      {/* {!intern && <p className={styles.infoText}>Sold out</p>} */}
       {intern && (
         <FormRadioGroup
           className={styles.radioGroup}
