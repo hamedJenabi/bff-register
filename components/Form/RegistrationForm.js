@@ -258,20 +258,20 @@ export default function RegistrationForm({
       value: ticketLabels[values.ticket] || "Not selected",
     },
     {
-      label: "Track",
+      label: "Role",
       value: isFullPass
         ? selectedTrack?.label || "Not selected"
         : "No class track",
     },
-    {
-      label: "Competitions",
-      value:
-        selectedCompetitionLabels.length > 0
-          ? selectedCompetitionLabels.join(", ")
-          : values.competition === "no"
-            ? "No competitions"
-            : "Optional",
-    },
+    // {
+    //   label: "Competitions",
+    //   value:
+    //     selectedCompetitionLabels.length > 0
+    //       ? selectedCompetitionLabels.join(", ")
+    //       : values.competition === "no"
+    //         ? "No competitions"
+    //         : "Optional",
+    // },
     {
       label: "T-shirt",
       value:
