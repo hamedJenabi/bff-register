@@ -67,7 +67,7 @@ export default function Home({ tickets }) {
       <main className={styles.main}>
         <div className={styles.content}>
           <div className={styles.title}>
-            <h3>Thank you for registering for Blues Fever 2026!</h3>
+            <h3>Thank you for your registration for Blues Fever 2026!</h3>
             <p>
               Please note that your registration confirmation e-mail may end up
               in your <b>junk mail or promotions folder</b>.

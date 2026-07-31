@@ -205,7 +205,7 @@ export default function RegistrationForm({
       window.localStorage.removeItem(DRAFT_STORAGE_KEY);
     }
   }, [draftLoaded, values]);
-
+  console.log("values", values);
   const selectTicket = (ticket) => {
     // if (ticket === "fullpass") {
 
@@ -393,8 +393,8 @@ export default function RegistrationForm({
           })}
         >
           <h3>Full pass </h3>
-          <p> Pick any class (6h)</p>
-          <p>1 free competition</p>
+          <p> Pick any class (6:15h)</p>
+
           <p>All 5 Parties</p>
           <strong className={styles.price}>€{fullpassPrice}</strong>
         </button>
@@ -433,7 +433,7 @@ export default function RegistrationForm({
         >
           <h3>Parent Pass </h3>
           <p>Two dancers sharing childcare</p>
-          <p> Pick any class (6h)</p>
+          <p> Pick any class (6:15h)</p>
           <p>All 5 Parties</p>
           <strong className={styles.price}>€{partyPrice}</strong>
         </button>
@@ -713,6 +713,12 @@ export default function RegistrationForm({
         <h2 id="voucher-section-title" className={styles.title}>
           Do you have a voucher?
         </h2>
+        <p className={styles.infoText}>
+          Info for pass winners: If you have won a pass and have not yet
+          received an email from us by July 31, please write to us at
+          registration@bluesfever.eu and wait for our reply with instructions on
+          how to register for your free pass.
+        </p>
       </div>
       <FormInput className={styles.input} {...form} name="voucher" />
       {values.voucher === "bffdiscount2026" && (
