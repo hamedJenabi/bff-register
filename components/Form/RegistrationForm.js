@@ -574,8 +574,8 @@ export default function RegistrationForm({
         </h2>
       </div>
       <p className={styles.infoText}>
-        You can register for competitions end of October. we will send you an
-        email about the registration by then.
+        You can register for competitions in November. we will send you an email
+        about the registration by then.
       </p>
       {/* {!intern && <p className={styles.infoText}>Sold out</p>} */}
       {/* {intern && (
