@@ -248,11 +248,11 @@ export default function Home({ tickets, users }) {
             intern={router?.query?.intern === "true"}
           />
         ) : (
-          <>
+          <div style={{ textAlign: "center", marginTop: "50px" }}>
             <h3>Registration starts on August 1st, 2026 :) </h3>
             <br />
             {/* <UrgeWithPleasureComponent /> */}
-          </>
+          </div>
         )}
       </main>
 
