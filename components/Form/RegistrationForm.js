@@ -18,6 +18,7 @@ import {
   isGroupDiscount,
   partyPrice,
   titleCase,
+  levelFor2026,
 } from "../../utils/functions";
 import { emailRegex } from "../../utils/validate";
 import styles from "./RegistrationForm.module.scss";
@@ -515,6 +516,13 @@ export default function RegistrationForm({
               {devide && <div className={styles.divider} />}
             </span>
           ))}
+        <div className={styles.infoTextWrapper}>
+          <p className={styles.infoText}>
+            You choose <strong>"Both"</strong> role if you will attend some
+            classes as LEAD and some as FOLLOW to help balance out the ratio
+            between the two roles.
+          </p>
+        </div>
         <FormMessage className={styles.errorMessage} {...form} name="level" />
         {/* <p className={styles.infoText}>
           * There will be an audition for advanced track on Friday at 12:30 to
@@ -524,6 +532,33 @@ export default function RegistrationForm({
         <p className={styles.infoText}>
           ** Open to dancers with at least intermediate level experience.
         </p> */}
+      </FormRadioGroup>
+    </section>
+  );
+  const renderLevelSection = () => (
+    <section
+      className={styles.sectionPanel}
+      aria-labelledby="level-section-title"
+    >
+      <div className={styles.panelHeader}>
+        <h2 id="level-section-title" className={styles.title}>
+          Choose your Level: (Classes are on Fri/Sat/Sun)
+        </h2>
+      </div>
+
+      <FormRadioGroup
+        className={classNames(styles.radioGroup, styles.radioTicket)}
+        {...form}
+        name="role"
+      >
+        {levelFor2026.map(({ label, value, detail }) => (
+          <span key={value}>
+            <label>
+              <FormRadio {...form} name="role" value={value} />
+              <span>{label}</span>
+            </label>
+          </span>
+        ))}
       </FormRadioGroup>
     </section>
   );
@@ -790,6 +825,7 @@ export default function RegistrationForm({
               {renderPersonalSection()}
               {renderPassSection()}
               {isFullPass && renderTrackSection()}
+              {isFullPass && renderLevelSection()}
               {renderCompetitionSection()}
               {renderShirtSection()}
               {renderDonationSection()}

@@ -52,7 +52,33 @@ export const levelsToShow_old = [
       "You consistently demonstrate, describe, and differentiate between a range of styles and movements, while maintaining blues aesthetic. You include some layered movements. You can observe and work out movement execution. You may teach blues at your local scene and do lots of international workshops.",
   },
 ];
-export const levelsToShow = [];
+export const levelFor2026 = [
+  {
+    label: "Beginner/Intermediate",
+    value: "beg/int",
+    detail:
+      "You have had one or two blues dance classes and are ready to know more about Blues.",
+  },
+  {
+    label: "Intermediate",
+    value: "int",
+    detail:
+      "You have had local classes and maybe one or more international workshops. You can execute the basic movements and steps. You know some variations of basics and you can choose them depending on the style of music.",
+  },
+
+  {
+    label: "Advanced",
+    value: "adv",
+    detail:
+      "You travel internationally to festivals and have attended workshops. You have an expanded vocabulary (aesthetics and movements) and have achieved good musicality. You have a high understanding of partnership in dancing.",
+  },
+  {
+    label: "Advanced +",
+    value: "adv+",
+    detail:
+      "You and Blues have a long story together. You end up going to finals in almost every competition, you practice regularly, and may teach Blues not only in your scene but also internationally.",
+  },
+];
 export const finalLevelsToShow = [
   {
     label: "Beginner/Intermediate",

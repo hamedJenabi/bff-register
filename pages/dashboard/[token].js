@@ -418,8 +418,8 @@ export default function Dashboard({ users, tickets }) {
       "lastname",
       "ticket",
       "parent_partner",
-      "role",
       "level",
+      "role",
       // "themed class",
       "competition",
       "competitions",
@@ -480,7 +480,11 @@ export default function Dashboard({ users, tickets }) {
           user.level,
           user.status,
           user.country,
-        ].some((value) => String(value || "").toLowerCase().includes(searchQuery));
+        ].some((value) =>
+          String(value || "")
+            .toLowerCase()
+            .includes(searchQuery),
+        );
       })
       .sort((a, b) => a.id - b.id)
       .map(
