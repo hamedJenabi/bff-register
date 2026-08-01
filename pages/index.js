@@ -237,23 +237,13 @@ export default function Home({ tickets, users }) {
         <link rel="icon" href="/icon.png" />
       </Head>
       <main className={styles.main}>
-        {router?.query?.intern === "true" ||
-        (isAfterTargetDate("2026-08-01T12:00:00+01:00") &&
-          !isPartypassSoldout) ? (
-          <RegistrationForm
-            form={form}
-            tickets={tickets}
-            users={users}
-            isClicked={isClicked}
-            intern={router?.query?.intern === "true"}
-          />
-        ) : (
-          <div style={{ textAlign: "center", marginTop: "50px" }}>
-            <h3>Registration starts on August 1st, 2026 :) </h3>
-            <br />
-            {/* <UrgeWithPleasureComponent /> */}
-          </div>
-        )}
+        <RegistrationForm
+          form={form}
+          tickets={tickets}
+          users={users}
+          isClicked={isClicked}
+          intern={router?.query?.intern === "true"}
+        />
       </main>
 
       <footer className={styles.footer}>
