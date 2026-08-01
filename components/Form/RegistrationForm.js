@@ -133,6 +133,9 @@ export default function RegistrationForm({
     45;
 
   const selectedTrack = tickets.find((ticket) => ticket.name === values.level);
+  const selectedLevel = levelFor2026.find(
+    (level) => level.value === values.role,
+  );
   const selectedCompetitionLabels = selectedCompetitions.map((competition) => {
     const match = compettionsInfo.find(({ value }) => value === competition);
     return match?.label || titleCase(competition);
@@ -263,6 +266,12 @@ export default function RegistrationForm({
       value: isFullPass
         ? selectedTrack?.label || "Not selected"
         : "No class track",
+    },
+    {
+      label: "Level",
+      value: isFullPass
+        ? selectedLevel?.label || "Not selected"
+        : "No class level",
     },
     // {
     //   label: "Competitions",
@@ -499,6 +508,7 @@ export default function RegistrationForm({
             <span key={value}>
               <label
                 className={classNames({
+                  [styles.selected]: values.level === value,
                   [styles.disabledLabel]: capacity === 0,
                 })}
               >
@@ -553,7 +563,11 @@ export default function RegistrationForm({
       >
         {levelFor2026.map(({ label, value, detail }) => (
           <span key={value}>
-            <label>
+            <label
+              className={classNames({
+                [styles.selected]: values.role === value,
+              })}
+            >
               <FormRadio {...form} name="role" value={value} />
               <span>{label}</span>
             </label>
