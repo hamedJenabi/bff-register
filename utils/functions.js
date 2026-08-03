@@ -207,7 +207,7 @@ export const compettionsInfo = [
 let fullpassPriceTemp = 245;
 let partyPriceTemp = 145;
 
-if (isAfterTargetDate("2026-08-03T11:59:00+02:00")) {
+if (isAfterTargetDate("2026-08-04T11:59:00+02:00")) {
   fullpassPriceTemp = 265;
 }
 
