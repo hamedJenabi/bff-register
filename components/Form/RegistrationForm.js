@@ -209,6 +209,13 @@ export default function RegistrationForm({
       window.localStorage.removeItem(DRAFT_STORAGE_KEY);
     }
   }, [draftLoaded, values]);
+
+  useEffect(() => {
+    if (values.shirtinfo !== "yes" && values.tshirt) {
+      form.update("tshirt", "");
+    }
+  }, [form, values.shirtinfo, values.tshirt]);
+
   console.log("values", values);
   const selectTicket = (ticket) => {
     // if (ticket === "fullpass") {

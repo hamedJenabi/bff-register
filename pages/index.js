@@ -43,6 +43,7 @@ export default function Home({ tickets, users }) {
       newcomers_mixnmatch_role: "",
       strictly_role: "",
       tshirtInfo: "",
+      shirtinfo: "",
       tshirt: "",
       competitions: "",
       donation: "",

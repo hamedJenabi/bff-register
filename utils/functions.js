@@ -257,7 +257,11 @@ export const getPrice = (requestData, isGroupDiscount, voucher = "") => {
   const donationAmount = requestData.donation_amount
     ? parseInt(requestData.donation_amount)
     : 0;
-  const tshirtPrice = requestData.tshirt.length > 0 ? 25 : 0;
+  const hasSelectedTshirt =
+    requestData.shirtinfo === undefined
+      ? requestData.tshirt?.length > 0
+      : requestData.shirtinfo === "yes" && requestData.tshirt?.length > 0;
+  const tshirtPrice = hasSelectedTshirt ? 25 : 0;
   const lunchMoney = requestData.lunch?.length * 15 || 0;
 
   const totalPrice =
