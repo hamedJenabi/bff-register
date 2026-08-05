@@ -776,7 +776,12 @@ export default function RegistrationForm({
           how to register for your free pass.
         </p>
       </div>
-      <FormInput className={styles.input} {...form} name="voucher" />
+      <FormInput
+        className={styles.input}
+        {...form}
+        name="voucher"
+        placeholder="enter your voucher code"
+      />
       {values.voucher === "bffdiscount2026" && (
         <p className={styles.infoText}>Your voucher has been expired!</p>
       )}
