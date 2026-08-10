@@ -232,7 +232,7 @@ export default function Home({ tickets, users }) {
         <meta name="description" content="BLUES FEVER 2026 Registration" />
         <meta
           property="og:image"
-          content="https://www.bluesfever.eu/wp-content/uploads/2024/12/bff_title_25.png"
+          content="https://www.bluesfever.eu/wp-content/uploads/2026/07/738523801_1632815165514895_8438899108768937555_n.png"
         />
 
         <link rel="icon" href="/icon.png" />
