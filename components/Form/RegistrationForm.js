@@ -120,7 +120,7 @@ export default function RegistrationForm({
     "open_mixnmatch",
   ].filter((comp) => selectedCompetitions.includes(comp));
 
-  const isPartyPass = isAfterTargetDate("2026-09-01T12:00:00+02:00");
+  const isPartyPass = isAfterTargetDate("2026-09-01T00:00:00+02:00");
   const isPartypassSoldout =
     users.filter((user) => user.ticket === "partyPass").length >= 92;
   const isFullPass =
