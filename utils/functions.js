@@ -234,7 +234,10 @@ export const getPrice = (requestData, isGroupDiscount, voucher = "") => {
     initialPrice = Math.round((initialPrice / 100) * 90);
   } else if (voucher?.includes("freepass26")) {
     initialPrice = initialPrice - partyPriceTemp; // Free for freepass26
-  } else if (voucher?.includes("insta10")) {
+  } else if (
+    voucher?.includes("insta10") &&
+    isAfterTargetDate("2026-09-01T00:00:00+02:00")
+  ) {
     initialPrice = initialPrice - 10; // 10 euro discount for insta10
   }
 

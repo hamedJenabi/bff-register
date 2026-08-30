@@ -782,9 +782,11 @@ export default function RegistrationForm({
         name="voucher"
         placeholder="enter your voucher code"
       />
-      {values.voucher === "bffdiscount2026" && (
-        <p className={styles.infoText}>Your voucher has been expired!</p>
-      )}
+      {values.voucher === "bffdiscount2026" ||
+        (values.voucher === "insta10" &&
+          isAfterTargetDate("2026-09-01T00:00:00+02:00") && (
+            <p className={styles.infoText}>Your voucher has been expired!</p>
+          ))}
 
       <div className={styles.checkboxWrapper}>
         <FormCheckbox {...form} name="terms" />
