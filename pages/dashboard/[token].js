@@ -440,44 +440,52 @@ export default function Dashboard({ users, tickets }) {
   const TicketsComponent = () => {
     const getLevelAmount = (level) =>
       users.filter(
-        (user) =>
-          user.role === level &&
-          user.status !== "canceled" &&
-          user.status !== "out",
+        (user) => user.role === level && user.status === "confirmed",
       ).length;
 
     return (
-      <div className={styles.tickets}>
-        <div className={styles.ticketRow}>
-          <p>Level</p>
-          <p>Capacity</p>
+      <div className={styles.capacityTables}>
+        <div className={styles.tickets}>
+          <div className={styles.ticketRow}>
+            <p>Level</p>
+            <p>Capacity</p>
+          </div>
+
+          {tickets
+            .sort((a, b) => a.id - b.id)
+            .map((ticket) => (
+              <div key={ticket.name} className={styles.infoRow}>
+                <div className={styles.ticketItem}>
+                  <p>{ticket.label}</p>
+                </div>
+                <div className={styles.ticketItem}>
+                  <p>{ticket.capacity}</p>
+                </div>
+              </div>
+            ))}
         </div>
 
-        {tickets
-          .sort((a, b) => a.id - b.id)
-          .map((ticket) => (
-            <div key={ticket.name} className={styles.infoRow}>
+        <div className={styles.capacityDivider}>Sold by level</div>
+
+        <div className={styles.tickets}>
+          <div className={styles.ticketRow}>
+            <p>Level</p>
+            <p>Sold</p>
+          </div>
+
+          {levelFor2026.map((level) => (
+            <div key={level.value} className={styles.infoRow}>
               <div className={styles.ticketItem}>
-                <p>{ticket.label}</p>
+                <p>
+                  {level.label} ({level.value})
+                </p>
               </div>
               <div className={styles.ticketItem}>
-                <p>{ticket.capacity}</p>
+                <p>{getLevelAmount(level.value)}</p>
               </div>
             </div>
           ))}
-
-        {levelFor2026.map((level) => (
-          <div key={level.value} className={styles.infoRow}>
-            <div className={styles.ticketItem}>
-              <p>
-                Level - {level.label} ({level.value})
-              </p>
-            </div>
-            <div className={styles.ticketItem}>
-              <p>{getLevelAmount(level.value)}</p>
-            </div>
-          </div>
-        ))}
+        </div>
       </div>
     );
   };

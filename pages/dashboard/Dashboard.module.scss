@@ -413,6 +413,37 @@
   background: white;
 }
 
+.capacityTables {
+  min-width: 760px;
+  padding: 12px;
+
+  .tickets {
+    margin: 0;
+  }
+}
+
+.capacityDivider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 18px 0;
+  color: var(--muted);
+  font-family: $headerFont;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0;
+  line-height: 1.2;
+  text-transform: uppercase;
+
+  &::before,
+  &::after {
+    content: "";
+    height: 1px;
+    flex: 1;
+    background: var(--line);
+  }
+}
+
 .ticketRow,
 .infoRow {
   display: grid;
