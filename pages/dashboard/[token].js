@@ -8,9 +8,8 @@ import styles from "./Dashboard.module.scss";
 import Header from "../../components/Header/Header.js";
 import classNames from "classnames";
 import {
-  levelsToShow,
   finalLevelsToShow,
-  groupLevelsToShow,
+  levelFor2026,
   titleCase,
 } from "../../utils/functions";
 import { unstable_FormCheckbox as FormCheckbox } from "reakit/Form";
@@ -439,6 +438,14 @@ export default function Dashboard({ users, tickets }) {
 
   //--------- Ticket Component
   const TicketsComponent = () => {
+    const getLevelAmount = (level) =>
+      users.filter(
+        (user) =>
+          user.role === level &&
+          user.status !== "canceled" &&
+          user.status !== "out",
+      ).length;
+
     return (
       <div className={styles.tickets}>
         <div className={styles.ticketRow}>
@@ -458,6 +465,19 @@ export default function Dashboard({ users, tickets }) {
               </div>
             </div>
           ))}
+
+        {levelFor2026.map((level) => (
+          <div key={level.value} className={styles.infoRow}>
+            <div className={styles.ticketItem}>
+              <p>
+                Level - {level.label} ({level.value})
+              </p>
+            </div>
+            <div className={styles.ticketItem}>
+              <p>{getLevelAmount(level.value)}</p>
+            </div>
+          </div>
+        ))}
       </div>
     );
   };
