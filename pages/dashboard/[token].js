@@ -438,25 +438,47 @@ export default function Dashboard({ users, tickets }) {
 
   //--------- Ticket Component
   const TicketsComponent = () => {
-    const getLevelAmount = (level) =>
+    const getTicketConfirmedAmount = (ticketName) =>
       users.filter(
-        (user) => user.role === level && user.status === "confirmed",
+        (user) => user.level === ticketName && user.status === "confirmed",
       ).length;
+
+    const getInitialCapacity = (ticket) =>
+      Number(ticket.capacity || 0) + getTicketConfirmedAmount(ticket.name);
+
+    const getLevelAmount = (level) =>
+      users.filter((user) => user.role === level && user.status === "confirmed")
+        .length;
 
     return (
       <div className={styles.capacityTables}>
         <div className={styles.tickets}>
-          <div className={styles.ticketRow}>
+          <div
+            className={classNames(
+              styles.ticketRow,
+              styles.capacityAvailabilityRow,
+            )}
+          >
             <p>Level</p>
-            <p>Capacity</p>
+            <p> Capacity</p>
+            <p>Remaining</p>
           </div>
 
-          {tickets
+          {[...tickets]
             .sort((a, b) => a.id - b.id)
             .map((ticket) => (
-              <div key={ticket.name} className={styles.infoRow}>
+              <div
+                key={ticket.name}
+                className={classNames(
+                  styles.infoRow,
+                  styles.capacityAvailabilityRow,
+                )}
+              >
                 <div className={styles.ticketItem}>
                   <p>{ticket.label}</p>
+                </div>
+                <div className={styles.ticketItem}>
+                  <p>{getInitialCapacity(ticket)}</p>
                 </div>
                 <div className={styles.ticketItem}>
                   <p>{ticket.capacity}</p>

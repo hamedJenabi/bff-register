@@ -73,16 +73,35 @@ export default function Dashboard({ users, tickets }) {
 
   //--------- Ticket Component
   const TicketsComponent = () => {
+    const getTicketConfirmedAmount = (ticketName) =>
+      users.filter(
+        (user) => user.level === ticketName && user.status === "confirmed",
+      ).length;
+
+    const getInitialCapacity = (ticket) =>
+      Number(ticket.capacity || 0) + getTicketConfirmedAmount(ticket.name);
+
     const ticketToshow = [
-      { name: "Level", capacity: "Capacity", waiting_list: "Waiting List" },
+      {
+        name: "Level",
+        firstCapacity: "First Capacity",
+        capacity: "Remaining",
+        waiting_list: "Waiting List",
+      },
       ...tickets,
     ];
     return (
       <div className={styles.tickets}>
         {ticketToshow?.map((ticket) => (
-          <div key={ticket.name} className={styles.ticketRow}>
+          <div
+            key={ticket.name}
+            className={classNames(styles.ticketRow, styles.capacityAdminRow)}
+          >
             <div className={styles.ticketItem}>
               <p>{ticket.name}</p>
+            </div>
+            <div className={styles.ticketItem}>
+              <p>{ticket.firstCapacity ?? getInitialCapacity(ticket)}</p>
             </div>
             <div className={styles.ticketItem}>
               <p>{ticket.capacity}</p>

@@ -472,6 +472,14 @@
   grid-template-columns: minmax(260px, 1fr) 160px;
 }
 
+.tickets .capacityAvailabilityRow {
+  grid-template-columns: minmax(260px, 1fr) 160px 160px;
+}
+
+.tickets .capacityAdminRow {
+  grid-template-columns: minmax(260px, 1fr) 160px 160px 160px;
+}
+
 .ticketItem {
   min-width: 0;
 }
