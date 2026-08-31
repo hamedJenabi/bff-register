@@ -443,9 +443,24 @@ export default function Dashboard({ users, tickets }) {
         (user) => user.level === ticketName && user.status === "confirmed",
       ).length;
 
-    const getInitialCapacity = (ticket) =>
-      Number(ticket.capacity || 0) + getTicketConfirmedAmount(ticket.name);
-
+    const getInitialCapacity = (ticketName) => {
+      const initalCapacity = [
+        {
+          name: "fullpass_lead",
+          capacity: 160,
+        },
+        {
+          name: "fullpass_follow",
+          capacity: 160,
+        },
+        {
+          name: "fullpass_both",
+          capacity: 50,
+        },
+      ];
+      return initalCapacity.find((ticket) => ticket.name === ticketName.name)
+        ?.capacity;
+    };
     const getLevelAmount = (level) =>
       users.filter((user) => user.role === level && user.status === "confirmed")
         .length;
