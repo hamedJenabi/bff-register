@@ -783,8 +783,8 @@ export default function RegistrationForm({
         placeholder="enter your voucher code"
       />
       {values.voucher === "bffdiscount2026" ||
-        (values.voucher === "insta10" &&
-          isAfterTargetDate("2026-09-01T00:00:00+02:00") && (
+        (values.voucher === "bah10" &&
+          isAfterTargetDate("2026-09-03T00:00:00+02:00") && (
             <p className={styles.infoText}>Your voucher has been expired!</p>
           ))}
 
