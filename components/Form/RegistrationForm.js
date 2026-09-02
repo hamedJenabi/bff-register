@@ -784,7 +784,7 @@ export default function RegistrationForm({
       />
       {values.voucher === "bffdiscount2026" ||
         (values.voucher === "bah10" &&
-          isAfterTargetDate("2026-09-03T00:00:00+02:00") && (
+          isAfterTargetDate("2026-09-04T00:00:00+02:00") && (
             <p className={styles.infoText}>Your voucher has been expired!</p>
           ))}
 
