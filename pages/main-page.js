@@ -68,8 +68,8 @@ const menuGroups = [
 
 const singleMenuLinks = [
   ["Home", `${baseUrl}/`],
-  ["Scholarship", `${baseUrl}/scholarship/`],
-  ["Previous BFFs", `${baseUrl}/bff-2023/`],
+  // ["Scholarship", `${baseUrl}/scholarship/`],
+  // ["Previous BFFs", `${baseUrl}/bff-2023/`],
 ];
 
 const featuredPeople = [
@@ -163,35 +163,60 @@ const featuredPeople = [
     role: "Musician",
     alt: "Janice Harrington",
   },
+  {
+    src: "https://www.bluesfever.eu/wp-content/uploads/2023/11/stef.jpeg",
+    name: "Stef Rosen",
+    role: "Musician",
+    alt: "Stef Rosen",
+  },
 ];
+
+const desktopPeopleCount = 6;
+const mobilePeopleCount = 4;
+const faceStripPeople = featuredPeople.filter(
+  ({ name }) =>
+    ![
+      "Alex & Ioanna",
+      "Dara Anderbard",
+      "Julie Brown",
+      "Mike Sonder",
+      "Stef Rosen",
+    ].includes(name),
+);
+
+const pickRandomPeople = (count) => {
+  const people = [...faceStripPeople];
+
+  for (let index = people.length - 1; index > 0; index -= 1) {
+    const randomIndex = Math.floor(Math.random() * (index + 1));
+    [people[index], people[randomIndex]] = [people[randomIndex], people[index]];
+  }
+
+  return people.slice(0, count);
+};
 
 const needToKnow = [
   {
-    number: "01.",
     title: "Passes",
     text: "Full Pass, Party Pass, and Parent Pass options.",
     href: `${baseUrl}/passes-levels/`,
   },
   {
-    number: "02.",
     title: "Schedule",
     text: "Classes, talks, parties, and competitions across the weekend.",
     href: `${baseUrl}/schedule-venue/`,
   },
   {
-    number: "03.",
     title: "Teachers",
     text: "International Blues teachers and movement voices.",
     href: `${baseUrl}/teachers/`,
   },
   {
-    number: "04.",
     title: "Musicians",
     text: "Live bands and late-night Blues energy.",
     href: `${baseUrl}/musicians/`,
   },
   {
-    number: "05.",
     title: "Venue",
     text: "Brotfabrik and Superar in Vienna.",
     href: `${baseUrl}/schedule-venue/`,
@@ -219,6 +244,18 @@ const pathSteps = [
 export default function MainPage() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [visiblePeople, setVisiblePeople] = useState(
+    faceStripPeople.slice(0, desktopPeopleCount),
+  );
+  const [activeMobileGroup, setActiveMobileGroup] = useState(null);
+  const selectedMobileGroup = menuGroups.find(
+    (group) => group.label === activeMobileGroup,
+  );
+
+  const closeMobileMenu = () => {
+    setMobileMenuOpen(false);
+    setActiveMobileGroup(null);
+  };
 
   useEffect(() => {
     document.body.dataset.bffTheme = "dark";
@@ -242,6 +279,40 @@ export default function MainPage() {
 
     return () => {
       window.clearInterval(intervalId);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!mobileMenuOpen) {
+      setActiveMobileGroup(null);
+    }
+  }, [mobileMenuOpen]);
+
+  useEffect(() => {
+    const mobileQuery = window.matchMedia("(max-width: 759px)");
+
+    const refreshVisiblePeople = () => {
+      setVisiblePeople(
+        pickRandomPeople(
+          mobileQuery.matches ? mobilePeopleCount : desktopPeopleCount,
+        ),
+      );
+    };
+
+    refreshVisiblePeople();
+
+    if (mobileQuery.addEventListener) {
+      mobileQuery.addEventListener("change", refreshVisiblePeople);
+
+      return () => {
+        mobileQuery.removeEventListener("change", refreshVisiblePeople);
+      };
+    }
+
+    mobileQuery.addListener(refreshVisiblePeople);
+
+    return () => {
+      mobileQuery.removeListener(refreshVisiblePeople);
     };
   }, []);
 
@@ -274,11 +345,13 @@ export default function MainPage() {
           Blues Fever
         </a>
         <nav className={styles.navLinks} aria-label="Main menu">
-          {singleMenuLinks.map(([label, href]) => (
-            <a href={href} key={label}>
-              {label}
-            </a>
-          ))}
+          <div className={styles.singleLinks}>
+            {singleMenuLinks.map(([label, href]) => (
+              <a href={href} key={label}>
+                {label}
+              </a>
+            ))}
+          </div>
           {menuGroups.map((group) => (
             <div className={styles.menuGroup} key={group.label}>
               <button type="button">{group.label}</button>
@@ -307,6 +380,14 @@ export default function MainPage() {
           <span />
           <span />
         </button>
+        <button
+          aria-label="Close mobile menu"
+          className={`${styles.mobileScrim} ${
+            mobileMenuOpen ? styles.mobileScrimOpen : ""
+          }`}
+          onClick={closeMobileMenu}
+          type="button"
+        />
         <nav
           className={`${styles.mobileMenu} ${
             mobileMenuOpen ? styles.mobileMenuOpen : ""
@@ -314,25 +395,54 @@ export default function MainPage() {
           id="mobile-menu"
           aria-label="Mobile menu"
         >
-          {singleMenuLinks.map(([label, href]) => (
-            <a href={href} key={label} onClick={() => setMobileMenuOpen(false)}>
-              {label}
-            </a>
-          ))}
-          {menuGroups.map((group) => (
-            <div className={styles.mobileMenuGroup} key={group.label}>
-              <strong>{group.label}</strong>
-              {group.links.map(([label, href]) => (
-                <a
-                  href={href}
-                  key={label}
-                  onClick={() => setMobileMenuOpen(false)}
-                >
+          {selectedMobileGroup ? (
+            <>
+              <button
+                className={styles.mobileBackButton}
+                onClick={() => setActiveMobileGroup(null)}
+                type="button"
+              >
+                <span className={styles.backIcon} aria-hidden="true" />
+                Back
+              </button>
+              <strong className={styles.mobileMenuTitle}>
+                {selectedMobileGroup.label}
+              </strong>
+              {selectedMobileGroup.links.map(([label, href]) => (
+                <a href={href} key={label} onClick={closeMobileMenu}>
                   {label}
                 </a>
               ))}
-            </div>
-          ))}
+            </>
+          ) : (
+            <>
+              <div className={styles.mobileMenuTop}>
+                <strong>Menu</strong>
+                <button onClick={closeMobileMenu} type="button">
+                  Close
+                </button>
+              </div>
+              {singleMenuLinks.map(([label, href]) => (
+                <a href={href} key={label} onClick={closeMobileMenu}>
+                  {label}
+                </a>
+              ))}
+              {menuGroups.map((group) => (
+                <button
+                  className={styles.mobileSubmenuButton}
+                  key={group.label}
+                  onClick={() => setActiveMobileGroup(group.label)}
+                  type="button"
+                >
+                  {group.label}
+                  <span className={styles.forwardIcon} aria-hidden="true" />
+                </button>
+              ))}
+              <a href={registrationUrl} onClick={closeMobileMenu}>
+                Register
+              </a>
+            </>
+          )}
         </nav>
       </header>
 
@@ -390,13 +500,11 @@ export default function MainPage() {
           aria-labelledby="know-title"
         >
           <div className={styles.sectionHeader}>
-            <p className={styles.eyebrow}>All you need to know</p>
-            <h2 id="know-title">One weekend. Five essentials.</h2>
+            <h2 id="know-title">All you need to know</h2>
           </div>
           <div className={styles.knowList}>
             {needToKnow.map((item) => (
               <a className={styles.knowItem} href={item.href} key={item.title}>
-                <span>{item.number}</span>
                 <strong>{item.title}</strong>
                 <p>{item.text}</p>
               </a>
@@ -428,13 +536,13 @@ export default function MainPage() {
         <section className={styles.visualSection} id="lineup">
           <div className={styles.sectionHeader}>
             <p className={styles.eyebrow}>Lineup</p>
-            <h2>Teachers, musicians, and deep Blues voices.</h2>
+            <h2>Teachers, musicians</h2>
           </div>
           <div
             className={styles.visualBand}
             aria-label="Featured teachers and musicians"
           >
-            {featuredPeople.map((person) => (
+            {visiblePeople.map((person) => (
               <figure className={styles.photoTile} key={person.name}>
                 <img src={person.src} alt={person.alt} loading="lazy" />
                 <figcaption>
