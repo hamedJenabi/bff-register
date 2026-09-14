@@ -211,13 +211,13 @@ if (isAfterTargetDate("2026-08-04T11:59:00+02:00")) {
   fullpassPriceTemp = 265;
 }
 
-if (isAfterTargetDate("2026-09-15T00:01:00+02:00")) {
-  fullpassPriceTemp = 285;
-}
+// if (isAfterTargetDate("2026-09-15T00:01:00+02:00")) {
+//   fullpassPriceTemp = 285;
+// }
 
-if (isAfterTargetDate("2026-09-15T00:01:00+02:00")) {
-  partyPriceTemp = 165;
-}
+// if (isAfterTargetDate("2026-09-15T00:01:00+02:00")) {
+//   partyPriceTemp = 165;
+// }
 
 export const fullpassPrice = fullpassPriceTemp;
 export const partyPrice = partyPriceTemp;
@@ -236,7 +236,7 @@ export const getPrice = (requestData, isGroupDiscount, voucher = "") => {
     initialPrice = initialPrice - partyPriceTemp; // Free for freepass26
   } else if (
     voucher?.includes("bah10") &&
-    !isAfterTargetDate("2026-09-04T00:00:00+02:00")
+    !isAfterTargetDate("2026-09-03T00:00:00+02:00")
   ) {
     initialPrice = initialPrice - 10; // 10 euro discount for bah10
   }
