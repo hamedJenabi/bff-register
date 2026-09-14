@@ -34,20 +34,13 @@ export default async function handler(req, res) {
 
   try {
     const session = await stripe.checkout.sessions.create({
-      payment_method_types: [
-        "card",
-        "ideal",
-        "sepa_debit",
-        "sofort",
-        "klarna",
-        "paypal",
-      ],
+      payment_method_types: ["card", "ideal", "sepa_debit", "sofort", "klarna"],
       line_items: [
         {
           price_data: {
             currency: "eur",
             product_data: {
-              name: "Your BFF'25 Ticket - plus 1.4% stripe fee",
+              name: "Your BFF'26 Ticket - plus 1.4% stripe fee",
             },
             unit_amount: grossPrice,
           },

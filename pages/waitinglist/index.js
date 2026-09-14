@@ -4,7 +4,7 @@ import useMedia from "use-media";
 import Router from "next/router";
 import React, { useState } from "react";
 
-import styles from "./waitinglist.module.scss";
+import styles from "../../styles/StatusPage.module.scss";
 import Header from "../../components/Header/Header.js";
 
 export default function Home() {
@@ -16,25 +16,18 @@ export default function Home() {
   return (
     <div className={styles.container}>
       <Head>
-        <title>BLUES FEVER 2025</title>
-        <meta name="description" content="BLUES FEVER 2025 Registration" />
+        <title>BLUES FEVER 2026</title>
+        <meta name="description" content="BLUES FEVER 2026 Registration" />
         <link rel="icon" href="/icon.png" />
-
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Amatic+SC&display=swap"
-          rel="stylesheet"
-        />
       </Head>
       <Header
-        title="BLUES FEVER 2025"
+        title="BLUES FEVER 2026"
         menuItems={[{ title: "Home", link: "https://www.bluesfever.eu/" }]}
       />
       <main className={styles.main}>
         <div className={styles.content}>
           <div className={styles.title}>
-            <h3>Thank you for your registration!</h3>
+            <h3>Thank you for your Blues Fever 2026 registration!</h3>
 
             <p>
               Unfortunately, all the spots are fully booked, so we put you on

@@ -6,10 +6,12 @@ import React, { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { titleCase } from "../../utils/functions";
 
-import styles from "./accept.module.scss";
+import styles from "../../styles/StatusPage.module.scss";
 import Header from "../../components/Header/Header.js";
 
 import { unstable_useFormState as useFormState } from "reakit/Form";
+
+const REGISTRATION_DRAFT_STORAGE_KEY = "bff_registration_draft";
 
 export default function Home({ tickets }) {
   const isMobile = useMedia({ maxWidth: "768px" });
@@ -39,6 +41,7 @@ export default function Home({ tickets }) {
       .then((response) => {
         if (typeof window !== "undefined") {
           localStorage.removeItem("accepted_user");
+          localStorage.removeItem(REGISTRATION_DRAFT_STORAGE_KEY);
         }
         if (response.status === 301) {
           Router.push("/soldout");
@@ -53,25 +56,18 @@ export default function Home({ tickets }) {
   return (
     <div className={styles.container}>
       <Head>
-        <title>BLUES FEVER 2025</title>
-        <meta name="description" content="BLUES FEVER 2023 Registration" />
+        <title>BLUES FEVER 2026</title>
+        <meta name="description" content="BLUES FEVER 2026 Registration" />
         <link rel="icon" href="/icon.png" />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Amatic+SC&display=swap"
-          rel="stylesheet"
-        />
       </Head>
       <Header
-        title="BLUES FEVER 2023"
-        menuItems={[{ title: "Home", link: "" }]}
+        title="BLUES FEVER 2026"
+        menuItems={[{ title: "Home", link: "https://www.bluesfever.eu/" }]}
       />
       <main className={styles.main}>
         <div className={styles.content}>
           <div className={styles.title}>
-            <h3>Thank you for registering!</h3>
-            <br />
+            <h3>Thank you for your registration for Blues Fever 2026!</h3>
             <p>
               Please note that your registration confirmation e-mail may end up
               in your <b>junk mail or promotions folder</b>.

@@ -1,141 +1,132 @@
 @import "../../../styles/variables";
 
-.modal {
-  @include modal;
-}
-.infoIcon {
-  font-size: $md;
-  color: $light;
-  margin-left: 3px;
-  cursor: pointer;
-  &:hover {
-    @include pulse;
-  }
-}
 .input {
-  @include fade-in-fast;
-  @include input;
-  padding: 0 $sm;
-  border: 1px solid $blue;
-  height: 40px;
-  border-radius: 5px;
-  &:focus {
-    outline: none;
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid #dce6e5;
+  border-radius: 6px;
+  background: white;
+  color: #172023;
+  font-family: $headerFont;
+  font-size: 14px;
+  letter-spacing: 0;
+  padding: 0 12px;
+
+  &:focus,
+  &:focus-visible {
+    border-color: #2f766f;
+    outline: 2px solid rgba(47, 118, 111, 0.2);
+    outline-offset: 2px;
   }
+}
+
+.button,
+.submit {
+  display: inline-flex;
+  min-height: 42px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #2f766f;
+  border-radius: 6px;
+  background: #2f766f;
+  color: white;
+  font-family: $headerFont;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0;
+  line-height: 1.2;
+  padding: 0 14px;
+
   &:hover {
-    border: 1px solid rgb(111, 96, 96) !important;
+    background: #225a55;
+    cursor: pointer;
   }
 
-  @media (min-width: 600px) {
-    height: 40px;
-    width: 250px;
+  &:focus,
+  &:focus-visible {
+    outline: 2px solid rgba(47, 118, 111, 0.28);
+    outline-offset: 2px;
   }
 }
+
 .button {
-  @include button;
-  width: 120px !important;
-  height: 50px !important;
+  min-width: 88px;
 }
+
 .submit {
-  @include button;
-  width: 120px !important;
-  height: 50px !important;
-  margin-top: $md;
+  width: fit-content;
+  margin-top: 18px;
 }
+
 .backdrop {
-  background-color: rgba(0, 0, 0, 0.5);
-  bottom: 0;
-  left: 0;
   position: fixed;
-  right: 0;
-  top: 0;
+  inset: 0;
   z-index: 100000;
+  display: grid;
+  align-items: end;
+  background-color: rgba(8, 13, 13, 0.56);
+  padding: 16px;
+
+  @media (min-width: 760px) {
+    align-items: center;
+  }
 }
 
 .card {
-  background-color: #f4ecec;
-  border-radius: 14px;
-  padding: 0 10px;
-  position: fixed;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  bottom: 0;
-  height: 350px;
-  width: 100%;
-  transform: translateX(0) translateY(100%);
-  transition: transform 500ms;
+  display: grid;
+  width: min(100%, 460px);
+  gap: 14px;
+  justify-self: center;
+  border: 1px solid #dce6e5;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.22);
+  padding: 16px;
+  transform: translateY(18px);
+  transition: transform 180ms ease;
+
   &.visible {
-    transform: translateX(0) translateY(0);
-  }
-
-  @media (min-width: 900px) {
-    left: 50%;
-    width: 435px;
-    height: 300px;
-    transform: translateX(-50%) translateY(0);
-    &.visible {
-      transform: translateX(-50%) translateY(-50%);
-    }
-  }
-
-  @media (min-width: 900px) {
-    top: 40%;
-    max-height: 40%;
+    transform: translateY(0);
   }
 }
 
-.iconContainer {
-  background-color: transparent;
-  border: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  &:focus {
-    @include focus();
-
-    &::after {
-      padding: -32px;
-      width: 100%;
-      height: 30px;
-      top: 50%;
-      transform: translateY(-50%) translateX(-50%);
-      left: 50%;
-      border-radius: 4px;
-    }
-  }
-  &:hover {
-    cursor: pointer;
-    transform: scale(1.12);
-    transition: all 400ms;
-    p {
-      color: $navy !important;
-    }
-  }
-}
 .closeIconWrapper {
   display: flex;
   justify-content: flex-end;
 }
+
 .closeIcon {
-  margin-top: 8px;
-  color: rgb(0, 0, 0);
+  display: inline-flex;
+  width: 36px;
+  height: 36px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  color: #172023;
+  font-size: 28px;
+  line-height: 1;
+
   &:hover {
+    background: #eef4f2;
     cursor: pointer;
-    @include pulse;
   }
-  &:focus {
-    @include focus();
-    &::after {
-      margin: -4px !important;
-      border-radius: 31px !important;
-    }
+
+  &:focus,
+  &:focus-visible {
+    outline: 2px solid rgba(47, 118, 111, 0.28);
+    outline-offset: 2px;
   }
 }
+
 .content {
-  padding: 0 80px;
-  // display: flex;
-  // flex-direction: column;
-  height: 100%;
-  text-align: center;
+  display: grid;
+  gap: 12px;
+
+  h3 {
+    color: #172023;
+    font-family: $headerFont;
+    font-size: 22px;
+    letter-spacing: 0;
+    line-height: 1.2;
+  }
 }

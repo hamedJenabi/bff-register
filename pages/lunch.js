@@ -65,7 +65,7 @@ export default function Home({ tickets, clientID }) {
           }
           if (response.status === 404) {
             alert(
-              "we didnt find you in our database, please check your email or contact us"
+              "we didnt find you in our database, please check your email or contact us",
             );
             setIsClicked(false);
           }
@@ -96,24 +96,17 @@ export default function Home({ tickets, clientID }) {
   return (
     <div className={styles.container}>
       <Head>
-        <title>Blues Fever 2025</title>
-        <meta name="description" content="BLUES FEVER 2025 Registration" />
+        <title>BLUES FEVER 2026</title>
+        <meta name="description" content="BLUES FEVER 2026 Registration" />
         <meta
           property="og:image"
           content="https://www.bluesfever.eu/wp-content/uploads/2024/12/bff_title_25.png"
         />
 
         <link rel="icon" href="/icon.png" />
-
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Amatic+SC&display=swap"
-          rel="stylesheet"
-        />
       </Head>
       <Header
-        title="BLUES FEVER 2025"
+        title="BLUES FEVER 2026"
         menuItems={[
           {
             title: "Home",

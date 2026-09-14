@@ -19,17 +19,14 @@ $breakpointSm: 370px;
 $breakpointMd: 760px;
 $breakpointLg: 1280px;
 $boxShadow: 0 22px 45px 0 rgba(103, 82, 82, 0.11);
-$Paragraph: Poiret One, Fjalla One, Roboto, -apple-system, BlinkMacSystemFont,
-  Segoe UI, Oxygen, Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue,
-  sans-serif;
-$headerFont: Roboto, -apple-system, BlinkMacSystemFont, Segoe UI, Oxygen, Ubuntu,
-  Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
+$openSans: "Open Sans", sans-serif;
+$Paragraph: $openSans;
+$headerFont: $openSans;
 @mixin infoText {
   font-size: 13px;
   line-height: 22px;
   color: black;
-  font-family: "Open Sans", Roboto, -apple-system, BlinkMacSystemFont, Segoe UI,
-    Oxygen, Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
+  font-family: $openSans;
   font-style: italic;
 }
 
@@ -53,15 +50,15 @@ $headerFont: Roboto, -apple-system, BlinkMacSystemFont, Segoe UI, Oxygen, Ubuntu
   }
   input {
     color: white;
-    font: 1em/1.25em Arial, Helvetica, sans-serif;
+    font:
+      1em/1.25em "Open Sans",
+      sans-serif;
   }
 }
 @mixin button {
   color: $navy;
   background-color: transparent;
-  font-family: Poiret One, Roboto, -apple-system, BlinkMacSystemFont, Segoe UI,
-    Roboto, Oxygen, Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue,
-    sans-serif;
+  font-family: $openSans;
   font-size: 16px;
   box-shadow: 15px 30px -10px rgba(0, 0, 0, 0.35);
   border: 0.5px solid #3e5b63;
@@ -104,8 +101,7 @@ $headerFont: Roboto, -apple-system, BlinkMacSystemFont, Segoe UI, Oxygen, Ubuntu
 @mixin error {
   font-size: 16px;
   color: rgb(192, 37, 37);
-  font-family: Roboto, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-    Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+  font-family: $openSans;
 }
 @keyframes fadeInOpacity {
   0% {
@@ -162,9 +158,7 @@ $headerFont: Roboto, -apple-system, BlinkMacSystemFont, Segoe UI, Oxygen, Ubuntu
   animation-timing-function: linear;
 }
 @mixin textLink {
-  font-family: Poiret One, Roboto, -apple-system, BlinkMacSystemFont, Segoe UI,
-    Roboto, Oxygen, Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue,
-    sans-serif;
+  font-family: $openSans;
   cursor: pointer;
   width: auto;
   color: initial;

@@ -8,9 +8,8 @@ import styles from "./Dashboard.module.scss";
 import Header from "../../components/Header/Header.js";
 import classNames from "classnames";
 import {
-  levelsToShow,
   finalLevelsToShow,
-  groupLevelsToShow,
+  levelFor2026,
   titleCase,
 } from "../../utils/functions";
 import { unstable_FormCheckbox as FormCheckbox } from "reakit/Form";
@@ -205,31 +204,31 @@ export default function Dashboard({ users, tickets }) {
         (user) =>
           user["level"] === level &&
           user["role"] === role &&
-          user["status"] === "registered"
+          user["status"] === "registered",
       );
       const ammount = users.filter(
         (user) =>
           user["level"] === level &&
           user["role"] === role &&
-          user["status"] === "email-sent"
+          user["status"] === "email-sent",
       );
       const ammountReminder = users.filter(
         (user) =>
           user["level"] === level &&
           user["role"] === role &&
-          user["status"] === "reminder"
+          user["status"] === "reminder",
       );
       const ammountWaiting = users.filter(
         (user) =>
           user["level"] === level &&
           user["role"] === role &&
-          user["status"] === "waitinglist"
+          user["status"] === "waitinglist",
       );
       const ammountPaid = users.filter(
         (user) =>
           user["level"] === level &&
           user["role"] === role &&
-          user["status"] === "confirmed"
+          user["status"] === "confirmed",
       );
       return {
         registered: registerAmount.length,
@@ -286,31 +285,31 @@ export default function Dashboard({ users, tickets }) {
         (user) =>
           user["level"] === level &&
           user["role"] === role &&
-          user["status"] === "registered"
+          user["status"] === "registered",
       );
       const ammount = users.filter(
         (user) =>
           user["level"] === level &&
           user["role"] === role &&
-          user["status"] === "email-sent"
+          user["status"] === "email-sent",
       );
       const ammountReminder = users.filter(
         (user) =>
           user["level"] === level &&
           user["role"] === role &&
-          user["status"] === "reminder"
+          user["status"] === "reminder",
       );
       const ammountWaiting = users.filter(
         (user) =>
           user["level"] === level &&
           user["role"] === role &&
-          user["status"] === "waitinglist"
+          user["status"] === "waitinglist",
       );
       const ammountPaid = users.filter(
         (user) =>
           user["level"] === level &&
           user["role"] === role &&
-          user["status"] === "confirmed"
+          user["status"] === "confirmed",
       );
       return {
         registered: registerAmount.length,
@@ -364,8 +363,8 @@ export default function Dashboard({ users, tickets }) {
     } else if (item === "theme_class") {
       setUserToShow(
         users.filter(
-          (user) => user["theme_class"] !== "no" && user["theme_class"] !== ""
-        )
+          (user) => user["theme_class"] !== "no" && user["theme_class"] !== "",
+        ),
       );
     } else if (item === "email-sent") {
       setUserToShow(users.filter((user) => user["status"] === "email-sent"));
@@ -401,7 +400,7 @@ export default function Dashboard({ users, tickets }) {
   const usersForCSV = userToShow.map((user) =>
     user.lunch || user.competition === "later"
       ? { ...user, to_pay: getToPay(user.to_pay, user.lunch) }
-      : user
+      : user,
   );
 
   const renderTableHeader = () => {
@@ -418,8 +417,8 @@ export default function Dashboard({ users, tickets }) {
       "lastname",
       "ticket",
       "parent_partner",
-      "role",
       "level",
+      "role",
       // "themed class",
       "competition",
       "competitions",
@@ -439,37 +438,119 @@ export default function Dashboard({ users, tickets }) {
 
   //--------- Ticket Component
   const TicketsComponent = () => {
+    const getTicketConfirmedAmount = (ticketName) =>
+      users.filter(
+        (user) => user.level === ticketName && user.status === "confirmed",
+      ).length;
+
+    const getInitialCapacity = (ticketName) => {
+      const initalCapacity = [
+        {
+          name: "fullpass_lead",
+          capacity: 160,
+        },
+        {
+          name: "fullpass_follow",
+          capacity: 160,
+        },
+        {
+          name: "fullpass_both",
+          capacity: 50,
+        },
+      ];
+      return initalCapacity.find((ticket) => ticket.name === ticketName.name)
+        ?.capacity;
+    };
+    const getLevelAmount = (level) =>
+      users.filter((user) => user.role === level && user.status === "confirmed")
+        .length;
+
     return (
-      <div className={styles.tickets}>
-        <div className={styles.ticketRow}>
-          <p>Level</p>
-          <p>Capacity</p>
+      <div className={styles.capacityTables}>
+        <div className={styles.tickets}>
+          <div
+            className={classNames(
+              styles.ticketRow,
+              styles.capacityAvailabilityRow,
+            )}
+          >
+            <p>Level</p>
+            <p> Capacity</p>
+            <p>Remaining</p>
+          </div>
+
+          {[...tickets]
+            .sort((a, b) => a.id - b.id)
+            .map((ticket) => (
+              <div
+                key={ticket.name}
+                className={classNames(
+                  styles.infoRow,
+                  styles.capacityAvailabilityRow,
+                )}
+              >
+                <div className={styles.ticketItem}>
+                  <p>{ticket.label}</p>
+                </div>
+                <div className={styles.ticketItem}>
+                  <p>{getInitialCapacity(ticket)}</p>
+                </div>
+                <div className={styles.ticketItem}>
+                  <p>{ticket.capacity}</p>
+                </div>
+              </div>
+            ))}
         </div>
 
-        {tickets
-          .sort((a, b) => a.id - b.id)
-          .map((ticket) => (
-            <div key={ticket.name} className={styles.infoRow}>
+        <div className={styles.capacityDivider}>Sold by level</div>
+
+        <div className={styles.tickets}>
+          <div className={styles.ticketRow}>
+            <p>Level</p>
+            <p>Sold</p>
+          </div>
+
+          {levelFor2026.map((level) => (
+            <div key={level.value} className={styles.infoRow}>
               <div className={styles.ticketItem}>
-                <p>{ticket.label}</p>
+                <p>
+                  {level.label} ({level.value})
+                </p>
               </div>
               <div className={styles.ticketItem}>
-                <p>{ticket.capacity}</p>
+                <p>{getLevelAmount(level.value)}</p>
               </div>
             </div>
           ))}
+        </div>
       </div>
     );
   };
   //--------- Table Data
 
   const renderTableData = () => {
+    const searchQuery = nameSearch.trim().toLowerCase();
+
     return userToShow
-      .filter((user) =>
-        nameSearch
-          ? user.firstname.toUpperCase().includes(nameSearch.toUpperCase())
-          : true
-      )
+      .filter((user) => {
+        if (!searchQuery) {
+          return true;
+        }
+
+        return [
+          user.firstname,
+          user.lastname,
+          user.email,
+          user.ticket,
+          user.level,
+          user.status,
+          user.country,
+        ].some((value) =>
+          String(value || "")
+            .toLowerCase()
+            .includes(searchQuery),
+        );
+      })
       .sort((a, b) => a.id - b.id)
       .map(
         ({
@@ -589,20 +670,14 @@ export default function Dashboard({ users, tickets }) {
               <td>Yes</td>
             </tr>
           );
-        }
+        },
       );
   };
   return (
     <div className={styles.container}>
       <Head>
-        <title>BLUES FEVER 2025</title>
+        <title>BLUES FEVER 2026</title>
         <link rel="icon" href="/icon.png" />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Amatic+SC&display=swap"
-          rel="stylesheet"
-        />
       </Head>
       <Header
         isAdmin
@@ -615,7 +690,7 @@ export default function Dashboard({ users, tickets }) {
         ]}
       />
       <h3 className={styles.title}>Registrations</h3>
-      <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+      <div className={styles.dashboardHeader}>
         <div className={styles.total}>
           <p>
             Total Registrations: {users?.length} = {totalAmount}
@@ -624,7 +699,7 @@ export default function Dashboard({ users, tickets }) {
             Selected List:{" "}
             {
               userToShow?.filter(
-                (user) => user.status !== "canceled" && user.status !== "out"
+                (user) => user.status !== "canceled" && user.status !== "out",
               )?.length
             }{" "}
             ={totalAmountList}
@@ -756,24 +831,38 @@ export default function Dashboard({ users, tickets }) {
         <div className={styles.content}>
           {activeSideBar !== "balance" && (
             <div className={styles.search}>
-              <select
-                onChange={(e) => setStatus(e.target.value)}
-                className={styles.select}
-              >
-                <option>registered</option>
-                <option>email-sent</option>
-                <option>reminder</option>
-                <option>waitinglist</option>
-                <option>confirmed</option>
-                <option>canceled</option>
-                <option>out</option>
-              </select>
-              <button
-                className={styles.statusButton}
-                onClick={handleStatusChange}
-              >
-                Change Status
-              </button>
+              <label className={styles.searchField}>
+                <span>Search registrations</span>
+                <input
+                  value={nameSearch}
+                  onChange={(e) => setNameSearch(e.target.value)}
+                  placeholder="Name, email, ticket, level, status..."
+                />
+              </label>
+
+              <div className={styles.bulkActions}>
+                <label className={styles.controlField}>
+                  <span>Bulk status</span>
+                  <select
+                    onChange={(e) => setStatus(e.target.value)}
+                    className={styles.select}
+                  >
+                    <option>registered</option>
+                    <option>email-sent</option>
+                    <option>reminder</option>
+                    <option>waitinglist</option>
+                    <option>confirmed</option>
+                    <option>canceled</option>
+                    <option>out</option>
+                  </select>
+                </label>
+                <button
+                  className={styles.statusButton}
+                  onClick={handleStatusChange}
+                >
+                  Change Status
+                </button>
+              </div>
 
               {/* <select
                 onChange={(e) => setStatus(e.target.value)}

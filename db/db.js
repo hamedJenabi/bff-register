@@ -13,61 +13,61 @@ const sql =
 
 export async function getTickets() {
   const tickets = await sql`
-      SELECT id, name, label, capacity, waiting_list FROM tickets_23
+      SELECT id, name, label, capacity, waiting_list FROM tickets_26
       `;
   return tickets;
 }
 export async function updateTicketCapacity(ticketId) {
   await sql`
-    UPDATE tickets_23
+    UPDATE tickets_26
     SET capacity = capacity - 1
     WHERE name = ${ticketId}
     `;
 }
 export async function updateTicketWaiting(ticketId) {
   await sql`
-    UPDATE tickets_23
+    UPDATE tickets_26
     SET waiting_list = waiting_list - 1
     WHERE id = ${ticketId}
     `;
 }
 export async function removeFromCapacity(ticketId) {
   await sql`
-    UPDATE tickets_23
+    UPDATE tickets_26
     SET capacity = capacity + 1
     WHERE id = ${ticketId}
     `;
 }
 export async function addToWaitingList(ticketId) {
   await sql`
-    UPDATE tickets_23
+    UPDATE tickets_26
     SET waiting_list = waiting_list - 1
     WHERE id = ${ticketId}
     `;
 }
 export async function addToCapacity(ticketId) {
   await sql`
-    UPDATE tickets_23
+    UPDATE tickets_26
     SET capacity = capacity - 1
     WHERE id = ${ticketId}
     `;
 }
 export async function removeFromWaitingList(ticketId) {
   await sql`
-    UPDATE tickets_23
+    UPDATE tickets_26
     SET waiting_list = waiting_list + 1
     WHERE id = ${ticketId}
     `;
 }
 export async function getTicketByName(name) {
   const ticket = await sql`
-    SELECT * FROM tickets_23 WHERE name=${name}
+    SELECT * FROM tickets_26 WHERE name=${name}
     `;
   return ticket[0];
 }
 export async function isTicketAvailable(id) {
   const ticket = await sql`
-    SELECT * FROM tickets_23 WHERE id=${id}
+    SELECT * FROM tickets_26 WHERE id=${id}
     `;
   return ticket[0];
 }
@@ -98,7 +98,7 @@ export async function insertRegistration(user) {
   };
 
   return sql`
-  INSERT INTO registrations_23${sql(
+  INSERT INTO registrations_26${sql(
     userData,
     "status",
     "date",
@@ -120,7 +120,7 @@ export async function insertRegistration(user) {
     "price",
     "lunch",
     "donation",
-    "terms"
+    "terms",
   )}
 RETURNING id
   `;
@@ -128,14 +128,14 @@ RETURNING id
 
 export async function getAllUsers() {
   const users = await sql`
-      SELECT * FROM registrations_23
+      SELECT * FROM registrations_26
     `;
   return users;
 }
 
 export async function getUserById(id) {
   const user = await sql`
-    SELECT * FROM registrations_23 WHERE id = ${id}
+    SELECT * FROM registrations_26 WHERE id = ${id}
   `;
   return user[0];
 }
@@ -166,7 +166,7 @@ export async function updateUserInfo(user, totalPrice) {
   };
 
   await sql`
-  UPDATE registrations_23
+  UPDATE registrations_26
   SET 
     "status" = ${userData.status},
     "email" = ${userData.email},
@@ -194,19 +194,19 @@ export async function updateUserInfo(user, totalPrice) {
 
 export async function getConfirmedUserByEmailAndName(email, firstname) {
   const user = await sql`
-    SELECT * FROM registrations_23 WHERE email = ${email} AND firstname = ${firstname} AND status = 'confirmed'
+    SELECT * FROM registrations_26 WHERE email = ${email} AND firstname = ${firstname} AND status = 'confirmed'
   `;
   return user[0];
 }
 export async function getUserByEmailAndName(email) {
   const user = await sql`
-    SELECT * FROM registrations_23 WHERE email = ${email}
+    SELECT * FROM registrations_26 WHERE email = ${email}
   `;
   return user[0];
 }
 export async function setUserLunchById(id, lunch, toPay) {
   await sql`
-   UPDATE registrations_23
+   UPDATE registrations_26
     SET lunch = ${lunch},
     to_pay = ${toPay}
      WHERE id = ${id};
@@ -218,10 +218,10 @@ export async function setUserCompById(
   newcomers_mixnmatch_role,
   strictly_role,
   competitions,
-  to_pay
+  to_pay,
 ) {
   await sql`
-   UPDATE registrations_23
+   UPDATE registrations_26
     SET 
     open_mixnmatch_role = ${open_mixnmatch_role},
     newcomers_mixnmatch_role = ${newcomers_mixnmatch_role},

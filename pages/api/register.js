@@ -85,6 +85,7 @@ export default async function register(req, response) {
     newcomers_mixnmatch_role: req.body.newcomers_mixnmatch_role,
     strictly_role: req.body.strictly_role,
     competitions: req.body.competitions,
+    shirtinfo: req.body.shirtinfo,
     tshirt: req.body.tshirt,
     donation_amount: req.body.donation_amount,
     lunch: req.body.lunch,
