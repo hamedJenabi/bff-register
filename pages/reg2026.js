@@ -18,7 +18,6 @@ import {
   CompetitionSection,
   LunchSection,
 } from "../components/Reg2026/AddOnSections";
-import { CATALOG_VERSION } from "../lib/reg2026/catalog";
 import { priceDraft } from "../lib/reg2026/pricing";
 import { validateDraft } from "../lib/reg2026/validation";
 import styles from "../components/Reg2026/Registration.module.scss";
@@ -42,10 +41,6 @@ export default function Registration({ initial, access, loadError }) {
   const [checkoutUrl, setCheckoutUrl] = useState(null);
   const [networkBusy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
-  const [draftNotice, setDraftNotice] = useState("");
-  const storageKey = initial
-    ? `bff-reg2026-${initial.participant.id}-${CATALOG_VERSION}`
-    : "";
   const pending = ["provisional", "payment_pending"].includes(
     data?.order?.status,
   );
@@ -146,53 +141,12 @@ export default function Registration({ initial, access, loadError }) {
   }, []);
   useEffect(() => {
     if (!initial) return;
-    let restored = initial.pendingDraft || initial.choices;
-    let key = newKey();
-    let compete;
-    try {
-      const record = JSON.parse(localStorage.getItem(storageKey));
-      if (
-        !initial.pendingDraft &&
-        record?.savedVersion === JSON.stringify(initial.choices) &&
-        ["classes", "competitions", "lunch"].every((field) =>
-          Array.isArray(record.draft?.[field]),
-        )
-      ) {
-        // Incomplete competition roles are still useful drafts; normalize unsafe choices.
-        restored = validateDraft(record.draft, initial.participant).value;
-        compete = record.compete;
-        key = ["expired", "payment_failed"].includes(initial.order?.status)
-          ? key
-          : record.requestKey || key;
-        setDraftNotice("Your local draft has been restored.");
-      }
-    } catch {
-      setDraftNotice("Local draft saving is unavailable in this browser.");
-    }
-    Object.entries(registrationFormValues(restored, compete)).forEach(
-      ([name, value]) => update(name, value),
-    );
-    setRequestKey(key);
+    Object.entries(
+      registrationFormValues(initial.pendingDraft || initial.choices),
+    ).forEach(([name, value]) => update(name, value));
+    setRequestKey(newKey());
     setHydrated(true);
-  }, [initial, storageKey, update]);
-  useEffect(() => {
-    if (!hydrated || !draft || pending) return;
-    try {
-      localStorage.setItem(
-        storageKey,
-        JSON.stringify({
-          draft,
-          compete: form.values.compete,
-          requestKey,
-          savedVersion: JSON.stringify(data.choices),
-        }),
-      );
-    } catch {
-      setDraftNotice("Local draft saving is unavailable in this browser.");
-    }
-    // Values change only when Reakit fields are updated, unlike the derived draft object.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [form.values, requestKey, data, storageKey, hydrated, pending]);
+  }, [initial, update]);
 
   const refresh = async (orderId = data?.order?.id) => {
     const query = new URLSearchParams({
@@ -210,9 +164,6 @@ export default function Registration({ initial, access, loadError }) {
     if (result.order?.status === "confirmed") {
       restoreForm(result.choices);
       setMessage("Your festival choices are confirmed.");
-      try {
-        localStorage.removeItem(storageKey);
-      } catch {}
     }
     return result;
   };
@@ -296,7 +247,6 @@ export default function Registration({ initial, access, loadError }) {
                 payment status.
               </p>
             )}
-            {draftNotice && <p className={styles.notice}>{draftNotice}</p>}
             <div className={styles.notice} role="status" aria-live="polite">
               {message ||
                 (data.order?.status === "confirmed"
@@ -346,66 +296,94 @@ export default function Registration({ initial, access, loadError }) {
                 </button>
               </div>
             )}
-            <Form {...form} aria-busy={busy}>
+            <div
+              className={
+                data.participant.ticket !== "partyPass"
+                  ? styles.registrationLayout
+                  : undefined
+              }
+            >
               {data.participant.ticket !== "partyPass" && (
-                <Schedule
-                  participant={data.participant}
+                <aside
+                  className={styles.selectionSummary}
+                  aria-label="Selected class total"
+                >
+                  <span
+                    className={styles.selectionCount}
+                    role="status"
+                    aria-live="polite"
+                    aria-atomic="true"
+                  >
+                    <strong>{draft.classes.length}</strong>{" "}
+                    {draft.classes.length === 1 ? "class" : "classes"} selected
+                  </span>
+                  <p>Across all festival days</p>
+                </aside>
+              )}
+              <Form {...form} aria-busy={busy}>
+                {data.participant.ticket !== "partyPass" && (
+                  <Schedule
+                    participant={data.participant}
+                    form={editForm}
+                    availability={data.availability.classes}
+                    disabled={busy || pending || !data.open}
+                  />
+                )}
+                <CompetitionSection
                   form={editForm}
-                  availability={data.availability.classes}
+                  saved={data.choices}
+                  remaining={data.availability.soloBattleRemaining}
                   disabled={busy || pending || !data.open}
                 />
-              )}
-              <CompetitionSection
-                form={editForm}
-                saved={data.choices}
-                remaining={data.availability.soloBattleRemaining}
-                disabled={busy || pending || !data.open}
-              />
-              <LunchSection
-                form={editForm}
-                saved={data.choices}
-                disabled={busy || pending || !data.open}
-              />
-              <section className={styles.review} aria-labelledby="review-title">
-                <h2 id="review-title">Review and submit</h2>
-                <p>
-                  {data.participant.ticket !== "partyPass" &&
-                    "Class registration is included in your pass. "}
-                  Only new lunch and competition bookings are charged.
-                </p>
-                <dl>
-                  <div>
-                    <dt>New add-ons</dt>
-                    <dd>{euros(price.subtotalCents)}</dd>
-                  </div>
-                  <div>
-                    <dt>Stripe fee (1.4% + €0.25)</dt>
-                    <dd>{euros(price.feeCents)}</dd>
-                  </div>
-                  <div>
-                    <dt>Total due</dt>
-                    <dd>{euros(price.totalCents)}</dd>
-                  </div>
-                </dl>
-                <p>
-                  {data.participant.ticket !== "partyPass" &&
-                    "Adding classes here is a draft action. "}
-                  Availability is checked again on submission.
-                </p>
-                <FormMessage {...form} name="formError" />
-                <FormSubmitButton
-                  {...form}
-                  className={styles.primary}
-                  disabled={busy || pending || !data.open || !hydrated}
+                <LunchSection
+                  form={editForm}
+                  saved={data.choices}
+                  disabled={busy || pending || !data.open}
+                />
+                <section
+                  className={styles.review}
+                  aria-labelledby="review-title"
                 >
-                  {busy
-                    ? "Saving…"
-                    : price.totalCents > 0
-                      ? `Continue to payment · ${euros(price.totalCents)}`
-                      : "Save festival choices"}
-                </FormSubmitButton>
-              </section>
-            </Form>
+                  <h2 id="review-title">Review and submit</h2>
+                  <p>
+                    {data.participant.ticket !== "partyPass" &&
+                      "Class registration is included in your pass. "}
+                    Only new lunch and competition bookings are charged.
+                  </p>
+                  <dl>
+                    <div>
+                      <dt>New add-ons</dt>
+                      <dd>{euros(price.subtotalCents)}</dd>
+                    </div>
+                    <div>
+                      <dt>Stripe fee (1.4% + €0.25)</dt>
+                      <dd>{euros(price.feeCents)}</dd>
+                    </div>
+                    <div>
+                      <dt>Total due</dt>
+                      <dd>{euros(price.totalCents)}</dd>
+                    </div>
+                  </dl>
+                  <p>
+                    {data.participant.ticket !== "partyPass" &&
+                      "Adding classes here is a draft action. "}
+                    Availability is checked again on submission.
+                  </p>
+                  <FormMessage {...form} name="formError" />
+                  <FormSubmitButton
+                    {...form}
+                    className={styles.primary}
+                    disabled={busy || pending || !data.open || !hydrated}
+                  >
+                    {busy
+                      ? "Saving…"
+                      : price.totalCents > 0
+                        ? `Continue to payment · ${euros(price.totalCents)}`
+                        : "Save festival choices"}
+                  </FormSubmitButton>
+                </section>
+              </Form>
+            </div>
           </>
         )}
       </main>
