@@ -1,0 +1,24 @@
+import { registrationStore as store } from "../../../db/reg2026";
+import { resolveParticipant, assertRegistrationOpen, publicParticipant } from "../../../lib/reg2026/access";
+import { choicesFromParticipant } from "../../../lib/reg2026/serialization";
+import { reconcileOrder } from "../../../lib/reg2026/payments";
+import { deliverOrderConfirmation } from "../../../lib/reg2026/email";
+import { allowMethod, apiError, publicOrder } from "../../../lib/reg2026/http";
+
+export default async function handler(req, res) {
+  if (!allowMethod(req, res, "GET")) return;
+  try {
+    let participant = await resolveParticipant(req.query, store);
+    let order = req.query.order ? await store.order(req.query.order, participant.id) : await store.activeOrder(participant.id);
+    if (order && ["provisional", "payment_pending"].includes(order.status)) order = await reconcileOrder(store, order);
+    if (order?.status === "confirmed") {
+      await deliverOrderConfirmation(store, order.id);
+      participant = await resolveParticipant(req.query, store);
+    }
+    let open = true;
+    try { assertRegistrationOpen(); } catch { open = false; }
+    return res.json({ participant: publicParticipant(participant), choices: choicesFromParticipant(participant),
+      availability: await store.availability(participant.id), order: publicOrder(order), open,
+      pendingDraft: ["provisional", "payment_pending"].includes(order?.status) ? order.draft : null });
+  } catch (error) { return apiError(res, error); }
+}
