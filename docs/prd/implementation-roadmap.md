@@ -4,7 +4,7 @@ Primary scope: `reg2026-registration.md`. The public-form redesign and wider cod
 
 ## Audit of the starting point
 
-- Present: 52 occurrence-based mock catalog entries, schedule reference, HMAC participant links, versioned `theme_class` serialization, draft validation, capacity/order/booking/email-retry migrations, and an unused free-save database helper.
+- Present: 51 occurrence-based mock catalog entries, schedule reference, HMAC participant links, versioned `theme_class` serialization, draft validation, capacity/order/booking/email-retry migrations, and an unused free-save database helper.
 - Missing: `/reg2026`, authenticated participant APIs, server-owned prices and orders, checkout fulfillment/expiry, confirmation emails, organizer sessions, invitations/retries, and automated verification.
 - Existing public registration: dark one-page UI, order summary and local draft work already exist. Pass checkout still trusts browser prices and browser completion; that older flow requires a separate security slice.
 - Catalog descriptions, some titles, rooms and partner flags are placeholders. They require organizer review before launch.
@@ -29,4 +29,6 @@ Final catalog and capacity review; invitation/confirmation SendGrid templates an
 - Step 2: implemented; isolated Postgres tests cover free saves, retries, failed edits, paid fulfillment, processing, expiry and email failure.
 - Step 3: implemented; participant page, responsive class schedule/dialogs, reusable add-on sections, local drafts, combined review, and pending checkout/status actions. Production build passes with pre-existing legacy import warnings.
 - Step 4: implemented; signed HttpOnly organizer sessions protect dashboard data, edits and email APIs. Invitations select unambiguous confirmed participants on the server, deduplicate delivery records, and expose bounded queue/send/retry actions.
-- Step 5: in progress.
+- Step 5: implemented; automated isolated database/HTTP/webhook checks, non-interactive lint, production build, desktop/tablet/mobile browser QA, and launch setup documentation in `reg2026-launch.md`.
+
+The attendee-app token contract, reviewed catalog, email templates and deployment configuration remain external launch inputs. The wider pass-purchase security and UX modernization backlog remains separate follow-up work.

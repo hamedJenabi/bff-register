@@ -9,7 +9,8 @@
     "migrate": "dotenv ley",
     "heroku-postbuild": "yarn migrate up && yarn build",
     "test": "node -r ./tests/register.cjs --test tests/*.test.cjs",
-    "test:integration": "node tests/run-integration.cjs"
+    "test:integration": "node tests/run-integration.cjs",
+    "preview:test": "node tests/preview.cjs"
   },
   "dependencies": {
     "@emotion/react": "^11.10.6",

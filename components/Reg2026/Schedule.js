@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useDialogState, Dialog, DialogBackdrop } from "reakit/Dialog";
 import { schedule, scheduleDays, scheduleById, CLASS_DAILY_LIMIT } from "../../lib/reg2026/catalog";
 import { validateDraft } from "../../lib/reg2026/validation";
@@ -6,13 +6,15 @@ import styles from "./Registration.module.scss";
 
 export default function Schedule({ participant, draft, change, availability, error, reportError, disabled }) {
   const dialog = useDialogState();
+  const finalFocusRef = useRef(null);
   const [active, setActive] = useState(null);
   const [role, setRole] = useState("");
   const [modalError, setModalError] = useState("");
   const selected = (id) => draft.classes.find((selection) => selection.sessionId === id);
   const places = (session, pool) => availability[session.id]?.[pool]?.remaining || 0;
   const full = (session) => session.partnerClass ? places(session, "lead") + places(session, "follow") <= 0 : places(session, "total") <= 0;
-  const open = (session) => {
+  const open = (session, event) => {
+    finalFocusRef.current = event.currentTarget;
     setActive(session); setRole(selected(session.id)?.role || ""); setModalError(""); dialog.show();
   };
   const select = () => {
@@ -20,7 +22,7 @@ export default function Schedule({ participant, draft, change, availability, err
       { sessionId: active.id, ...(active.partnerClass ? { role } : {}) }];
     const next = { ...draft, classes };
     const result = validateDraft(next, participant);
-    if (!result.valid) { setModalError(result.errors.classes); return; }
+    if (result.errors.classes || result.errors.form) { setModalError(result.errors.classes || result.errors.form); return; }
     if (places(active, active.partnerClass ? role : "total") <= 0) { setModalError("This place is full. Choose another class or role."); return; }
     change(next); reportError(""); dialog.hide();
   };
@@ -45,7 +47,7 @@ export default function Schedule({ participant, draft, change, availability, err
               if (!session) return <td className={styles.emptyCell} key={room}><span className={styles.srOnly}>No class</span></td>;
               const choice = selected(session.id);
               return <td key={room}><button type="button" className={styles.classCard} aria-pressed={!!choice}
-                disabled={disabled || (full(session) && !choice)} onClick={() => open(session)}>
+                disabled={disabled || (full(session) && !choice)} onClick={(event) => open(session, event)}>
                 <small className={styles.mobileRoom}>{room}</small><strong>{session.title}</strong><span>{session.teachers}</span>
                 <small>{choice ? `Selected${choice.role ? ` · ${choice.role}` : ""}` : full(session) ? "Full" : session.partnerClass
                   ? `${places(session, "lead")} lead · ${places(session, "follow")} follow` : `${places(session, "total")} places`}</small>
@@ -62,8 +64,8 @@ export default function Schedule({ participant, draft, change, availability, err
           <button type="button" disabled={disabled} onClick={() => remove(choice.sessionId)} aria-label={`Remove ${session.title}, ${session.day} ${session.start}`}>Remove</button></li>;
       })}</ul>}
     </div>
-    <DialogBackdrop {...dialog} className={styles.backdrop}>
-      <Dialog {...dialog} className={styles.dialog} aria-labelledby="class-detail-title" aria-describedby="class-detail-description">
+    {active && <DialogBackdrop {...dialog} className={styles.backdrop}>
+      <Dialog {...dialog} className={styles.dialog} unstable_finalFocusRef={finalFocusRef} aria-labelledby="class-detail-title" aria-describedby="class-detail-description">
         {active && <>
           <button type="button" className={styles.close} onClick={dialog.hide} aria-label="Close class details">×</button>
           <p>{active.day} · {active.start}–{active.end} · {active.room}</p>
@@ -78,6 +80,6 @@ export default function Schedule({ participant, draft, change, availability, err
           {selected(active.id) && <button type="button" onClick={() => { remove(active.id); dialog.hide(); }}>Remove class</button>}
         </>}
       </Dialog>
-    </DialogBackdrop>
+    </DialogBackdrop>}
   </section>;
 }

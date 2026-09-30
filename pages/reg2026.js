@@ -18,6 +18,7 @@ export default function Registration({ initial, access, loadError }) {
   const [draft, setDraft] = useState(initial?.pendingDraft || initial?.choices);
   const [requestKey, setRequestKey] = useState("");
   const [hydrated, setHydrated] = useState(false);
+  const [checkoutUrl, setCheckoutUrl] = useState(null);
   const [busy, setBusy] = useState(false);
   const [errors, setErrors] = useState({});
   const [message, setMessage] = useState("");
@@ -36,11 +37,12 @@ export default function Registration({ initial, access, loadError }) {
     let key = newKey();
     try {
       const record = JSON.parse(localStorage.getItem(storageKey));
-      if (!initial.pendingDraft && initial.order?.status !== "confirmed" && record?.savedVersion === JSON.stringify(initial.choices) &&
-          validateDraft(record.draft, initial.participant).valid) {
-        restored = record.draft; key = record.requestKey || key; setDraftNotice("Your local draft has been restored.");
+      if (!initial.pendingDraft && record?.savedVersion === JSON.stringify(initial.choices) &&
+          ["classes", "competitions", "lunch"].every((field) => Array.isArray(record.draft?.[field]))) {
+        // Incomplete competition roles are still useful drafts; normalize unsafe choices.
+        restored = validateDraft(record.draft, initial.participant).value;
+        key = ["expired", "payment_failed"].includes(initial.order?.status) ? key : record.requestKey || key; setDraftNotice("Your local draft has been restored.");
       }
-      if (initial.order?.status === "confirmed") localStorage.removeItem(storageKey);
     } catch { setDraftNotice("Local draft saving is unavailable in this browser."); }
     setDraft(restored); setWantsCompetition(restored.competitions.length > 0); setRequestKey(key); setHydrated(true);
   }, [initial, storageKey]);
@@ -56,6 +58,8 @@ export default function Registration({ initial, access, loadError }) {
     const result = await response.json();
     if (!response.ok) throw new Error(result.error);
     setData(result);
+    if (!["provisional", "payment_pending"].includes(result.order?.status)) setCheckoutUrl(null);
+    if (["expired", "payment_failed"].includes(result.order?.status)) setRequestKey(newKey());
     if (result.order?.status === "confirmed") {
       setDraft(result.choices); setWantsCompetition(result.choices.competitions.length > 0);
       setMessage("Your festival choices are confirmed.");
@@ -70,7 +74,7 @@ export default function Registration({ initial, access, loadError }) {
     // Poll only while the participant is waiting for a verified payment status.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pending, data?.order?.id]);
-  const change = (next) => { setDraft(next); setRequestKey(newKey()); setErrors({}); setMessage(""); };
+  const change = (next) => { setDraft(next); setRequestKey(newKey()); setErrors({}); setMessage("You have unsaved changes. Submit to save them."); };
   const submit = async (event) => {
     event.preventDefault();
     const validated = validateDraft(draft, data.participant);
@@ -85,7 +89,11 @@ export default function Registration({ initial, access, loadError }) {
       const result = await response.json();
       if (!response.ok) { setErrors(result.errors || {}); throw new Error(result.error); }
       setData((current) => ({ ...current, order: result.order, pendingDraft: draft }));
-      if (result.checkoutUrl) { window.location.assign(result.checkoutUrl); return; }
+      if (result.checkoutUrl) {
+        setCheckoutUrl(result.checkoutUrl);
+        setMessage("Your places are provisionally held. Review the validated total below, then open secure checkout.");
+        return;
+      }
       await refresh(result.order.id);
       // Keep the verified order in the URL so refreshes display the confirmation.
       await router.replace({ pathname: "/reg2026", query: { ...access, order: result.order.id } }, undefined, { shallow: true });
@@ -105,14 +113,15 @@ export default function Registration({ initial, access, loadError }) {
     } catch (error) { setMessage(error.message); }
     finally { setBusy(false); }
   };
-  const price = draft && data ? priceDraft(draft, data.choices) : null;
+  const price = pending ? { subtotalCents: data.order.subtotalCents, feeCents: data.order.feeCents, totalCents: data.order.totalCents }
+    : draft && data ? priceDraft(draft, data.choices) : null;
   return <div className={styles.page}>
     <Head><title>Festival choices · Blues Fever 2026</title><meta name="robots" content="noindex,nofollow" /><meta name="referrer" content="no-referrer" /></Head>
     <header className={styles.header}><a href="https://www.bluesfever.eu/">Blues Fever</a><p>Vienna · 2026</p></header>
     <main className={styles.main}>
       {!data ? <section><h1>Festival choices</h1><p role="alert">{loadError || "This registration link is unavailable."}</p><p>Please contact the organizers for help.</p></section> : <>
         <div className={styles.intro}><p>Your festival registration</p><h1>{data.participant.firstname} {data.participant.lastname}</h1>
-          <p>{passLabel[data.participant.ticket] || data.participant.ticket} · Classes, competitions and lunch</p></div>
+          <p>{passLabel[data.participant.ticket] || data.participant.ticket} · {data.participant.ticket === "partyPass" ? "Competitions and lunch" : "Classes, competitions and lunch"}</p></div>
         {!data.open && <p className={styles.notice}>Registration is closed. You can view your saved choices and payment status.</p>}
         {draftNotice && <p className={styles.notice}>{draftNotice}</p>}
         <div className={styles.notice} role="status" aria-live="polite">
@@ -122,7 +131,7 @@ export default function Registration({ initial, access, loadError }) {
             ["expired", "payment_failed"].includes(data.order?.status) ? "Checkout expired or payment failed. Your previous confirmed choices are unchanged." : "Review your choices, then submit them together.")}
         </div>
         {pending && <div className={styles.actions}>
-          {data.order.status === "provisional" && <><button type="button" disabled={busy} onClick={() => checkoutAction(false)}>Resume checkout</button>
+          {data.order.status === "provisional" && <><button type="button" disabled={busy} onClick={() => checkoutUrl ? window.location.assign(checkoutUrl) : checkoutAction(false)}>Open secure checkout</button>
             <button type="button" disabled={busy} onClick={() => checkoutAction(true)}>Cancel pending checkout</button></>}
           <button type="button" disabled={busy} onClick={() => refresh().catch((error) => setMessage(error.message))}>Check payment status</button>
         </div>}
@@ -134,10 +143,10 @@ export default function Registration({ initial, access, loadError }) {
             change={change} remaining={data.availability.soloBattleRemaining} error={errors.competitions} disabled={busy || pending || !data.open} />
           <LunchSection draft={draft} saved={data.choices} change={change} error={errors.lunch} disabled={busy || pending || !data.open} />
           <section className={styles.review} aria-labelledby="review-title"><h2 id="review-title">Review and submit</h2>
-            <p>Class registration is included in your pass. Only new lunch and competition bookings are charged.</p>
+            <p>{data.participant.ticket !== "partyPass" && "Class registration is included in your pass. "}Only new lunch and competition bookings are charged.</p>
             <dl><div><dt>New add-ons</dt><dd>{euros(price.subtotalCents)}</dd></div><div><dt>Stripe fee (1.4% + €0.25)</dt><dd>{euros(price.feeCents)}</dd></div>
               <div><dt>Total due</dt><dd>{euros(price.totalCents)}</dd></div></dl>
-            <p>Adding classes here is a draft action. Availability is checked again on submission.</p>
+            <p>{data.participant.ticket !== "partyPass" && "Adding classes here is a draft action. "}Availability is checked again on submission.</p>
             {errors.form && <p role="alert">{errors.form}</p>}
             <button className={styles.primary} type="submit" disabled={busy || pending || !data.open || !hydrated}>
               {busy ? "Saving…" : price.totalCents > 0 ? `Continue to payment · ${euros(price.totalCents)}` : "Save festival choices"}</button>

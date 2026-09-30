@@ -10,7 +10,7 @@ import styles from "./Dashboard.module.scss";
 import Header from "../../components/Header/Header.js";
 import { unstable_useFormState as useFormState } from "reakit/Form";
 import classNames from "classnames";
-import { levelsToShow, titleCase } from "../../utils/functions";
+import { finalLevelsToShow as levelsToShow, titleCase } from "../../utils/functions";
 export default function Dashboard({ users, tickets }) {
   const [nameSearch, setNameSearch] = useState("");
   const [activeSideBar, setActiveSideBar] = useState("all");

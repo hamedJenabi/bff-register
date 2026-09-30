@@ -221,4 +221,4 @@ Production database-backed schedule authoring is deferred by the request. Persis
 - [Code and UX improvement backlog](./code-and-ux-improvement-backlog.md).
 - [Stripe guidance on server-side payment fulfillment](https://docs.stripe.com/payments/existing-customers?platform=web&ui=stripe-hosted).
 
-The `class_capacities_26` migration has been applied to the configured local PostgreSQL database. It has no rows yet because partner-class flags remain provisional. Page, booking, payment, and email implementation has not begun; no production deployment has been made.
+Implementation update: the participant journey, persistent orders/bookings, verified Stripe fulfillment, organizer sessions/invitations, durable email retries and automated/browser verification are now implemented locally. See [the implementation roadmap](./implementation-roadmap.md) and [launch setup](./reg2026-launch.md). No production deployment or operational database migration was performed in this implementation pass. Final catalog, SendGrid templates, attendee-app token contract and deployment configuration remain launch inputs.

@@ -1,40 +1,26 @@
-CREATE DATABASE bluesfever;
-CREATE USER bluesfever WITH ENCRYPTED PASSWORD 'bluesfever';
-GRANT ALL PRIVILEGES ON DATABASE bluesfever TO bluesfever;
-\q
-psql -U bluesfever bluesfever
+# Blues Fever registration
 
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+Next.js Pages Router app using Postgres, Stripe, SendGrid and Reakit. The public pass-purchase flow lives at `/`; confirmed participants use signed `/reg2026` links for class, competition and lunch choices.
 
-## Getting Started
+## Development
 
-First, run the development server:
+Install dependencies using the committed `yarn.lock`, configure a local `.env`, and run `npm run dev`. Database migrations use Ley (`npm run migrate -- up`); apply them only against the intended database.
 
-```bash
-npm run dev
-# or
-yarn dev
+## Checks
+
+```sh
+npm test
+npm run test:integration
+npm run lint
+npm run build
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The integration suite needs PostgreSQL `initdb` and `pg_ctl` on PATH. It creates and destroys an isolated cluster, substitutes Stripe/email adapters, and never reads the operational database. `npm run preview:test` starts a disposable browser-QA environment with fictional participants and no live payment/email credentials.
 
-You can start editing the page by modifying `pages/index.js`. The page auto-updates as you edit the file.
+## 2026 implementation
 
-[API routes](https://nextjs.org/docs/api-routes/introduction) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.js`.
+- [Product requirements](docs/prd/reg2026-registration.md)
+- [Audit and large-step roadmap](docs/prd/implementation-roadmap.md)
+- [Environment, migrations, webhook, templates and launch inputs](docs/prd/reg2026-launch.md)
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/api-routes/introduction) instead of React pages.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+The new flow is closed by default. Organizer login now requires a configured `ADMIN_SESSION_SECRET` and a server-issued cookie; browser local-storage flags do not authorize access. See the launch guide before enabling registration or sending invitations.

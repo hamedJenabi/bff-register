@@ -108,5 +108,83 @@ test("registration orders on isolated Postgres", { skip: !process.env.TEST_DATAB
       await queueInvitations(store);
       assert.equal(await processDeliveryBatch(store, false, async () => { throw new Error("must not resend"); }), 0);
     });
+    await t.test("HTTP endpoints enforce signed access, complete drafts and server-owned checkout", async () => {
+      const { signIdentity } = require("../lib/reg2026/security");
+      const payments = require("../lib/reg2026/payments");
+      const sessions = new Map();
+      const mockStripe = { checkout: { sessions: {
+        create: async (args, options) => {
+          assert.equal(args.line_items[0].price_data.unit_amount, 1547);
+          const value = { id: "cs_http_test", url: "https://checkout.example.com/http", amount_total: 1547, currency: "eur",
+            status: "open", payment_status: "unpaid", metadata: args.metadata, client_reference_id: args.client_reference_id };
+          sessions.set(value.id, value); return value;
+        }, retrieve: async (id) => sessions.get(id),
+      } }, webhooks: { constructEvent: () => { throw new Error("Invalid signature"); } } };
+      require.cache[require.resolve("../db/reg2026")] = { id: require.resolve("../db/reg2026"), filename: require.resolve("../db/reg2026"), loaded: true, exports: { registrationStore: store } };
+      require.cache[require.resolve("../lib/reg2026/payments")].exports = { ...payments,
+        getStripe: () => mockStripe, checkoutForOrder: (...args) => payments.checkoutForOrder(...args, mockStripe),
+        reconcileOrder: (...args) => payments.reconcileOrder(...args, mockStripe),
+      };
+      const submit = require("../pages/api/reg2026/submit").default;
+      const load = require("../pages/api/reg2026/index").default;
+      const res = () => ({ headers: {}, code: 200, setHeader(k,v) { this.headers[k] = v; }, status(c) { this.code = c; return this; }, json(body) { this.body = body; return this; }, end() { return this; } });
+      const [person] = await sql`INSERT INTO registrations_26 (date,status,role,ticket,firstname,lastname,email,country)
+        VALUES ('2026','confirmed','advanced','partyPass','HTTP','Participant','http+test@example.com','Austria') RETURNING *`;
+      const user = person.email + "+" + person.firstname;
+      const access = { user, sig: signIdentity(user) };
+      const rejected = res(); await load({ method: "GET", query: { user, sig: "tampered" } }, rejected);
+      assert.equal(rejected.code, 403);
+      const projection = res(); await load({ method: "GET", query: access }, projection);
+      assert.equal(projection.code, 200); assert.equal(projection.body.participant.email, undefined);
+      const malformed = res(); await submit({ method: "POST", body: { ...access, requestKey: "http-malformed-01", draft: null } }, malformed);
+      assert.equal(malformed.code, 422);
+      const classes = res(); await submit({ method: "POST", body: { ...access, requestKey: "http-party-00001", draft: free } }, classes);
+      assert.equal(classes.code, 422);
+      const closed = res(); process.env.REG2026_ENABLED = "false";
+      await submit({ method: "POST", body: { ...access, requestKey: "http-closed-0001", draft: empty() } }, closed);
+      assert.equal(closed.code, 403); process.env.REG2026_ENABLED = "true";
+      const paid = res(); await submit({ method: "POST", body: { ...access, requestKey: "http-payment-001", draft: { ...empty(), lunch: ["saturday"] }, price: 1 } }, paid);
+      assert.equal(paid.code, 200); assert.equal(paid.body.order.totalCents, 1547);
+      assert.equal(paid.body.checkoutUrl, "https://checkout.example.com/http");
+      const retried = res(); await submit({ method: "POST", body: { ...access, requestKey: "http-payment-001", draft: { ...empty(), lunch: ["saturday"] } } }, retried);
+      assert.equal(retried.body.order.id, paid.body.order.id);
+      // Exercise raw webhook HTTP handling with Stripe's own local signature verifier.
+      const Stripe = require("stripe");
+      const verifier = new Stripe("sk_test_not_a_live_key");
+      mockStripe.webhooks.constructEvent = (...args) => verifier.webhooks.constructEvent(...args);
+      process.env.REG2026_STRIPE_WEBHOOK_SECRET = "whsec_test_only";
+      const webhook = require("../pages/api/reg2026/webhook").default;
+      const { Readable } = require("node:stream");
+      const event = { id: "evt_test", type: "checkout.session.completed", data: { object: { ...sessions.get("cs_http_test"), status: "complete", payment_status: "paid" } } };
+      const raw = JSON.stringify(event);
+      const invoke = async (signature) => {
+        const req = Readable.from([Buffer.from(raw)]); req.method = "POST"; req.headers = { "stripe-signature": signature };
+        const response = res(); await webhook(req, response); return response;
+      };
+      assert.equal((await invoke("bad-signature")).code, 400);
+      const signature = verifier.webhooks.generateTestHeaderString({ payload: raw, secret: process.env.REG2026_STRIPE_WEBHOOK_SECRET });
+      assert.equal((await invoke(signature)).code, 200);
+      assert.equal((await invoke(signature)).code, 200);
+      assert.equal((await store.order(paid.body.order.id, person.id)).status, "confirmed");
+      const state = res(); await load({ method: "GET", query: { ...access, order: paid.body.order.id } }, state);
+      assert.deepEqual(state.body.choices.lunch, ["saturday"]);
+      process.env.ADMIN_SESSION_SECRET = "test-admin-secret"; process.env.ADMIN_USER = "test-admin";
+      const invitations = require("../pages/api/reg2026/invitations").default;
+      const unauthenticated = res(); await invitations({ method: "POST", headers: {}, body: { action: "queue", recipients: [person] } }, unauthenticated);
+      assert.equal(unauthenticated.code, 401);
+      require.cache[require.resolve("../db/db")] = { loaded: true, exports: {
+        getConfirmedUserByEmailAndName: async () => person,
+        setUserLunchById: () => { throw new Error("Legacy writes must not be reached"); },
+        setUserCompById: () => { throw new Error("Legacy writes must not be reached"); },
+      } };
+      const legacyLunch = require("../pages/api/lunch").default;
+      const retired = res(); await legacyLunch({ method: "POST", body: {} }, retired);
+      assert.equal(retired.code, 410);
+      process.env.REG2026_ENABLED = "false";
+      const protectedBooking = res(); await legacyLunch({ method: "POST", body: {
+        email: person.email, firstname: person.firstname, lastname: person.lastname, lunch: [],
+      } }, protectedBooking);
+      assert.equal(protectedBooking.code, 410);
+    });
   } finally { await sql.end(); }
 });

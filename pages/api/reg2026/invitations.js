@@ -4,9 +4,9 @@ import { queueInvitations, processDeliveryBatch } from "../../../lib/reg2026/inv
 import { apiError } from "../../../lib/reg2026/http";
 export default async function handler(req, res) {
   if (!requireAdmin(req, res)) return;
-  if (req.method === "GET") return res.json({ summary: await store.deliverySummary() });
-  if (req.method !== "POST") { res.setHeader("Allow", "GET, POST"); return res.status(405).end(); }
+  if (!["GET", "POST"].includes(req.method)) { res.setHeader("Allow", "GET, POST"); return res.status(405).end(); }
   try {
+    if (req.method === "GET") return res.json({ summary: await store.deliverySummary() });
     if (req.body?.action === "queue") await queueInvitations(store);
     else if (!["send", "retry"].includes(req.body?.action)) return res.status(422).json({ error: "Unknown delivery action" });
     const processed = req.body.action === "queue" ? 0 : await processDeliveryBatch(store, req.body.action === "retry");

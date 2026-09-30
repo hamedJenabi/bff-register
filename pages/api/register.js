@@ -11,7 +11,7 @@ import {
 import {
   titleCase,
   getPrice,
-  levelsToShow,
+  finalLevelsToShow as levelsToShow,
   discounts,
 } from "../../utils/functions";
 
