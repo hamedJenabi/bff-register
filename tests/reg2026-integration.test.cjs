@@ -89,5 +89,24 @@ test("registration orders on isolated Postgres", { skip: !process.env.TEST_DATAB
       const bookings = await sql`SELECT session_id FROM class_bookings_26 WHERE registration_id = ${participant.id}`;
       assert.deepEqual(bookings.map((b) => b.session_id), ["fri-1330-kantine"]);
     });
+    await t.test("invitations skip ambiguous identities, survive failures and never blindly resend", async () => {
+      const { queueInvitations, processDeliveryBatch } = require("../lib/reg2026/invitations");
+      process.env.REG2026_ENABLED = "true";
+      process.env.REG2026_CATALOG_REVIEWED = "true";
+      process.env.REG2026_INVITATION_TEMPLATE_ID = "d-invite-test";
+      await sql`INSERT INTO registrations_26 (date,status,role,ticket,firstname,lastname,email,country)
+        VALUES ('2026','confirmed','advanced','partyPass','Duplicate','One','duplicate@example.com','Austria'),
+          ('2026','confirmed','advanced','partyPass','Duplicate','Two','duplicate@example.com','Austria')`;
+      assert.equal(await queueInvitations(store), 1);
+      assert.equal(await queueInvitations(store), 1);
+      const records = await sql`SELECT * FROM registration_email_retries_26 WHERE kind = 'invitation'`;
+      assert.equal(records.length, 1);
+      assert.ok(records[0].payload.dynamicTemplateData.registrationUrl.includes("sig="));
+      await processDeliveryBatch(store, false, async () => { throw new Error("temporary failure"); });
+      await processDeliveryBatch(store, true, async () => {});
+      assert.equal((await sql`SELECT delivery_status FROM registration_email_retries_26 WHERE kind = 'invitation'`)[0].delivery_status, "sent");
+      await queueInvitations(store);
+      assert.equal(await processDeliveryBatch(store, false, async () => { throw new Error("must not resend"); }), 0);
+    });
   } finally { await sql.end(); }
 });

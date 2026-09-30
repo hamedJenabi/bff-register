@@ -1,3 +1,4 @@
+import { adminPageRedirect } from "../../../lib/admin/session";
 import Head from "next/head";
 import Link from "next/link";
 import dynamic from "next/dynamic";
@@ -80,12 +81,7 @@ export default function User({ user }) {
         .catch((error) => console.log(error));
     },
   });
-  if (typeof window !== "undefined") {
-    const admin = localStorage.getItem("login_admin");
-    if (admin !== "true") {
-      Router.push("/login/admin");
-    }
-  }
+
   const handleClick = (key) => {
     alert(key);
   };
@@ -135,7 +131,9 @@ export default function User({ user }) {
   );
 }
 
-export async function getServerSideProps({ params }) {
+export async function getServerSideProps({ params, req, res }) {
+  const redirect = adminPageRedirect(req, res);
+  if (redirect) return redirect;
   const { id } = params;
   const { getUserById } = await import("../../../db/db");
   const user = await getUserById(id);

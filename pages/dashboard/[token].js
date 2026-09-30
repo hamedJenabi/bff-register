@@ -1,3 +1,5 @@
+import OrganizerDelivery from "../../components/Reg2026/OrganizerDelivery";
+import { adminPageRedirect } from "../../lib/admin/session";
 import Head from "next/head";
 import useMedia from "use-media";
 import Router from "next/router";
@@ -339,12 +341,7 @@ export default function Dashboard({ users, tickets }) {
       </div>
     );
   };
-  if (typeof window !== "undefined") {
-    const admin = localStorage.getItem("login_admin");
-    if (admin !== "true") {
-      Router.push("/login/admin");
-    }
-  }
+
 
   const handleSideBarClick = (item) => {
     if (item !== "capacity") {
@@ -929,6 +926,7 @@ export default function Dashboard({ users, tickets }) {
           >
             Send Email to All confirmed
           </button>
+          <OrganizerDelivery />
         </div>
       </main>
 
@@ -946,7 +944,9 @@ export default function Dashboard({ users, tickets }) {
   );
 }
 
-export async function getServerSideProps() {
+export async function getServerSideProps({ req, res }) {
+  const redirect = adminPageRedirect(req, res);
+  if (redirect) return redirect;
   const { getAllUsers, getTickets } = await import("../../db/db");
   const users = await getAllUsers();
 
