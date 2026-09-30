@@ -27,4 +27,5 @@ Final catalog and capacity review; invitation/confirmation SendGrid templates an
 
 - Step 1: implemented; rule checks run with `npm test`.
 - Step 2: implemented; isolated Postgres tests cover free saves, retries, failed edits, paid fulfillment, processing, expiry and email failure.
-- Steps 3–5: pending.
+- Step 3: implemented; participant page, responsive class schedule/dialogs, reusable add-on sections, local drafts, combined review, and pending checkout/status actions. Production build passes with pre-existing legacy import warnings.
+- Steps 4–5: pending.
