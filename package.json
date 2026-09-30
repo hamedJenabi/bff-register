@@ -7,7 +7,8 @@
     "start": "next start -p ${PORT:-\"3000\"}",
     "lint": "next lint",
     "migrate": "dotenv ley",
-    "heroku-postbuild": "yarn migrate up && yarn build"
+    "heroku-postbuild": "yarn migrate up && yarn build",
+    "test": "node -r ./tests/register.cjs --test tests/*.test.cjs"
   },
   "dependencies": {
     "@emotion/react": "^11.10.6",
