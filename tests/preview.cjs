@@ -36,7 +36,7 @@ const net = require('node:net');
       VALUES ('2026','confirmed','advanced','fullpass','Demo','Dancer','demo+full@example.com','Austria'),
       ('2026','confirmed','advanced','partyPass','Party','Dancer','demo+party@example.com','Austria')`;
     await sql.end();
-    const env = { ...process.env, DATABASE_URL: url, PGPORT: String(port), NODE_ENV: 'development',
+    const env = { ...process.env, DATABASE_URL: url, PGPORT: String(port), NODE_ENV: 'development', BFF_PREVIEW: 'true',
       REG2026_ENABLED: 'true', REG2026_SIGNING_SECRET: 'preview-only-signing-secret', REG2026_ORIGIN: 'http://localhost:31026',
       REG2026_CLOSES_AT: '2099-01-01T00:00:00Z', ADMIN_SESSION_SECRET: 'preview-only-admin-secret',
       ADMIN_USER: 'preview', HASHED_PASS: 'preview', STRIPE_SECRET_KEY: '', SENDGRID_API_KEY: '',
