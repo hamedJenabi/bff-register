@@ -46,6 +46,8 @@ $accent: #ffd69c;
 @media (hover: hover) { .classGrid button.classCard:not(:disabled):hover { background: #582637; border-color: #dbadba; transform: translateY(-1px); } }
 .selectedClasses { margin-top: 26px; ul { padding: 0; list-style: none; } li { display: flex; justify-content: space-between; gap: 16px; align-items: center; border-top: 1px solid #704050; padding: 14px 0; font-size: 14px; } }
 .primary, .page button.primary { background: $accent; color: $background; font-weight: 700; border-color: $accent; }
+.voucher { margin: 20px 0; label { display: block; font-weight: 600; } }
+.page input.voucherInput { display: block; width: 100%; max-width: 420px; min-height: 44px; height: auto; border: 1px solid #926272; border-radius: 8px; padding: 10px 12px; background: #4b1b2a; color: $text; font: inherit; &::placeholder { color: $muted; } }
 .backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.75); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 24px; opacity: 0; transition: opacity 180ms ease; }
 .backdrop[data-animated="false"] { opacity: 1; }
 .backdrop[data-enter] { opacity: 1; }

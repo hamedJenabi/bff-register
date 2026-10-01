@@ -5,6 +5,8 @@ import {
   unstable_useFormState as useFormState,
   unstable_Form as Form,
   unstable_FormMessage as FormMessage,
+  unstable_FormInput as FormInput,
+  unstable_FormLabel as FormLabel,
   unstable_FormSubmitButton as FormSubmitButton,
 } from "reakit/Form";
 import {
@@ -18,7 +20,7 @@ import {
   CompetitionSection,
   LunchSection,
 } from "../components/Reg2026/AddOnSections";
-import { CLASS_SELECTION_LIMIT } from "../lib/reg2026/catalog";
+import { CLASS_SELECTION_LIMIT, FREE_PASS_VOUCHER } from "../lib/reg2026/catalog";
 import { priceDraft } from "../lib/reg2026/pricing";
 import { validateDraft } from "../lib/reg2026/validation";
 import styles from "../components/Reg2026/Registration.module.scss";
@@ -409,6 +411,14 @@ export default function Registration({ initial, access, loadError }) {
                       This is a one-time registration. Review all choices before
                       submitting. Contact the organizers for any later changes.
                     </p>
+                    <div className={styles.voucher}>
+                      <FormLabel {...editForm} name="voucher">Voucher</FormLabel>
+                      <FormInput {...editForm} name="voucher" type="text" className={styles.voucherInput}
+                        placeholder="Enter your voucher code" autoComplete="off" spellCheck={false}
+                        disabled={busy || !data.open} />
+                      <FormMessage {...form} name="voucher" />
+                      {draft.voucher === FREE_PASS_VOUCHER && <p role="status" aria-live="polite">Voucher applied. All selected options are free.</p>}
+                    </div>
                     <FormMessage {...form} name="formError" />
                     <FormSubmitButton
                       {...form}

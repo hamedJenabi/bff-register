@@ -57,3 +57,14 @@ test("Reakit validation applies the festival-wide five-class cap", () => {
   values.classes = classes.slice(0, 5);
   assert.deepEqual(validateRegistrationForm(values, participant, empty()), {});
 });
+
+test("Reakit vouchers survive draft restoration and blank codes preserve the original draft format", () => {
+  const values = registrationFormValues({ ...empty(), lunch: ["saturday"], voucher: "freepass26" });
+  assert.equal(values.voucher, "freepass26");
+  assert.equal(registrationDraft(values).voucher, "freepass26");
+  assert.deepEqual(validateRegistrationForm(values, participant, empty()), {});
+  values.voucher = "invalid";
+  assert.match(validateRegistrationForm(values, participant, empty()).voucher, /not recognized/);
+  values.voucher = "  ";
+  assert.equal(registrationDraft(values).voucher, undefined);
+});

@@ -51,3 +51,17 @@ test("competition roles and invalid choices cannot bypass validation", () => {
   assert.equal(validateDraft({ ...empty(), lunch: [null] }, { ticket: "fullpass" }).valid, false);
   assert.equal(validateDraft({ ...empty(), classes: [null] }, { ticket: "fullpass" }).valid, false);
 });
+
+test("freepass26 waives all add-ons and fees while preserving booking validation", () => {
+  const draft = { ...empty(), competitions: ["solo_battle", "open_mixnmatch", "newcomers_mixnmatch", "strictly", "fever_showcase"],
+    competitionRoles: { open_mixnmatch: "lead", newcomers_mixnmatch: "follow", strictly: "lead" }, lunch: ["saturday", "sunday"] };
+  assert.equal(priceDraft(draft, empty()).totalCents, 8139);
+  const valid = validateDraft({ ...draft, voucher: " freepass26 " }, { ticket: "partyPass" });
+  assert.equal(valid.valid, true); assert.equal(valid.value.voucher, "freepass26");
+  assert.deepEqual(priceDraft(valid.value, empty()), { errors: {}, subtotalCents: 0, feeCents: 0, totalCents: 0 });
+  for (const voucher of ["invalid", "Freepass26", true, ["freepass26"]]) {
+    assert.ok(validateDraft({ ...draft, voucher }, { ticket: "partyPass" }).errors.voucher);
+  }
+  assert.equal(validateDraft({ ...draft, voucher: "freepass26", competitionRoles: {} }, { ticket: "partyPass" }).valid, false);
+  assert.equal(validateDraft({ ...draft, voucher: "freepass26", classes: [{ sessionId: "fri-1330-ankersaal" }] }, { ticket: "partyPass" }).valid, false);
+});

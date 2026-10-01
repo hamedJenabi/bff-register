@@ -40,6 +40,8 @@ A confirmed `reg2026_orders` row marks the participant as registered, including 
 
 Completed links show only a confirmation, a link back to the festival website and `registration@bluesfever.eu` for all later changes. Competition/lunch controls do not show “Already booked” labels. Legacy add-ons alone do not mark the supplemental form complete; their purchases remain credited. Unfinished checkout stays accessible, and expired or failed attempts may be retried. Browser storage remains disabled.
 
+The optional Voucher field accepts `freepass26` (with surrounding whitespace trimmed). The normalized code is stored in the order draft, and server-owned pricing waives all new competition/lunch charges and Stripe fees. The resulting zero-total order confirms immediately without checkout. Unknown or malformed voucher values are rejected. Pass eligibility, dance roles, five-class/slot limits, capacities and paid add-on protections still apply; original festival pass purchases are untouched. Unit, database and HTTP tests cover the waiver, invalid codes, confirmed capacity and repeat submissions. Browser QA confirmed a paid draft became €0 and completed without Stripe.
+
 ## Stripe
 
 Configure a dedicated webhook destination at `https://YOUR_ORIGIN/api/reg2026/webhook` for:

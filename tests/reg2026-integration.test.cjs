@@ -163,6 +163,19 @@ test("registration orders on isolated Postgres", { skip: !process.env.TEST_DATAB
       assert.equal((await store.organizerClasses(unfinished.id)).editable, false);
       await assert.rejects(store.editClasses(unfinished.id, [], ""), /pending checkout/);
     });
+    await t.test("voucher registrations confirm choices and capacity once without a checkout", async () => {
+      const person = await createPerson("Voucher");
+      const draft = { ...empty(), classes: [{ sessionId: "sun-1415-ankersaal" }], competitions: ["solo_battle"], lunch: ["saturday", "sunday"], voucher: "freepass26" };
+      const confirmed = await store.submit(person, draft, "voucher-request-01");
+      assert.equal(confirmed.status, "confirmed"); assert.equal(confirmed.total_cents, 0); assert.equal(confirmed.fee_cents, 0);
+      assert.equal(confirmed.stripe_session_id, null); assert.equal(confirmed.draft.voucher, "freepass26");
+      const [booking] = await sql`SELECT status FROM class_bookings_26 WHERE registration_id = ${person.id}`;
+      assert.equal(booking.status, "confirmed");
+      const [current] = await sql`SELECT competitions, lunch FROM registrations_26 WHERE id = ${person.id}`;
+      assert.deepEqual(current, { competitions: "solo_battle", lunch: "saturday,sunday" });
+      assert.equal((await store.submit(person, draft, "voucher-request-01")).id, confirmed.id);
+      await assert.rejects(store.submit(person, draft, "voucher-new-key-01"), /contact the organizers/);
+    });
     await t.test("invitations skip ambiguous identities, survive failures and never blindly resend", async () => {
       const { queueInvitations, processDeliveryBatch } = require("../lib/reg2026/invitations");
       process.env.REG2026_ENABLED = "true";
@@ -232,6 +245,17 @@ test("registration orders on isolated Postgres", { skip: !process.env.TEST_DATAB
       const closed = res(); process.env.REG2026_ENABLED = "false";
       await submit({ method: "POST", body: { ...access, requestKey: "http-closed-0001", draft: empty() } }, closed);
       assert.equal(closed.code, 403); process.env.REG2026_ENABLED = "true";
+      const voucherPerson = await createPerson("VoucherHTTP");
+      const voucherUser = voucherPerson.email + "+" + voucherPerson.firstname;
+      const voucherAccess = { user: voucherUser, sig: signIdentity(voucherUser) };
+      const invalidVoucher = res(); await submit({ method: "POST", body: { ...voucherAccess, requestKey: "http-bad-voucher-01",
+        draft: { ...empty(), voucher: "invalid", lunch: ["saturday"] }, price: 0 } }, invalidVoucher);
+      assert.equal(invalidVoucher.code, 422); assert.match(invalidVoucher.body.errors.voucher, /not recognized/);
+      assert.equal(await store.completedOrder(voucherPerson.id), undefined);
+      const voucher = res(); await submit({ method: "POST", body: { ...voucherAccess, requestKey: "http-free-voucher-01",
+        draft: { ...free, competitions: ["solo_battle"], lunch: ["saturday", "sunday"], voucher: "freepass26" } } }, voucher);
+      assert.equal(voucher.code, 200); assert.equal(voucher.body.order.status, "confirmed");
+      assert.equal(voucher.body.order.totalCents, 0); assert.equal(voucher.body.checkoutUrl, null); assert.equal(sessions.size, 0);
       const paid = res(); await submit({ method: "POST", body: { ...access, requestKey: "http-payment-001", draft: { ...empty(), lunch: ["saturday"] }, price: 1 } }, paid);
       assert.equal(paid.code, 200); assert.equal(paid.body.order.totalCents, 1547);
       assert.equal(paid.body.checkoutUrl, "https://checkout.example.com/http");
