@@ -41,7 +41,7 @@ export default function Registration({ initial, access, loadError }) {
   const [data, setData] = useState(initial);
   const [requestKey, setRequestKey] = useState("");
   const [hydrated, setHydrated] = useState(false);
-  const [checkoutUrl, setCheckoutUrl] = useState(null);
+  const [redirecting, setRedirecting] = useState(false);
   const [networkBusy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const pending = ["provisional", "payment_pending"].includes(
@@ -92,18 +92,17 @@ export default function Registration({ initial, access, loadError }) {
             form: result.error || "Could not submit. Your draft has been kept.",
           });
         }
+        if (result.checkoutUrl) {
+          setRedirecting(true);
+          setMessage("Opening secure checkout…");
+          window.location.assign(result.checkoutUrl);
+          return;
+        }
         setData((current) => ({
           ...current,
           order: result.order,
           pendingDraft: validated.value,
         }));
-        if (result.checkoutUrl) {
-          setCheckoutUrl(result.checkoutUrl);
-          setMessage(
-            "Your places are provisionally held. Review the validated total below, then open secure checkout.",
-          );
-          return;
-        }
         await refresh(result.order.id);
         // Keep the verified order in the URL so refreshes display the confirmation.
         await router.replace(
@@ -115,6 +114,7 @@ export default function Registration({ initial, access, loadError }) {
           { shallow: true },
         );
       } catch (error) {
+        setRedirecting(false);
         if (error.formError) throw error;
         const text =
           error.message || "Could not submit. Your draft has been kept.";
@@ -124,7 +124,7 @@ export default function Registration({ initial, access, loadError }) {
     },
   });
   const draft = registrationDraft(form.values);
-  const busy = networkBusy || form.submitting;
+  const busy = networkBusy || form.submitting || redirecting;
   const { update } = form;
   const restoreForm = (choices, compete) => {
     Object.entries(registrationFormValues(choices, compete)).forEach(
@@ -164,8 +164,6 @@ export default function Registration({ initial, access, loadError }) {
     const result = await response.json();
     if (!response.ok) throw new Error(result.error);
     setData(result);
-    if (!["provisional", "payment_pending"].includes(result.order?.status))
-      setCheckoutUrl(null);
     if (["expired", "payment_failed"].includes(result.order?.status))
       setRequestKey(newKey());
     if (result.order?.status === "confirmed") {
@@ -196,9 +194,13 @@ export default function Registration({ initial, access, loadError }) {
       );
       const result = await response.json();
       if (!response.ok) throw new Error(result.error);
-      if (result.checkoutUrl) window.location.assign(result.checkoutUrl);
-      else await refresh(result.order?.id || "");
+      if (result.checkoutUrl) {
+        setRedirecting(true);
+        setMessage("Opening secure checkout…");
+        window.location.assign(result.checkoutUrl);
+      } else await refresh(result.order?.id || "");
     } catch (error) {
+      setRedirecting(false);
       setMessage(error.message);
     } finally {
       setBusy(false);
@@ -272,11 +274,7 @@ export default function Registration({ initial, access, loadError }) {
                     <button
                       type="button"
                       disabled={busy}
-                      onClick={() =>
-                        checkoutUrl
-                          ? window.location.assign(checkoutUrl)
-                          : checkoutAction(false)
-                      }
+                      onClick={() => checkoutAction(false)}
                     >
                       Open secure checkout
                     </button>
@@ -425,11 +423,13 @@ export default function Registration({ initial, access, loadError }) {
                       className={styles.primary}
                       disabled={busy || pending || !data.open || !hydrated}
                     >
-                      {busy
-                        ? "Saving…"
-                        : price.totalCents > 0
-                          ? `Continue to payment · ${euros(price.totalCents)}`
-                          : "Save festival choices"}
+                      {redirecting
+                        ? "Opening secure checkout…"
+                        : busy
+                          ? "Saving…"
+                          : price.totalCents > 0
+                            ? `Continue to payment · ${euros(price.totalCents)}`
+                            : "Save festival choices"}
                     </FormSubmitButton>
                   </section>
                 </Form>

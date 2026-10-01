@@ -1,4 +1,4 @@
-// Disposable browser-QA server: no operational DB, Stripe key or SendGrid key.
+// Disposable browser-QA server: no operational DB, live Stripe or SendGrid key.
 require('./register.cjs');
 const { execFileSync, spawn } = require('node:child_process');
 const { mkdtempSync, rmSync } = require('node:fs');
@@ -6,6 +6,7 @@ const path = require('node:path');
 const os = require('node:os');
 const postgres = require('postgres');
 const net = require('node:net');
+const http = require('node:http');
 (async () => {
   const root = mkdtempSync(path.join(os.tmpdir(), 'bff-reg2026-preview-'));
   const data = path.join(root, 'data');
@@ -14,8 +15,26 @@ const net = require('node:net');
   const port = listener.address().port;
   await new Promise((resolve) => listener.close(resolve));
   let started = false, child;
+  const checkout = http.createServer((req, res) => {
+    const query = new URL(req.url, 'http://127.0.0.1').searchParams;
+    const order = Number(query.get('order'));
+    const amount = Number(query.get('amount'));
+    const returnUrl = query.get('return');
+    const safeReturn = returnUrl?.startsWith('http://localhost:31026/reg2026?')
+      ? returnUrl.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;') : null;
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.end(`<!doctype html><html lang="en"><meta name="viewport" content="width=device-width"><title>Test checkout</title>
+      <body style="font-family:system-ui;max-width:640px;margin:60px auto;padding:24px"><h1>Test checkout destination</h1>
+      <p>The registration form redirected here automatically after submission.</p>
+      <p>This local stand-in creates no payment and sends no email.</p>
+      <p>Order ${Number.isSafeInteger(order) ? order : 'unknown'} · ${Number.isSafeInteger(amount) ? (amount / 100).toFixed(2) : 'unknown'} EUR</p>
+      ${safeReturn ? `<a href="${safeReturn}">Return without paying</a>` : ''}</body></html>`);
+  });
+  await new Promise((resolve, reject) => { checkout.on('error', reject); checkout.listen(0, '127.0.0.1', resolve); });
+  const checkoutOrigin = `http://127.0.0.1:${checkout.address().port}`;
   const cleanup = () => {
     if (child) child.kill('SIGTERM');
+    checkout.close();
     if (started) {
       started = false;
       execFileSync('pg_ctl', ['-D', data, '-m', 'immediate', '-w', 'stop'], { stdio: 'pipe' });
@@ -53,7 +72,8 @@ const net = require('node:net');
     const env = { ...process.env, DATABASE_URL: url, PGPORT: String(port), NODE_ENV: 'development', BFF_PREVIEW: 'true',
       REG2026_ENABLED: 'true', REG2026_SIGNING_SECRET: 'preview-only-signing-secret', REG2026_ORIGIN: 'http://localhost:31026',
       REG2026_CLOSES_AT: '2099-01-01T00:00:00Z', ADMIN_SESSION_SECRET: 'preview-only-admin-secret',
-      ADMIN_USER: 'preview', HASHED_PASS: 'preview', STRIPE_SECRET_KEY: '', SENDGRID_API_KEY: '',
+      ADMIN_USER: 'preview', HASHED_PASS: 'preview', STRIPE_SECRET_KEY: 'sk_test_preview_only', SENDGRID_API_KEY: '',
+      PREVIEW_CHECKOUT_ORIGIN: checkoutOrigin,
       REG2026_CONFIRMATION_TEMPLATE_ID: '', REG2026_INVITATION_TEMPLATE_ID: '', REG2026_CATALOG_REVIEWED: 'false' };
     process.env.REG2026_SIGNING_SECRET = env.REG2026_SIGNING_SECRET;
     const { buildRegistrationPath } = require('../lib/reg2026/security');
@@ -62,7 +82,9 @@ const net = require('node:net');
     console.log('PENDING_URL=http://localhost:31026' + buildRegistrationPath({ firstname: 'Pending', email: 'demo+pending@example.com' }));
     console.log('COMPLETED_URL=http://localhost:31026' + buildRegistrationPath({ firstname: 'Complete', email: 'demo+complete@example.com' }));
     console.log('CLASSES_URL=http://localhost:31026' + buildRegistrationPath({ firstname: 'Hamed', email: 'demo+classes@example.com' }));
-    child = spawn(process.execPath, ['node_modules/next/dist/bin/next', 'dev', '-H', '127.0.0.1', '-p', '31026'], { env, stdio: 'inherit' });
+    console.log('TEST_CHECKOUT_ORIGIN=' + checkoutOrigin);
+    child = spawn(process.execPath, ['--experimental-loader', path.join(__dirname, 'preview-loader.mjs'),
+      'node_modules/next/dist/bin/next', 'dev', '-H', '127.0.0.1', '-p', '31026'], { env, stdio: 'inherit' });
     for (const signal of ['SIGINT', 'SIGTERM']) process.on(signal, () => { cleanup(); process.exit(0); });
     await new Promise((resolve) => child.on('exit', resolve));
   } finally { cleanup(); }

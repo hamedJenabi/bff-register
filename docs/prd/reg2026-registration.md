@@ -92,7 +92,7 @@ Start the competition section with “Do you want to compete?” and reveal the 
 - Send an email containing the saved registration information. The SendGrid template ID will be supplied by the user.
 - Include an attendee-app link with requested shape `https://app.bluesfever.eu?token=firstname+email+id`; the token contract and encoding require agreement.
 - Lunch and competition additions are paid through Stripe, including the existing checkout fee; class-only submissions have no payment step. Full Pass holders no longer receive a free competition entry.
-- Display the validated subtotal, Stripe fee, and charged total before redirecting. On return from Stripe, show payment-pending status until a server-verified payment event confirms the booking. A never-completed checkout and its provisional booking expire after one hour; a completed payment still processing remains pending until Stripe reports success or failure.
+- Display subtotal, Stripe fee, and charged total in the form. After a successful paid submission, redirect directly to the server-created Stripe checkout without a second review screen or checkout click. On return from Stripe, show payment-pending status until a server-verified payment event confirms the booking. A never-completed checkout and its provisional booking expire after one hour; a completed payment still processing remains pending until Stripe reports success or failure.
 - After completion, all changes, added entries, removals and refunds go through organizers. Pending, failed or expired payment attempts can still be completed or retried; they do not count as successful registrations.
 - If a confirmation email fails, keep the booking confirmed and the participant's success page accurate; record the failed send for an organizer retry.
 
@@ -192,6 +192,7 @@ Production database-backed schedule authoring is deferred by the request. Persis
 22. If SendGrid fails after payment and booking confirmation, keep the booking confirmed, show the participant success, and queue the failed confirmation email for organizer retry.
 23. Add a Classes column to the organizer dashboard with a registered class count and a button opening participant-specific details. Show saved class titles, day/time, teachers and lead/follow or solo roles in an accessible dialog, including an explicit empty state. Organizers can remove classes and add replacements from a dropdown, with roles, then save atomically without email or payment actions. Preserve five-class, time-slot, eligibility and capacity rules; prevent stale edits and edits during pending checkout. Pending checkout drafts are not confirmed registrations.
 24. Add an optional Voucher input at the end of `/reg2026`. The code `freepass26` makes all selected competition entries and lunch meals free, including checkout fees. Confirm these submissions without Stripe, while preserving class/pass/role/capacity rules and one-time registration. Reject unknown codes. Previously purchased festival passes remain unchanged.
+25. Submit paid choices directly to Stripe without an intermediate checkout-review screen. Keep resume/cancel/status recovery for participants who return without paying or reopen a pending registration.
 
 ### Launch inputs and deferred details
 
