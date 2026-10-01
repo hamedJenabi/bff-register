@@ -45,3 +45,15 @@ test("empty and partial local drafts initialize all fields and preserve competit
   assert.deepEqual(registrationFormErrors({ classes: "Full", form: "Unavailable" }),
     { classes: "Full", formError: "Unavailable" });
 });
+
+
+test("Reakit validation applies the festival-wide five-class cap", () => {
+  const { schedule } = require("../lib/reg2026/catalog");
+  const slots = new Set();
+  const classes = schedule.filter((session) => !slots.has(session.slotId) && slots.add(session.slotId))
+    .slice(0, 6).map((session) => ({ sessionId: session.id, ...(session.partnerClass ? { role: "lead" } : {}) }));
+  const values = registrationFormValues({ ...empty(), classes });
+  assert.match(validateRegistrationForm(values, participant, empty()).classes, /5 classes in total/);
+  values.classes = classes.slice(0, 5);
+  assert.deepEqual(validateRegistrationForm(values, participant, empty()), {});
+});

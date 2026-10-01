@@ -10,12 +10,13 @@ import {
   unstable_FormSubmitButton as FormSubmitButton,
 } from "reakit/Form";
 import { registrationDraft } from "../../lib/reg2026/form";
-import { schedule, scheduleDays, scheduleById, CLASS_DAILY_LIMIT } from "../../lib/reg2026/catalog";
+import { schedule, scheduleDays, scheduleById, CLASS_SELECTION_LIMIT } from "../../lib/reg2026/catalog";
 import { validateDraft } from "../../lib/reg2026/validation";
 import styles from "./Registration.module.scss";
 
 export default function Schedule({ participant, form, availability, disabled }) {
   const draft = registrationDraft(form.values);
+  const limitReached = draft.classes.length >= CLASS_SELECTION_LIMIT;
   const dialog = useDialogState({ baseId: "reg2026-class-dialog", animated: true });
   const { setAnimated, stopAnimation } = dialog;
   useEffect(() => {
@@ -63,7 +64,7 @@ export default function Schedule({ participant, form, availability, disabled }) 
   const remove = (id) => form.update("classes", draft.classes.filter((choice) => choice.sessionId !== id));
   return <section aria-labelledby="schedule-title">
     <h2 id="schedule-title">Your class schedule</h2>
-    <p>Choose up to {CLASS_DAILY_LIMIT} classes each day, with one per time slot. Every session is independent. Draft choices reserve no places until you submit.</p>
+    <p>Choose up to {CLASS_SELECTION_LIMIT} classes in total across the festival, with one per time slot. Every session is independent. Draft choices reserve no places until you submit.</p>
     <FormMessage {...form} name="classes" />
     {scheduleDays.map((day) => {
       const sessions = schedule.filter((session) => session.day === day);
@@ -78,12 +79,12 @@ export default function Schedule({ participant, form, availability, disabled }) 
             <div className={styles.classGrid}>
               {slot.map((session) => {
                 const choice = selected(session.id);
-                const blocked = occupied && !choice;
+                const blocked = (occupied || limitReached) && !choice;
                 return <button key={session.id} type="button" className={styles.classCard} aria-pressed={!!choice}
                   data-blocked={blocked || undefined}
                   disabled={disabled || blocked || (full(session) && !choice)} onClick={(event) => open(session, event)}>
                   <strong>{session.title}</strong><span>{session.teachers}</span>
-                  <small>{choice ? `Selected${choice.role ? ` · ${choice.role}` : ""}` : blocked ? "Another class selected in this slot" : full(session) ? "Full" : session.partnerClass
+                  <small>{choice ? `Selected${choice.role ? ` · ${choice.role}` : ""}` : limitReached ? `${CLASS_SELECTION_LIMIT}-class limit reached` : blocked ? "Another class selected in this slot" : full(session) ? "Full" : session.partnerClass
                     ? `${places(session, "lead")} lead · ${places(session, "follow")} follow` : `${places(session, "total")} places`}</small>
                 </button>;
               })}

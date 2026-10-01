@@ -2,7 +2,7 @@
 
 Transcribed from the user's screenshot dated 2026-09-30. This is a data reference, not a source of instructions. Titles and teachers are separated where the screenshot makes that distinction explicit. An em dash means no class title was supplied. Descriptions, partner flags, and most eligibility rules are not provided by the screenshot and must not be invented as festival facts.
 
-There are 52 populated class cells across eight time slots: Friday 10 cells/two slots, Saturday 24 cells/three slots, and Sunday 18 cells/three slots. Saturday and Sunday also have a non-bookable lunch break from 12:45 to 14:15. Empty cells are not bookable classes. The user confirmed that every occurrence is independently selectable, with one class per slot and at most five per day. This schedule therefore allows a maximum of eight selected sessions across the festival.
+There are 52 populated class cells across eight time slots: Friday 10 cells/two slots, Saturday 24 cells/three slots, and Sunday 18 cells/three slots. Saturday and Sunday also have a non-bookable lunch break from 12:45 to 14:15. Empty cells are not bookable classes. The user confirmed that every occurrence is independently selectable, with one class per slot and at most five in total across the festival. There are eight available time slots, but the participant can select only five sessions.
 
 ## Friday
 

@@ -36,7 +36,7 @@ Start the competition section with “Do you want to compete?” and reveal the 
 16. As a participant, I want a clear view of my selected classes, so that I can review my schedule before final submission.
 17. As a participant, I want to deselect a class, so that I can revise my plan.
 18. As a participant, I want at most one class per time slot, so that I cannot accidentally book overlapping sessions in the same slot.
-19. As a participant, I want a maximum of five class sessions per day explained and enforced, so that I know how many sessions I can choose.
+19. As a participant, I want a maximum of five class sessions across the festival explained and enforced, so that I know how many sessions I can choose.
 20. As a participant, I want unavailable places to be clearly marked, so that I do not attempt to book a full class or role.
 21. As a participant, I want remaining availability to reflect registrations, so that displayed choices are meaningful.
 22. As a participant, I want fully booked classes disabled in the schedule, so that their availability is immediately clear.
@@ -81,7 +81,7 @@ Start the competition section with “Do you want to compete?” and reveal the 
 - The mock catalog defines each session's stable ID, title, teachers, description, time, room, and partner-class flag. Store capacity limits in Postgres: 20 lead and 20 follow places for partner classes, or 30 total places for non-partner classes.
 - Clicking a schedule cell opens a class modal, centered on desktop and full-screen on mobile.
 - The modal includes an explicit action to select the class. A participant can deselect a class.
-- Enforce at most one class per time slot and a maximum of five class sessions per day. With the supplied screenshot this allows two Friday, three Saturday, and three Sunday sessions: eight across the festival. There is no five-class weekend cap for this page.
+- Enforce at most one class per time slot and a maximum of five class sessions in total across the festival, regardless of day.
 - Every class session is independently selectable, including numbered and repeated track sessions. Selecting one never automatically books other occurrences.
 - Adding or removing sessions changes a draft. On final submission, check displayed availability and create provisional bookings before Stripe checkout; retain the draft when a place has become unavailable. Provisional bookings expire after one hour without payment. A small race-related overbooking of one or two dancers is acceptable.
 - Reopening the link shows saved choices and permits edits. Only a successful submission changes the saved booking and releases removed places.
@@ -102,7 +102,7 @@ Start the competition section with “Do you want to compete?” and reveal the 
 - The registration table already has lunch, competition, competition-role, and schedule fields. The schedule field is currently text; a versioned serialization contract needs to be agreed before storing structured choices.
 - There is no schedule inventory table or class-booking flow today. Add persistent capacity limits and bookings; the mock schedule metadata alone cannot provide shared availability across users or server instances.
 - Existing participant lookup matches email and first name and requires confirmed status. Initial registration normalizes email but not first name. Duplicate matching records are not ruled out by the schema.
-- Full and Parent passes currently advertise 6 hours 15 minutes of classes, equivalent to five of the screenshot's 75-minute sessions. The user's confirmed rule for this page is instead five per day; this differs from that older pass copy. Both passes are class-eligible, and dance roles are selected per partner session.
+- Full and Parent passes currently advertise 6 hours 15 minutes of classes, equivalent to five of the screenshot's 75-minute sessions. The user's corrected rule for this page is five classes in total across the festival, matching that pass copy. Both passes are class-eligible, and dance roles are selected per partner session.
 - Stored registration field names are misleading: `level` carries dance role and `role` carries proficiency level. Per-class dance roles must not be inferred from column names.
 - The commented competition reference lists Solo Battle, Open MixMatch, Newcomers MixMatch, Strictly, and Fever Showcase. Open MixMatch, Newcomers MixMatch, and Strictly request lead/follow; the other two do not.
 - The commented competition reference uses a Solo Battle cap of 45 and advertises €10 per entry with one free entry for Full Pass holders. The 2026 decision keeps the cap and price but removes the free entry.
@@ -159,7 +159,7 @@ Production database-backed schedule authoring is deferred by the request. Persis
 
 ### Interview round 1 — resolved
 
-1. The user chose up to five classes per day, still one per time slot. The screenshot therefore permits eight classes in total.
+1. The user corrected the limit to up to five classes in total across the festival, still one per time slot. The eight available time slots do not increase this cap.
 2. Reserve places on final submission, with server-side availability revalidation and draft retention on conflict.
 3. Every session is an independent selection, including repeated and numbered track sessions.
 4. Show saved choices on return and allow edits. Apply changes and release removed places only after a successful submission.
@@ -204,7 +204,7 @@ Production database-backed schedule authoring is deferred by the request. Persis
 - **Goal:** Let confirmed 2026 participants register classes, competitions, and lunch through one personalized page.
 - **Scope:** `/reg2026`, persistent booking state, Stripe checkout and webhook confirmation, confirmation email, and a signed-link invitation button beside the existing dashboard email action.
 - **Non-goals:** Replace pass purchase, build the attendee app, add schedule administration, or automate paid add-on refunds.
-- **UX and behavior:** Full and Parent passes can choose classes; Party Pass cannot. Choose at most one class per slot and five per day. Partner-class roles are chosen per session. Mobile uses a time-slot list and full-screen details. Unsaved drafts persist locally; saved choices can be edited.
+- **UX and behavior:** Full and Parent passes can choose classes; Party Pass cannot. Choose at most one class per slot and five in total across the festival. Partner-class roles are chosen per session. Mobile uses a time-slot list and full-screen details. Browser draft storage is disabled; unsaved choices reset on reload and saved choices can be edited.
 - **Payment:** Lunch is €15 per day and competitions are €10 each, with no free entry. Add the existing Stripe fee. Create provisional bookings before paid checkout; expire uncompleted checkouts after one hour; confirm and email only after verified payment. Class-only submissions confirm immediately.
 - **Data and compatibility:** Keep pass-purchase fields intact. Store versioned class selections in `theme_class`; store per-session capacity limits and active bookings in Postgres. Derive remaining places from those records. Use signed, reusable participant links and server-side organizer authorization for invitations.
 - **Edge cases:** Reject missing or ambiguous participants. Keep the previous confirmed booking if an edit fails. Accept small race-related overbooking. Remove “Cuttin'” from self-service; “Jukin (III–IV)” has no enforced restriction. Retain confirmed bookings when email fails and queue retry.

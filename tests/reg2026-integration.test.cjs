@@ -140,6 +140,19 @@ test("registration orders on isolated Postgres", { skip: !process.env.TEST_DATAB
       assert.equal(malformed.code, 422);
       const classes = res(); await submit({ method: "POST", body: { ...access, requestKey: "http-party-00001", draft: free } }, classes);
       assert.equal(classes.code, 422);
+      const [fullPass] = await sql`INSERT INTO registrations_26 (date,status,role,ticket,firstname,lastname,email,country)
+        VALUES ('2026','confirmed','advanced','fullpass','Limit','Participant','limit@example.com','Austria') RETURNING *`;
+      const fullUser = fullPass.email + "+" + fullPass.firstname;
+      const slots = new Set();
+      const tooMany = require("../lib/reg2026/catalog").schedule
+        .filter((session) => !slots.has(session.slotId) && slots.add(session.slotId)).slice(0, 6)
+        .map((session) => ({ sessionId: session.id, ...(session.partnerClass ? { role: "lead" } : {}) }));
+      const overLimit = res();
+      await submit({ method: "POST", body: { user: fullUser, sig: signIdentity(fullUser),
+        requestKey: "http-class-limit-01", draft: { ...empty(), classes: tooMany } } }, overLimit);
+      assert.equal(overLimit.code, 422);
+      assert.match(overLimit.body.errors.classes, /5 classes in total/);
+      assert.equal(await store.activeOrder(fullPass.id), undefined);
       const closed = res(); process.env.REG2026_ENABLED = "false";
       await submit({ method: "POST", body: { ...access, requestKey: "http-closed-0001", draft: empty() } }, closed);
       assert.equal(closed.code, 403); process.env.REG2026_ENABLED = "true";

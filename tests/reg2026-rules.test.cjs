@@ -23,11 +23,21 @@ test("Party Pass, malformed drafts, slots and partner roles are enforced", () =>
   draft.classes.push({ sessionId: "fri-1330-studio" });
   assert.match(validateDraft(draft, { ticket: "fullpass" }).errors.classes, /time slot/);
 });
-test("eight distinct weekend sessions are allowed and serialization round trips", () => {
+test("five classes across the festival are allowed; six and eight are rejected", () => {
   const seen = new Set();
-  const classes = schedule.filter((s) => !seen.has(s.slotId) && seen.add(s.slotId)).map((s) => ({ sessionId: s.id, ...(s.partnerClass ? { role: "follow" } : {}) }));
-  assert.equal(classes.length, 8);
-  assert.equal(validateDraft({ ...empty(), classes }, { ticket: "parentPass" }).valid, true);
+  const sessions = schedule.filter((session) => !seen.has(session.slotId) && seen.add(session.slotId))
+    .map((session) => ({ sessionId: session.id, ...(session.partnerClass ? { role: "follow" } : {}) }));
+  assert.equal(sessions.length, 8);
+  const classes = sessions.slice(0, 5);
+  for (const ticket of ["fullpass", "parentPass"]) {
+    assert.equal(validateDraft(empty(), { ticket }).valid, true);
+    assert.equal(validateDraft({ ...empty(), classes }, { ticket }).valid, true);
+    for (const count of [6, 8]) {
+      const result = validateDraft({ ...empty(), classes: sessions.slice(0, count) }, { ticket });
+      assert.equal(result.valid, false);
+      assert.match(result.errors.classes, /5 classes in total/);
+    }
+  }
   assert.deepEqual(parseThemeClass(serializeThemeClass(classes)), classes);
 });
 test("only new add-ons are charged, no free Full Pass entry, fees use cents", () => {

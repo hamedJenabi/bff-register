@@ -18,6 +18,7 @@ import {
   CompetitionSection,
   LunchSection,
 } from "../components/Reg2026/AddOnSections";
+import { CLASS_SELECTION_LIMIT } from "../lib/reg2026/catalog";
 import { priceDraft } from "../lib/reg2026/pricing";
 import { validateDraft } from "../lib/reg2026/validation";
 import styles from "../components/Reg2026/Registration.module.scss";
@@ -317,7 +318,7 @@ export default function Registration({ initial, access, loadError }) {
                     <strong>{draft.classes.length}</strong>{" "}
                     {draft.classes.length === 1 ? "class" : "classes"} selected
                   </span>
-                  <p>Across all festival days</p>
+                  <p>Maximum {CLASS_SELECTION_LIMIT} across all days</p>
                 </aside>
               )}
               <Form {...form} aria-busy={busy}>
