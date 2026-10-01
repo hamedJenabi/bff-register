@@ -46,6 +46,9 @@ export default function Registration({ initial, access, loadError }) {
     data?.order?.status,
   );
 
+  const completed =
+    !pending && !!(data?.completed || data?.order?.status === "confirmed");
+
   const form = useFormState({
     baseId: "reg2026",
     // React Strict Mode replays effect cleanup; drafts should survive it.
@@ -78,6 +81,7 @@ export default function Registration({ initial, access, loadError }) {
         });
         const result = await response.json();
         if (!response.ok) {
+          if (response.status === 409) await refresh().catch(() => {});
           setMessage(
             result.error || "Could not submit. Your draft has been kept.",
           );
@@ -242,26 +246,23 @@ export default function Registration({ initial, access, loadError }) {
                   : "Classes, competitions and lunch"}
               </p>
             </div>
-            {!data.open && (
+            {!data.open && !completed && (
               <p className={styles.notice}>
-                Registration is closed. You can view your saved choices and
-                payment status.
+                Registration is closed. You can check pending payment status.
               </p>
             )}
-            <div className={styles.notice} role="status" aria-live="polite">
-              {message ||
-                (data.order?.status === "confirmed"
-                  ? "Your festival choices are confirmed."
-                  : data.order?.status === "payment_pending"
-                    ? "Payment is processing. Your previous saved choices remain in place until payment is verified."
+            {!completed && (
+              <div className={styles.notice} role="status" aria-live="polite">
+                {message ||
+                  (data.order?.status === "payment_pending"
+                    ? "Payment is processing. Registration will complete after payment is verified."
                     : data.order?.status === "provisional"
                       ? "Checkout is open. These choices are provisional for up to one hour. Payment has not yet been confirmed."
-                      : ["expired", "payment_failed"].includes(
-                            data.order?.status,
-                          )
-                        ? "Checkout expired or payment failed. Your previous confirmed choices are unchanged."
+                      : ["expired", "payment_failed"].includes(data.order?.status)
+                        ? "Checkout expired or payment failed. Please review your choices and try again."
                         : "Review your choices, then submit them together.")}
-            </div>
+              </div>
+            )}
             {pending && (
               <div className={styles.actions}>
                 {data.order.status === "provisional" && (
@@ -297,94 +298,133 @@ export default function Registration({ initial, access, loadError }) {
                 </button>
               </div>
             )}
-            <div
-              className={
-                data.participant.ticket !== "partyPass"
-                  ? styles.registrationLayout
-                  : undefined
-              }
-            >
-              {data.participant.ticket !== "partyPass" && (
-                <aside
-                  className={styles.selectionSummary}
-                  aria-label="Selected class total"
-                >
-                  <span
-                    className={styles.selectionCount}
-                    role="status"
-                    aria-live="polite"
-                    aria-atomic="true"
-                  >
-                    <strong>{draft.classes.length}</strong>{" "}
-                    {draft.classes.length === 1 ? "class" : "classes"} selected
-                  </span>
-                  <p>Maximum {CLASS_SELECTION_LIMIT} across all days</p>
-                </aside>
-              )}
-              <Form {...form} aria-busy={busy}>
+            {completed ? (
+              <section aria-labelledby="complete-title">
+                <h2 id="complete-title">Registration complete</h2>
+                <p>Your festival choices are confirmed. Thank you!</p>
+                <p>
+                  For any changes, contact{" "}
+                  <a href="mailto:registration@bluesfever.eu">the organizers</a>.
+                </p>
+                <a href="https://www.bluesfever.eu/">Back to Blues Fever</a>
+              </section>
+            ) : pending ? (
+              <section className={styles.review} aria-labelledby="pending-title">
+                <h2 id="pending-title">Complete your payment</h2>
+                <p>
+                  Your choices are held while you finish checkout. Payment must
+                  be confirmed to complete registration.
+                </p>
+                <dl>
+                  <div>
+                    <dt>Add-ons</dt>
+                    <dd>{euros(price.subtotalCents)}</dd>
+                  </div>
+                  <div>
+                    <dt>Stripe fee (1.4% + €0.25)</dt>
+                    <dd>{euros(price.feeCents)}</dd>
+                  </div>
+                  <div>
+                    <dt>Total due</dt>
+                    <dd>{euros(price.totalCents)}</dd>
+                  </div>
+                </dl>
+              </section>
+            ) : (
+              <div
+                className={
+                  data.participant.ticket !== "partyPass"
+                    ? styles.registrationLayout
+                    : undefined
+                }
+              >
                 {data.participant.ticket !== "partyPass" && (
-                  <Schedule
-                    participant={data.participant}
+                  <aside
+                    className={styles.selectionSummary}
+                    aria-label="Selected class total"
+                  >
+                    <span
+                      className={styles.selectionCount}
+                      role="status"
+                      aria-live="polite"
+                      aria-atomic="true"
+                    >
+                      <strong>{draft.classes.length}</strong>{" "}
+                      {draft.classes.length === 1 ? "class" : "classes"} selected
+                    </span>
+                    <p>Maximum {CLASS_SELECTION_LIMIT} across all days</p>
+                  </aside>
+                )}
+                <Form {...form} aria-busy={busy}>
+                  {data.participant.ticket !== "partyPass" && (
+                    <Schedule
+                      participant={data.participant}
+                      form={editForm}
+                      availability={data.availability.classes}
+                      disabled={busy || pending || !data.open}
+                    />
+                  )}
+                  <CompetitionSection
                     form={editForm}
-                    availability={data.availability.classes}
+                    saved={data.choices}
+                    remaining={data.availability.soloBattleRemaining}
                     disabled={busy || pending || !data.open}
                   />
-                )}
-                <CompetitionSection
-                  form={editForm}
-                  saved={data.choices}
-                  remaining={data.availability.soloBattleRemaining}
-                  disabled={busy || pending || !data.open}
-                />
-                <LunchSection
-                  form={editForm}
-                  saved={data.choices}
-                  disabled={busy || pending || !data.open}
-                />
-                <section
-                  className={styles.review}
-                  aria-labelledby="review-title"
-                >
-                  <h2 id="review-title">Review and submit</h2>
-                  <p>
-                    {data.participant.ticket !== "partyPass" &&
-                      "Class registration is included in your pass. "}
-                    Only new lunch and competition bookings are charged.
-                  </p>
-                  <dl>
-                    <div>
-                      <dt>New add-ons</dt>
-                      <dd>{euros(price.subtotalCents)}</dd>
-                    </div>
-                    <div>
-                      <dt>Stripe fee (1.4% + €0.25)</dt>
-                      <dd>{euros(price.feeCents)}</dd>
-                    </div>
-                    <div>
-                      <dt>Total due</dt>
-                      <dd>{euros(price.totalCents)}</dd>
-                    </div>
-                  </dl>
-                  <p>
-                    {data.participant.ticket !== "partyPass" &&
-                      "Adding classes here is a draft action. "}
-                    Availability is checked again on submission.
-                  </p>
-                  <FormMessage {...form} name="formError" />
-                  <FormSubmitButton
-                    {...form}
-                    className={styles.primary}
-                    disabled={busy || pending || !data.open || !hydrated}
+                  <LunchSection
+                    form={editForm}
+                    saved={data.choices}
+                    disabled={busy || pending || !data.open}
+                  />
+                  <section
+                    className={styles.review}
+                    aria-labelledby="review-title"
                   >
-                    {busy
-                      ? "Saving…"
-                      : price.totalCents > 0
-                        ? `Continue to payment · ${euros(price.totalCents)}`
-                        : "Save festival choices"}
-                  </FormSubmitButton>
-                </section>
-              </Form>
-            </div>
+                    <h2 id="review-title">Review and submit</h2>
+                    <p>
+                      {data.participant.ticket !== "partyPass" &&
+                        "Class registration is included in your pass. "}
+                      Competition entries and lunch are paid together. Existing
+                      purchases are credited.
+                    </p>
+                    <dl>
+                      <div>
+                        <dt>Add-ons</dt>
+                        <dd>{euros(price.subtotalCents)}</dd>
+                      </div>
+                      <div>
+                        <dt>Stripe fee (1.4% + €0.25)</dt>
+                        <dd>{euros(price.feeCents)}</dd>
+                      </div>
+                      <div>
+                        <dt>Total due</dt>
+                        <dd>{euros(price.totalCents)}</dd>
+                      </div>
+                    </dl>
+                    <p>
+                      {data.participant.ticket !== "partyPass" &&
+                        "Adding classes here is a draft action. "}
+                      Availability is checked again on submission.
+                    </p>
+                    <p>
+                      This is a one-time registration. Review all choices before
+                      submitting. Contact the organizers for any later changes.
+                    </p>
+                    <FormMessage {...form} name="formError" />
+                    <FormSubmitButton
+                      {...form}
+                      className={styles.primary}
+                      disabled={busy || pending || !data.open || !hydrated}
+                    >
+                      {busy
+                        ? "Saving…"
+                        : price.totalCents > 0
+                          ? `Continue to payment · ${euros(price.totalCents)}`
+                          : "Save festival choices"}
+                    </FormSubmitButton>
+                  </section>
+                </Form>
+              </div>
+            )}
           </>
         )}
       </main>
@@ -413,7 +453,7 @@ export async function getServerSideProps({ query, res }) {
     const order =
       typeof query.order === "string" && /^\d+$/.test(query.order)
         ? await store.order(query.order, participant.id)
-        : await store.activeOrder(participant.id);
+        : await store.activeOrder(participant.id) || await store.completedOrder(participant.id);
     let open = true;
     try {
       assertRegistrationOpen();
@@ -425,6 +465,7 @@ export async function getServerSideProps({ query, res }) {
       choices: choicesFromParticipant(participant),
       availability: await store.availability(participant.id),
       open,
+      completed: !!(await store.completedOrder(participant.id)),
       order: publicOrder(order),
       pendingDraft: ["provisional", "payment_pending"].includes(order?.status)
         ? order.draft

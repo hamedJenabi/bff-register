@@ -9,16 +9,17 @@ export default async function handler(req, res) {
   if (!allowMethod(req, res, "GET")) return;
   try {
     let participant = await resolveParticipant(req.query, store);
-    let order = req.query.order ? await store.order(req.query.order, participant.id) : await store.activeOrder(participant.id);
+    let order = req.query.order ? await store.order(req.query.order, participant.id) : await store.activeOrder(participant.id) || await store.completedOrder(participant.id);
     if (order && ["provisional", "payment_pending"].includes(order.status)) order = await reconcileOrder(store, order);
     if (order?.status === "confirmed") {
       await deliverOrderConfirmation(store, order.id);
       participant = await resolveParticipant(req.query, store);
     }
+    const completed = !!(await store.completedOrder(participant.id));
     let open = true;
     try { assertRegistrationOpen(); } catch { open = false; }
     return res.json({ participant: publicParticipant(participant), choices: choicesFromParticipant(participant),
-      availability: await store.availability(participant.id), order: publicOrder(order), open,
+      availability: await store.availability(participant.id), order: publicOrder(order), open, completed,
       pendingDraft: ["provisional", "payment_pending"].includes(order?.status) ? order.draft : null });
   } catch (error) { return apiError(res, error); }
 }

@@ -42,7 +42,7 @@ export function CompetitionSection({ form, saved, remaining, disabled }) {
               <div key={competition.id}>
                 <label>
                   <FormCheckbox {...form} name="competitions" value={competition.id} disabled={disabled || paid || full} />
-                  {competition.label} · €10{paid ? " · Already booked" : full ? " · Full" : ""}
+                  {competition.label} · €10{full ? " · Full" : ""}
                 </label>
                 {selected && competition.roleRequired && (
                   <>
@@ -63,7 +63,6 @@ export function CompetitionSection({ form, saved, remaining, disabled }) {
           })}
         </fieldset>
       )}
-      {saved.competitions.length > 0 && <p>Contact the organizers to change or remove an already booked competition.</p>}
       <FormMessage {...form} name="competitions" />
     </section>
   );
@@ -80,11 +79,9 @@ export function LunchSection({ form, saved, disabled }) {
           <label key={day}>
             <FormCheckbox {...form} name="lunch" value={day} disabled={disabled || saved.lunch.includes(day)} />
             {day === "saturday" ? "Saturday" : "Sunday"} lunch · €15
-            {saved.lunch.includes(day) ? " · Already booked" : ""}
           </label>
         ))}
       </fieldset>
-      {saved.lunch.length > 0 && <p>Contact the organizers to remove a paid lunch booking.</p>}
       <FormMessage {...form} name="lunch" />
     </section>
   );

@@ -13,7 +13,7 @@ Primary scope: `reg2026-registration.md`. The public-form redesign and wider cod
 
 1. **Rules and safety rails** — strict complete-draft validation, incremental add-on pricing and cents-based fee calculation, focused executable tests. No free competition entry; saved paid add-ons cannot be removed through self-service.
 2. **Persistent submission and payment** — signed participant resolution, transactional booking edits and provisional orders, retry-safe checkout, verified webhook fulfillment, processing/expiry handling, and durable confirmation delivery records.
-3. **Participant journey** — responsive schedule and accessible class details, per-session roles, competition/lunch sections, saved/local drafts, combined price review, checkout and verified return status.
+3. **Participant journey** — responsive schedule and accessible class details, per-session roles, competition/lunch sections, one-time completion and pending checkout recovery, combined price review, checkout and verified return status.
 4. **Organizer delivery** — server-side sessions for dashboard and admin APIs, server-selected invitations, tracked delivery and explicit failed-email retries beside existing dashboard actions.
 5. **Integrated verification and launch documentation** — isolated Postgres and substituted payment/email checks, build/lint, responsive/keyboard QA where tooling permits, environment/migration/webhook setup and remaining launch inputs.
 
@@ -27,7 +27,7 @@ Final catalog and capacity review; invitation/confirmation SendGrid templates an
 
 - Step 1: implemented; rule checks run with `npm test`.
 - Step 2: implemented; isolated Postgres tests cover free saves, retries, failed edits, paid fulfillment, processing, expiry and email failure.
-- Step 3: implemented; participant page, responsive class schedule/dialogs, reusable add-on sections, local drafts, combined review, and pending checkout/status actions. Production build passes with pre-existing legacy import warnings.
+- Step 3: implemented; participant page, responsive class schedule/dialogs, reusable add-on sections, one-time completion, combined review, and pending checkout/status actions. Production build passes with pre-existing legacy import warnings.
 - Step 4: implemented; signed HttpOnly organizer sessions protect dashboard data, edits and email APIs. Invitations select unambiguous confirmed participants on the server, deduplicate delivery records, and expose bounded queue/send/retry actions.
 - Step 5: implemented; automated isolated database/HTTP/webhook checks, non-interactive lint, production build, desktop/tablet/mobile browser QA, and launch setup documentation in `reg2026-launch.md`.
 

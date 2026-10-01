@@ -32,9 +32,19 @@ const net = require('node:net');
       await sql.begin((tx) => require(`../migrations/${file}`).up(tx));
     }
     await sql`CREATE TABLE tickets_26 (id SERIAL, name TEXT, label TEXT, capacity INTEGER, waiting_list INTEGER)`;
-    await sql`INSERT INTO registrations_26 (date,status,role,ticket,firstname,lastname,email,country)
+    const people = await sql`INSERT INTO registrations_26 (date,status,role,ticket,firstname,lastname,email,country)
       VALUES ('2026','confirmed','advanced','fullpass','Demo','Dancer','demo+full@example.com','Austria'),
-      ('2026','confirmed','advanced','partyPass','Party','Dancer','demo+party@example.com','Austria')`;
+      ('2026','confirmed','advanced','partyPass','Party','Dancer','demo+party@example.com','Austria'),
+      ('2026','confirmed','advanced','partyPass','Pending','Dancer','demo+pending@example.com','Austria'),
+      ('2026','confirmed','advanced','partyPass','Complete','Dancer','demo+complete@example.com','Austria') RETURNING *`;
+    const store = require('../lib/reg2026/store').createRegistrationStore(sql);
+    const paidDraft = { classes: [], competitions: ['solo_battle'], competitionRoles: {}, lunch: ['saturday'] };
+    await store.submit(people[2], paidDraft, 'preview-pending-001');
+    const confirmed = await store.submit(people[3], paidDraft, 'preview-complete-01');
+    await store.attachSession(confirmed.id, 'cs_preview_complete');
+    await store.applyPayment({ id: 'cs_preview_complete', amount_total: confirmed.total_cents, currency: 'eur',
+      client_reference_id: String(people[3].id), metadata: { reg2026OrderId: String(confirmed.id) },
+      status: 'complete', payment_status: 'paid' }, 'checkout.session.completed');
     await sql.end();
     const env = { ...process.env, DATABASE_URL: url, PGPORT: String(port), NODE_ENV: 'development', BFF_PREVIEW: 'true',
       REG2026_ENABLED: 'true', REG2026_SIGNING_SECRET: 'preview-only-signing-secret', REG2026_ORIGIN: 'http://localhost:31026',
@@ -45,6 +55,8 @@ const net = require('node:net');
     const { buildRegistrationPath } = require('../lib/reg2026/security');
     console.log('FULL_PASS_URL=http://localhost:31026' + buildRegistrationPath({ firstname: 'Demo', email: 'demo+full@example.com' }));
     console.log('PARTY_PASS_URL=http://localhost:31026' + buildRegistrationPath({ firstname: 'Party', email: 'demo+party@example.com' }));
+    console.log('PENDING_URL=http://localhost:31026' + buildRegistrationPath({ firstname: 'Pending', email: 'demo+pending@example.com' }));
+    console.log('COMPLETED_URL=http://localhost:31026' + buildRegistrationPath({ firstname: 'Complete', email: 'demo+complete@example.com' }));
     child = spawn(process.execPath, ['node_modules/next/dist/bin/next', 'dev', '-H', '127.0.0.1', '-p', '31026'], { env, stdio: 'inherit' });
     for (const signal of ['SIGINT', 'SIGTERM']) process.on(signal, () => { cleanup(); process.exit(0); });
     await new Promise((resolve) => child.on('exit', resolve));

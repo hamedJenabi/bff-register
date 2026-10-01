@@ -65,9 +65,9 @@ Start the competition section with “Do you want to compete?” and reveal the 
 45. As a maintainer, I want the screenshot schedule represented as replaceable mock data, so that a database-backed schedule can be introduced later.
 46. As a maintainer, I want the new registration flow to use the existing competition and lunch content appropriately, so that its business rules remain recognizable.
 47. As a participant, I want adding a class to remain a draft action, so that I can plan before reserving places with my final submission.
-48. As a participant, I want to reopen my link and see my saved choices, so that I can revise my registration.
-49. As a participant, I want my current booking retained if an edit fails, so that an unsuccessful change does not lose my existing places.
-50. As a participant, I want removed places released after a successful edit, so that my saved registration reflects my new choices.
+48. As a participant, I want my link to show a completion message after registering once, so that I know I am finished.
+49. As a participant, I want to resume unfinished checkout or retry a failed payment, so that I can complete my one-time registration.
+50. As a participant, I want organizer contact details after registering, so that I can request later changes.
 
 ## Implementation Decisions
 
@@ -84,7 +84,7 @@ Start the competition section with “Do you want to compete?” and reveal the 
 - Enforce at most one class per time slot and a maximum of five class sessions in total across the festival, regardless of day.
 - Every class session is independently selectable, including numbered and repeated track sessions. Selecting one never automatically books other occurrences.
 - Adding or removing sessions changes a draft. On final submission, check displayed availability and create provisional bookings before Stripe checkout; retain the draft when a place has become unavailable. Provisional bookings expire after one hour without payment. A small race-related overbooking of one or two dancers is acceptable.
-- Reopening the link shows saved choices and permits edits. Only a successful submission changes the saved booking and releases removed places.
+- Registration is one-time. After a free submission or verified successful payment, reopening the link shows only a completion message and organizer contact; no registration fields are available. Enforce this on the server, including for registrations with no choices. Identical request retries remain idempotent.
 - Decrease displayed availability as provisional and paid bookings are recorded, and disable fully booked classes for new selections. Store bookings persistently across server instances.
 - Use the commented competition section in the current public registration form as the competition reference, with a reusable competition section.
 - Use the existing food form as the lunch reference.
@@ -93,7 +93,7 @@ Start the competition section with “Do you want to compete?” and reveal the 
 - Include an attendee-app link with requested shape `https://app.bluesfever.eu?token=firstname+email+id`; the token contract and encoding require agreement.
 - Lunch and competition additions are paid through Stripe, including the existing checkout fee; class-only submissions have no payment step. Full Pass holders no longer receive a free competition entry.
 - Display the validated subtotal, Stripe fee, and charged total before redirecting. On return from Stripe, show payment-pending status until a server-verified payment event confirms the booking. A never-completed checkout and its provisional booking expire after one hour; a completed payment still processing remains pending until Stripe reports success or failure.
-- After payment, participants can edit classes for free and pay through a new Stripe checkout to add lunch or competition entries. Removing paid add-ons and refunds are handled by organizers.
+- After completion, all changes, added entries, removals and refunds go through organizers. Pending, failed or expired payment attempts can still be completed or retried; they do not count as successful registrations.
 - If a confirmation email fails, keep the booking confirmed and the participant's success page accurate; record the failed send for an organizer retry.
 
 ### Repository findings that constrain the design
@@ -139,7 +139,7 @@ Testing boundary: the participant-facing page, invitation action, and load/save/
 - Submit concurrent requests for the last place and verify the best-effort availability check and the accepted small race-related overbooking behavior.
 - Verify request retries do not consume capacity or charge twice, according to the agreed save semantics.
 - Verify the agreed behavior when saving succeeds and email sending fails.
-- Verify that unsuccessful edits preserve the previous paid booking and successful edits release only removed class places. Paid add-on removals stay organizer-managed.
+- Verify that a completed free, paid or empty registration rejects further submissions without changing its bookings. Test concurrent first submissions, identical retries, and unfinished payment recovery. All later changes stay organizer-managed.
 - Check malformed or ambiguous participant links, plus-addressed emails, and the agreed policy for unconfirmed participants.
 - Verify desktop and mobile layouts, full-screen mobile dialogs, keyboard operation, modal focus management, labels, and error announcements.
 - Existing prior art is the public registration redesign PRD's journey-based QA and the improvement backlog's API/integration recommendations. The repository currently has no configured automated test framework.
@@ -162,15 +162,15 @@ Production database-backed schedule authoring is deferred by the request. Persis
 1. The user corrected the limit to up to five classes in total across the festival, still one per time slot. The eight available time slots do not increase this cap.
 2. Reserve places on final submission, with server-side availability revalidation and draft retention on conflict.
 3. Every session is an independent selection, including repeated and numbered track sessions.
-4. Show saved choices on return and allow edits. Apply changes and release removed places only after a successful submission.
+4. The user changed this to a one-time registration. Return links show completion and organizer contact after successful submission/payment; self-service edits are disabled.
 
 ### Interview round 2 — resolved
 
 5. Only confirmed participants may use `/reg2026`. Full and Parent passes can book classes; Party Pass can use competitions and lunch but not classes. A missing or ambiguous identity match must not select an arbitrary registration; direct the participant to registration support.
-6. The personalized `/reg2026` link keeps the requested email and first-name identity values and adds a signature that authorizes viewing and editing. It is reusable while registration is open, with no fixed per-link expiry. Closing the form centrally or rotating the signing secret can disable access. The exact signed URL encoding remains to be designed.
+6. The personalized `/reg2026` link keeps the requested email and first-name identity values and adds a signature that authorizes first registration and payment status access. The link remains usable to resume checkout or view completion, with no fixed per-link expiry. Closing the form centrally or rotating the signing secret can disable access. The exact signed URL encoding remains to be designed.
 
 7. Saturday and Sunday lunch cost €15 each; each competition entry costs €10; classes have no extra charge. No pass includes a free competition entry. Stripe checkout is required for the combined amount. The draft becomes a provisional booking before checkout; an unpaid booking expires after one hour. One or two overbooked dancers due to simultaneous submissions are acceptable.
-8. After payment, participants may edit class bookings without a new charge. Added lunch or competition entries require another Stripe checkout. Removing a paid add-on or requesting a refund goes through the organizers; there is no automatic self-service refund.
+8. The user changed this to one successful registration per participant. After payment or free confirmation, every change goes through organizers. Existing paid add-ons remain credited on the first submission.
 
 ### Interview round 3 — resolved
 
@@ -186,9 +186,9 @@ Production database-backed schedule authoring is deferred by the request. Persis
 16. Lunch selection remains Saturday and/or Sunday only. State that dietary options are available, without collecting a preference in this form.
 17. A paid submission stays provisional while Stripe payment is pending. Confirm saved choices and send the registration confirmation email only after Stripe reports successful payment. A class-only submission has no Stripe step and can confirm immediately.
 18. Add the existing checkout fee calculation, approximately 1.4% plus €0.25, to paid supplemental orders. Show the fee and charged total before the Stripe redirect; calculate them on the server from validated selections.
-19. Confirming another class in an occupied time slot replaces the draft selection for that slot. The modal explains the replacement before confirmation; the saved booking changes only when the final submission succeeds.
+19. Selecting a class disables other classes in its time slot. Remove the selection before choosing a replacement; selections reserve places only on final submission.
 20. Desktop shows the schedule as a room-by-time grid. Mobile shows a day-by-day list grouped by time slot, with a class card for each room; class details open full-screen.
-21. Keep unsaved choices in local storage per signed participant link so they survive refresh or browser close on the same device. Clear that draft after successful submission; load confirmed bookings from the server.
+21. Browser draft storage is disabled. Unsaved choices reset on reload. Pending payment choices are recovered from the server; confirmed registrations show only completion.
 22. If SendGrid fails after payment and booking confirmation, keep the booking confirmed, show the participant success, and queue the failed confirmation email for organizer retry.
 
 ### Launch inputs and deferred details
@@ -197,18 +197,18 @@ Production database-backed schedule authoring is deferred by the request. Persis
 - Supply dedicated SendGrid template IDs for the invitation and confirmation emails. The invitation template must accept `registrationUrl`; confirmation variables can be finalized with the template.
 - Confirm the attendee app's final token contract and URL before including a working app link in confirmation emails. The app is being built separately.
 - Configure the registration closing rule, Stripe webhook secret, SendGrid credentials, and signing secret in the deployment environment.
-- Seed `class_capacities_26` after the partner flags and class catalog are reviewed. Implement the remaining serialization and migrations for `theme_class`, provisional bookings, checkout state, and email retries during the build. Preserve existing pass purchases and paid bookings during edits. Initial limit changes can be made in Postgres; an admin capacity editor is outside this phase.
+- Seed `class_capacities_26` after the partner flags and class catalog are reviewed. Implement the remaining serialization and migrations for `theme_class`, provisional bookings, checkout state, and email retries during the build. Preserve existing pass purchases and credit legacy paid add-ons on the first registration. Initial limit changes can be made in Postgres; an admin capacity editor is outside this phase.
 
 ## Decision Log
 
 - **Goal:** Let confirmed 2026 participants register classes, competitions, and lunch through one personalized page.
 - **Scope:** `/reg2026`, persistent booking state, Stripe checkout and webhook confirmation, confirmation email, and a signed-link invitation button beside the existing dashboard email action.
 - **Non-goals:** Replace pass purchase, build the attendee app, add schedule administration, or automate paid add-on refunds.
-- **UX and behavior:** Full and Parent passes can choose classes; Party Pass cannot. Choose at most one class per slot and five in total across the festival. Partner-class roles are chosen per session. Mobile uses a time-slot list and full-screen details. Browser draft storage is disabled; unsaved choices reset on reload and saved choices can be edited.
+- **UX and behavior:** Full and Parent passes can choose classes; Party Pass cannot. Choose at most one class per slot and five in total across the festival. Partner-class roles are chosen per session. Mobile uses a time-slot list and full-screen details. Browser draft storage is disabled; unsaved choices reset on reload. Registration is one-time; completed links show only confirmation and organizer contact.
 - **Payment:** Lunch is €15 per day and competitions are €10 each, with no free entry. Add the existing Stripe fee. Create provisional bookings before paid checkout; expire uncompleted checkouts after one hour; confirm and email only after verified payment. Class-only submissions confirm immediately.
 - **Data and compatibility:** Keep pass-purchase fields intact. Store versioned class selections in `theme_class`; store per-session capacity limits and active bookings in Postgres. Derive remaining places from those records. Use signed, reusable participant links and server-side organizer authorization for invitations.
-- **Edge cases:** Reject missing or ambiguous participants. Keep the previous confirmed booking if an edit fails. Accept small race-related overbooking. Remove “Cuttin'” from self-service; “Jukin (III–IV)” has no enforced restriction. Retain confirmed bookings when email fails and queue retry.
-- **Verification:** Test participant access, booking rules, payment and expiry transitions, edits, retries, invite authorization, email failure, responsive layout, and keyboard accessibility.
+- **Edge cases:** Reject missing or ambiguous participants. Reject all changes to a completed registration and preserve its bookings. Accept small race-related overbooking. Remove “Cuttin'” from self-service; “Jukin (III–IV)” has no enforced restriction. Retain confirmed bookings when email fails and queue retry.
+- **Verification:** Test participant access, booking rules, payment and expiry transitions, one-time completion, retries, invite authorization, email failure, responsive layout, and keyboard accessibility.
 - **Open launch inputs:** Final catalog review, SendGrid template IDs, attendee-app URL contract, deployment secrets, and the registration closing rule.
 
 ## Sources
