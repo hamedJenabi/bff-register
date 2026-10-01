@@ -1,60 +1,3 @@
-const partnerSessions = [
-  "fri-1330-kantine",
-  "fri-1330-lot",
-  "fri-1330-room-tbc",
-  "fri-1515-ankersaal",
-  "fri-1515-kantine",
-  "fri-1515-studio",
-  "fri-1515-room-tbc",
-  "sat-1130-ankersaal",
-  "sat-1130-superar-3",
-  "sat-1130-hilger",
-  "sat-1130-lot",
-  "sat-1130-social-schule",
-  "sat-1130-studio",
-  "sat-1415-ankersaal",
-  "sat-1415-lot",
-  "sat-1415-social-schule",
-  "sat-1600-superar-1",
-  "sat-1600-superar-2",
-  "sat-1600-hilger",
-  "sat-1600-lot",
-  "sat-1600-social-schule",
-  "sat-1600-studio",
-  "sun-1130-ankersaal",
-  "sun-1130-superar-1",
-  "sun-1130-hilger",
-  "sun-1130-lot",
-  "sun-1130-social-schule",
-  "sun-1130-studio",
-  "sun-1415-superar-1",
-  "sun-1415-lot",
-  "sun-1415-social-schule",
-  "sun-1600-hilger",
-];
-
-const nonPartnerSessions = [
-  "fri-1330-ankersaal",
-  "fri-1330-studio",
-  "fri-1515-lot",
-  "sat-1130-superar-1",
-  "sat-1130-superar-2",
-  "sat-1415-superar-1",
-  "sat-1415-superar-2",
-  "sat-1415-superar-3",
-  "sat-1415-hilger",
-  "sat-1415-studio",
-  "sat-1600-superar-3",
-  "sun-1130-superar-2",
-  "sun-1415-ankersaal",
-  "sun-1415-superar-2",
-  "sun-1415-hilger",
-  "sun-1415-studio",
-  "sun-1600-ankersaal",
-  "sun-1600-superar-1",
-  "sun-1600-superar-2",
-];
-
 exports.up = async (sql) => {
   await sql`
     CREATE TABLE reg2026_orders (
@@ -106,21 +49,6 @@ exports.up = async (sql) => {
     )
   `;
 
-  for (const sessionId of partnerSessions) {
-    await sql`
-      INSERT INTO class_capacities_26 (session_id, pool, capacity)
-      VALUES (${sessionId}, 'lead', 20), (${sessionId}, 'follow', 20)
-      ON CONFLICT (session_id, pool) DO NOTHING
-    `;
-  }
-
-  for (const sessionId of nonPartnerSessions) {
-    await sql`
-      INSERT INTO class_capacities_26 (session_id, pool, capacity)
-      VALUES (${sessionId}, 'total', 30)
-      ON CONFLICT (session_id, pool) DO NOTHING
-    `;
-  }
 };
 
 exports.down = async (sql) => {
@@ -128,8 +56,4 @@ exports.down = async (sql) => {
   await sql`DROP TABLE class_bookings_26`;
   await sql`DROP TABLE reg2026_orders`;
 
-  await sql`
-    DELETE FROM class_capacities_26
-    WHERE session_id = ANY(${[...partnerSessions, ...nonPartnerSessions]})
-  `;
 };

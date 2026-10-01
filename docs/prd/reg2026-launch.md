@@ -26,9 +26,9 @@ Do not commit secret values. Cookie `Secure` is enabled in production, so produc
 
 ## Database and catalog
 
-Use the existing Ley workflow (`npm run migrate -- up`) against a backed-up staging database first. Apply migrations through `00008-reg2026-order-safety.js` before deploying these routes. Migration 7 seeds the mock session capacities; review them before enabling registration. Migration 8 adds submission idempotency, one active order per participant, processing-payment status, and delivery deduplication.
+Use the existing Ley workflow (`npm run migrate -- up`) against a backed-up staging database first. Apply migrations through `00008-reg2026-order-safety.js` before deploying these routes. Migration 7 creates bookings/orders without inserting mock capacity rows. Migration 8 adds submission idempotency, one active order per participant, processing-payment status, and delivery deduplication.
 
-Review all placeholder class descriptions, missing titles, room labels and partner flags in `lib/reg2026/catalog.js`. Keep stable occurrence IDs aligned with `class_capacities_26`; partner sessions use lead/follow pools, other sessions use total. Update capacity limits in Postgres. Final festival dates/content remain organizer inputs.
+Mock class metadata and capacity defaults now live in `mockdata/schedule2026.js`, shared by the frontend and server validation. Fresh capacity tables stay empty; availability subtracts real bookings from mock defaults unless an organizer has saved a capacity override. Existing non-default capacity rows remain effective. Keep occurrence IDs stable to preserve participant bookings. Final festival dates/content remain organizer inputs.
 
 Audit legacy lunch/competition records before launch: the first registration credits existing saved add-ons and charges only additional selections. The old routes previously recorded amounts due without verified payment. Reconcile unpaid entries before invitations so they do not become free entitlements. If any versioned class choices were populated manually, backfill corresponding confirmed bookings before opening capacity.
 

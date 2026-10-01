@@ -13,6 +13,18 @@ test("registration orders on isolated Postgres", { skip: !process.env.TEST_DATAB
       await sql.begin((tx) => require(`../migrations/${file}`).up(tx));
     }
     const store = createRegistrationStore(sql);
+    await t.test("schedule mocks work with an empty capacity table and stored limits override defaults", async () => {
+      assert.equal((await sql`SELECT * FROM class_capacities_26`).length, 0);
+      const defaults = await store.availability();
+      assert.equal(defaults.classes["fri-1330-ankersaal"].total.remaining, 30);
+      assert.equal(defaults.classes["fri-1330-kantine"].lead.remaining, 20);
+      assert.equal(defaults.classes["fri-1330-kantine"].follow.remaining, 20);
+      await sql`INSERT INTO class_capacities_26 (session_id, pool, capacity) VALUES ('fri-1330-kantine', 'lead', 12)`;
+      const edited = await store.availability();
+      assert.equal(edited.classes["fri-1330-kantine"].lead.remaining, 12);
+      assert.equal(edited.classes["fri-1330-kantine"].follow.remaining, 20);
+      await sql`DELETE FROM class_capacities_26`;
+    });
     const [participant] = await sql`INSERT INTO registrations_26 (date,status,role,ticket,firstname,lastname,email,country,price)
       VALUES ('2026','confirmed','advanced','fullpass','Test','Participant','test+one@example.com','Austria','200') RETURNING *`;
     const free = { ...empty(), classes: [{ sessionId: "fri-1330-ankersaal" }] };
@@ -135,9 +147,9 @@ test("registration orders on isolated Postgres", { skip: !process.env.TEST_DATAB
       await assert.rejects(store.editClasses(person.id, [], before.version), /changed in another session/);
       await assert.rejects(store.editClasses(person.id, [{ sessionId: "sun-1130-lot" }], edited.version), /check the class choices/);
       await assert.rejects(store.editClasses(person.id, [{ sessionId: "fri-1330-ankersaal" }, { sessionId: "fri-1330-studio" }], edited.version), /check the class choices/);
-      await sql`UPDATE class_capacities_26 SET capacity = 0 WHERE session_id = 'fri-1515-lot'`;
+      await sql`INSERT INTO class_capacities_26 (session_id, pool, capacity) VALUES ('fri-1515-lot', 'total', 0)`;
       await assert.rejects(store.editClasses(person.id, [{ sessionId: "fri-1515-lot" }], edited.version), /now full/);
-      await sql`UPDATE class_capacities_26 SET capacity = 30 WHERE session_id = 'fri-1515-lot'`;
+      await sql`DELETE FROM class_capacities_26 WHERE session_id = 'fri-1515-lot'`;
       assert.deepEqual((await store.organizerClasses(person.id)).classes, replacement);
 
       require.cache[require.resolve("../db/reg2026")] = { loaded: true, exports: { registrationStore: store } };
