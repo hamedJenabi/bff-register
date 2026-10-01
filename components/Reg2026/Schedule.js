@@ -10,11 +10,14 @@ import {
   unstable_FormSubmitButton as FormSubmitButton,
 } from "reakit/Form";
 import { registrationDraft } from "../../lib/reg2026/form";
-import { schedule, scheduleDays, scheduleById, CLASS_SELECTION_LIMIT } from "../../lib/reg2026/catalog";
+import { schedule as mockSchedule, scheduleDays, CLASS_SELECTION_LIMIT } from "../../lib/reg2026/catalog";
+import { indexSchedule } from "../../lib/reg2026/schedule";
 import { validateDraft } from "../../lib/reg2026/validation";
 import styles from "./Registration.module.scss";
 
-export default function Schedule({ participant, form, availability, disabled }) {
+export default function Schedule({ participant, form, availability, disabled, sessions = mockSchedule }) {
+  const schedule = sessions;
+  const scheduleById = indexSchedule(schedule);
   const draft = registrationDraft(form.values);
   const limitReached = draft.classes.length >= CLASS_SELECTION_LIMIT;
   const dialog = useDialogState({ baseId: "reg2026-class-dialog", animated: true });
@@ -39,7 +42,7 @@ export default function Schedule({ participant, form, availability, disabled }) 
       if (active.partnerClass && !["lead", "follow"].includes(role)) {
         throw { role: "Choose lead or follow for this class." };
       }
-      const result = validateDraft({ ...draft, classes: selection(role) }, participant);
+      const result = validateDraft({ ...draft, classes: selection(role) }, participant, schedule);
       if (result.errors.classes || result.errors.form) {
         throw { selectionError: result.errors.classes || result.errors.form };
       }
@@ -73,9 +76,10 @@ export default function Schedule({ participant, form, availability, disabled }) 
         <h3>{day}</h3>
         {times.map((time) => {
           const slot = sessions.filter((session) => session.start === time);
+          const sharedEnd = slot.every((session) => session.end === slot[0].end);
           const occupied = slot.some((session) => selected(session.id));
           return <div className={styles.timeSlot} key={time}>
-            <h4>{time}–{slot[0].end}</h4>
+            <h4>{time}{sharedEnd ? `–${slot[0].end}` : ""}</h4>
             <div className={styles.classGrid}>
               {slot.map((session) => {
                 const choice = selected(session.id);
@@ -84,6 +88,7 @@ export default function Schedule({ participant, form, availability, disabled }) 
                   data-blocked={blocked || undefined}
                   disabled={disabled || blocked || (full(session) && !choice)} onClick={(event) => open(session, event)}>
                   <strong>{session.title}</strong><span>{session.teachers}</span>
+                  {!sharedEnd && <span>{session.start}–{session.end}</span>}
                   <small>{choice ? `Selected${choice.role ? ` · ${choice.role}` : ""}` : limitReached ? `${CLASS_SELECTION_LIMIT}-class limit reached` : blocked ? "Another class selected in this slot" : full(session) ? "Full" : session.partnerClass
                     ? `${places(session, "lead")} lead · ${places(session, "follow")} follow` : `${places(session, "total")} places`}</small>
                 </button>;

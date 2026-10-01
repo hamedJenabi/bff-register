@@ -187,6 +187,10 @@ export default function Dashboard({ users, tickets }) {
         title="VSB DASHBOARD"
         menuItems={[
           {
+            title: "SCHEDULE",
+            link: "/dashboard/schedule",
+          },
+          {
             title: "LOG OUT ",
             link: "/login/admin",
           },

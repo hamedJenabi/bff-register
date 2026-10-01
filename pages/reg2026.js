@@ -62,6 +62,7 @@ export default function Registration({ initial, access, loadError }) {
         values,
         data.participant,
         data.choices,
+        data.schedule,
       );
       if (Object.keys(errors).length) throw errors;
     },
@@ -69,6 +70,7 @@ export default function Registration({ initial, access, loadError }) {
       const validated = validateDraft(
         registrationDraft(values),
         data.participant,
+        data.schedule,
       );
       setMessage("");
       try {
@@ -83,7 +85,7 @@ export default function Registration({ initial, access, loadError }) {
         });
         const result = await response.json();
         if (!response.ok) {
-          if (response.status === 409) await refresh().catch(() => {});
+          if ([409, 422].includes(response.status)) await refresh().catch(() => {});
           setMessage(
             result.error || "Could not submit. Your draft has been kept.",
           );
@@ -361,6 +363,7 @@ export default function Registration({ initial, access, loadError }) {
                       participant={data.participant}
                       form={editForm}
                       availability={data.availability.classes}
+                      sessions={data.schedule}
                       disabled={busy || pending || !data.open}
                     />
                   )}
@@ -474,6 +477,7 @@ export async function getServerSideProps({ query, res }) {
       participant: publicParticipant(participant),
       choices: choicesFromParticipant(participant),
       availability: await store.availability(participant.id),
+      schedule: await store.schedule(),
       open,
       completed: !!(await store.completedOrder(participant.id)),
       order: publicOrder(order),

@@ -690,6 +690,10 @@ export default function Dashboard({ users, tickets }) {
         title="BFF DASHBOARD"
         menuItems={[
           {
+            title: "SCHEDULE",
+            link: "/dashboard/schedule",
+          },
+          {
             title: "LOG OUT ",
             link: "/login/admin",
           },

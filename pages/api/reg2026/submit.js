@@ -23,7 +23,7 @@ export default async function handler(req, res) {
       throw new RegistrationError(409, REGISTRATION_COMPLETE_MESSAGE);
     }
     // Check payment configuration before allocating new provisional places.
-    const validated = validateDraft(req.body.draft, participant);
+    const validated = validateDraft(req.body.draft, participant, await store.schedule());
     if (!completed && validated.valid && priceDraft(validated.value, choicesFromParticipant(participant)).totalCents > 0) {
       getStripe(); canonicalOrigin();
     }

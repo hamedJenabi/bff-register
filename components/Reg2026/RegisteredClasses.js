@@ -5,7 +5,8 @@ import {
   unstable_FormInput as FormInput, unstable_FormLabel as FormLabel,
   unstable_FormMessage as FormMessage, unstable_FormSubmitButton as FormSubmitButton,
 } from "reakit/Form";
-import { schedule, scheduleById, CLASS_SELECTION_LIMIT } from "../../lib/reg2026/catalog";
+import { schedule as mockSchedule, CLASS_SELECTION_LIMIT } from "../../lib/reg2026/catalog";
+import { indexSchedule } from "../../lib/reg2026/schedule";
 import { parseThemeClass } from "../../lib/reg2026/serialization";
 import { validateDraft } from "../../lib/reg2026/validation";
 import styles from "./RegisteredClasses.module.scss";
@@ -15,6 +16,8 @@ const readableClasses = (value) => parseThemeClass(value).filter((choice) => typ
 export default function RegisteredClasses({ id, firstname, lastname, themeClass, buttonClassName }) {
   const dialog = useDialogState({ baseId: `registered-classes-${id}`, animated: true });
   const [hasOpened, setHasOpened] = useState(false);
+  const [schedule, setSchedule] = useState(mockSchedule);
+  const scheduleById = indexSchedule(schedule);
   const [savedClasses, setSavedClasses] = useState(() => readableClasses(themeClass));
   const [version, setVersion] = useState(themeClass || "");
   const [availability, setAvailability] = useState({});
@@ -36,7 +39,7 @@ export default function RegisteredClasses({ id, firstname, lastname, themeClass,
     baseId: `registered-classes-editor-${id}`, resetOnUnmount: false,
     values: { classes: savedClasses, newClass: "", newRole: "", formError: "" },
     onValidate: ({ classes }) => {
-      const result = validateDraft({ classes, competitions: [], competitionRoles: {}, lunch: [] }, { ticket: "fullpass" });
+      const result = validateDraft({ classes, competitions: [], competitionRoles: {}, lunch: [] }, { ticket: "fullpass" }, schedule);
       if (!result.valid) throw { formError: result.errors.classes || result.errors.form };
     },
     onSubmit: async ({ classes }) => {
@@ -68,6 +71,7 @@ export default function RegisteredClasses({ id, firstname, lastname, themeClass,
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "Could not load classes.");
       setSavedClasses(result.classes); setVersion(result.version); setAvailability(result.availability); setEditable(result.editable);
+      setSchedule(result.schedule);
     } catch (error) { setMessage(error.message); }
     finally { setLoading(false); }
   };

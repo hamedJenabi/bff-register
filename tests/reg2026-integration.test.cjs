@@ -9,12 +9,13 @@ const empty = () => ({ classes: [], competitions: [], competitionRoles: {}, lunc
 test("registration orders on isolated Postgres", { skip: !process.env.TEST_DATABASE_URL }, async (t) => {
   const sql = postgres(process.env.TEST_DATABASE_URL, { onnotice: () => {} });
   try {
-    for (const file of ["00004-CREAT-registraion-2026", "00006-create-class-capacities-2026", "00007-create-reg2026-bookings", "00008-reg2026-order-safety"]) {
+    for (const file of ["00004-CREAT-registraion-2026", "00006-create-class-capacities-2026", "00007-create-reg2026-bookings", "00008-reg2026-order-safety", "00009-create-schedule-overrides-2026"]) {
       await sql.begin((tx) => require(`../migrations/${file}`).up(tx));
     }
     const store = createRegistrationStore(sql);
     await t.test("schedule mocks work with an empty capacity table and stored limits override defaults", async () => {
       assert.equal((await sql`SELECT * FROM class_capacities_26`).length, 0);
+      assert.equal((await sql`SELECT * FROM schedule_overrides_26`).length, 0);
       const defaults = await store.availability();
       assert.equal(defaults.classes["fri-1330-ankersaal"].total.remaining, 30);
       assert.equal(defaults.classes["fri-1330-kantine"].lead.remaining, 20);
@@ -250,6 +251,58 @@ test("registration orders on isolated Postgres", { skip: !process.env.TEST_DATAB
       assert.deepEqual(await sql`SELECT * FROM registrations_26 WHERE id = ${participant.id}`, before);
       assert.deepEqual(await sql`SELECT * FROM reg2026_orders WHERE registration_id = ${participant.id}`, ordersBefore);
       assert.deepEqual(await sql`SELECT * FROM registration_email_retries_26 WHERE registration_id = ${participant.id}`, emailsBefore);
+    });
+    await t.test("schedule editor persists overrides, updates registration metadata and protects booked sessions", async () => {
+      const { scheduleFormValues } = require("../lib/reg2026/schedule");
+      const { validateDraft } = require("../lib/reg2026/validation");
+      const { setAdminSession } = require("../lib/admin/session");
+      require.cache[require.resolve("../db/reg2026")] = { loaded: true, exports: { registrationStore: store } };
+      const endpoint = require("../pages/api/reg2026/schedule").default;
+      const response = () => ({ headers: {}, code: 200, setHeader(k,v) { this.headers[k] = v; }, status(c) { this.code = c; return this; }, json(body) { this.body = body; return this; }, end() { return this; } });
+      const sessionResponse = response(); setAdminSession(sessionResponse);
+      const headers = { cookie: sessionResponse.headers["Set-Cookie"].split(";")[0], host: "localhost:3000", origin: "http://localhost:3000" };
+      const unauthenticated = response(); await endpoint({ method: "GET", headers: {} }, unauthenticated);
+      assert.equal(unauthenticated.code, 401);
+      const crossOrigin = response(); await endpoint({ method: "POST", headers: { ...headers, origin: "https://outside.example.com" }, body: {} }, crossOrigin);
+      assert.equal(crossOrigin.code, 403);
+      const loaded = response(); await endpoint({ method: "GET", headers }, loaded);
+      const base = loaded.body.schedule.find((session) => session.id === "sun-1600-superar-2");
+      assert.equal(base.version, 0);
+      const invalid = response(); await endpoint({ method: "POST", headers, body: { id: base.id, version: 0,
+        values: { ...scheduleFormValues(base), title: "", end: "10:00", totalCapacity: "-1" } } }, invalid);
+      assert.equal(invalid.code, 422); assert.ok(invalid.body.errors.title); assert.ok(invalid.body.errors.end); assert.ok(invalid.body.errors.totalCapacity);
+      const changed = { ...scheduleFormValues(base), title: "Late Blues Workshop", teachers: "Catherine & Guest",
+        description: "Practice pulse, connection and musical choices.", room: "Main Studio", start: "15:45", end: "17:00",
+        partnerClass: true, leadCapacity: "2", followCapacity: "3" };
+      const emailCount = (await sql`SELECT COUNT(*)::INT AS count FROM registration_email_retries_26`)[0].count;
+      const saved = response(); await endpoint({ method: "POST", headers, body: { id: base.id, version: 0, values: changed } }, saved);
+      assert.equal(saved.code, 200); assert.equal(saved.body.session.version, 1);
+      assert.equal(saved.body.session.slotId, "sunday-1545");
+      assert.equal(saved.body.session.title, changed.title); assert.equal(saved.body.session.partnerClass, true);
+      assert.equal((await sql`SELECT COUNT(*)::INT AS count FROM registration_email_retries_26`)[0].count, emailCount);
+      assert.equal((await sql`SELECT * FROM schedule_overrides_26`).length, 1);
+      assert.equal((await sql`SELECT * FROM class_capacities_26`).length, 2);
+      const reloaded = await store.schedule();
+      assert.equal(reloaded.find((session) => session.id === base.id).description, changed.description);
+      const person = await createPerson("ScheduleParticipant");
+      const choice = { ...empty(), classes: [{ sessionId: base.id, role: "lead" }] };
+      assert.equal(validateDraft({ ...choice, classes: [{ sessionId: base.id }] }, person, reloaded).valid, false);
+      const order = await store.submit(person, choice, "schedule-choice-01");
+      const availability = await store.availability();
+      assert.equal(availability.classes[base.id].lead.remaining, 1); assert.equal(availability.classes[base.id].follow.remaining, 3);
+      const organizerView = await store.organizerClasses(person.id);
+      assert.equal(organizerView.schedule.find((session) => session.id === base.id).title, changed.title);
+      const message = require("../lib/reg2026/email").confirmationMessage(person, order.draft, await store.schedule());
+      assert.equal(message.dynamicTemplateData.classes[0].title, changed.title);
+      assert.equal(message.dynamicTemplateData.classes[0].role, "lead");
+      await assert.rejects(store.editSchedule(base.id, changed, 0), /changed in another session/);
+      await assert.rejects(store.editSchedule(base.id, { ...changed, partnerClass: false }, 1), /has registrations/);
+      await assert.rejects(store.editSchedule(base.id, { ...changed, start: "16:00" }, 1), /has registrations/);
+      const after = await store.editSchedule(base.id, { ...changed, description: "Updated workshop description.", leadCapacity: "0" }, 1);
+      assert.equal(after.version, 2); assert.equal((await store.availability()).classes[base.id].lead.remaining, 0);
+      assert.deepEqual((await store.organizerClasses(person.id)).classes, choice.classes);
+      const [booking] = await sql`SELECT pool, status FROM class_bookings_26 WHERE registration_id = ${person.id}`;
+      assert.deepEqual(booking, { pool: "lead", status: "confirmed" });
     });
     await t.test("HTTP endpoints enforce signed access, complete drafts and server-owned checkout", async () => {
       const { signIdentity } = require("../lib/reg2026/security");

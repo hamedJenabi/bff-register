@@ -68,6 +68,7 @@ Start the competition section with “Do you want to compete?” and reveal the 
 48. As a participant, I want my link to show a completion message after registering once, so that I know I am finished.
 49. As a participant, I want to resume unfinished checkout or retry a failed payment, so that I can complete my one-time registration.
 50. As a participant, I want organizer contact details after registering, so that I can request later changes.
+51. As an organizer, I want a Schedule sub-page to edit class details and capacities, so that participant registration stays current without changing code.
 
 ## Implementation Decisions
 
@@ -78,7 +79,7 @@ Start the competition section with “Do you want to compete?” and reveal the 
 - Provide schedule registration, competition registration, and lunch in that order, with one final submit action.
 - Hide schedule registration for Party Pass participants. The persisted ticket value in the current app is `partyPass`.
 - Use the supplied screenshot as the mock schedule source. Later schedule data will come from a database.
-- The mock catalog defines each session's stable ID, title, teachers, description, time, room, and partner-class flag. Store capacity limits in Postgres: 20 lead and 20 follow places for partner classes, or 30 total places for non-partner classes.
+- `mockdata/schedule2026.js` defines each session's stable ID, title, teachers, description, time, room, partner-class flag and default capacities (20 lead / 20 follow or 30 total). Database schedule and capacity tables start empty. Admin edits persist as overrides, while unchanged classes keep using the frontend mock data. The server uses the same effective catalog for validation and availability.
 - Clicking a schedule cell opens a class modal, centered on desktop and full-screen on mobile.
 - The modal includes an explicit action to select the class. A participant can deselect a class.
 - Enforce at most one class per time slot and a maximum of five class sessions in total across the festival, regardless of day.
@@ -118,7 +119,7 @@ Start the competition section with “Do you want to compete?” and reveal the 
 
 - Update the participant's existing registration, without modifying purchased-pass details, identity, admission status, or original ticket price.
 - Validate and save the complete draft atomically on final submission, retaining the confirmed draft-until-submit behavior.
-- `class_capacities_26` is the Postgres capacity table, keyed by stable session ID and capacity pool (`lead`, `follow`, or `total`); seed it from the agreed defaults after catalog review. Add a booking table for provisional and confirmed selections. Compute remaining places from the stored limit minus active bookings; do not maintain a separately decremented remaining-count field. A best-effort availability check is sufficient; strict concurrency serialization is not required because a small race-related overbooking is acceptable.
+- `class_capacities_26` stores capacity overrides keyed by stable session ID and pool (`lead`, `follow`, or `total`), with no mock seeds. Compute remaining places from the stored override or mock default minus active bookings. `schedule_overrides_26` stores changed class metadata and a revision for stale-edit protection. Share the effective schedule with the frontend; validate on the server against the same data. Booked classes keep their timing/type fixed, and schedule writes serialize against booking writes.
 - Keep one stable identifier for each scheduled occurrence in the mock catalog, plus day, start/end time, room, description, and partner flag. The same identifier links catalog entries to capacity and booking rows.
 - Store enough versioned schedule information to reconstruct the participant's selections, including session identifiers and selected dance roles.
 - Preserve other sections and draft choices when validation or availability fails.
@@ -148,12 +149,11 @@ Testing boundary: the participant-facing page, invitation action, and load/save/
 ## Out of Scope
 
 - Replacing the original pass-purchase flow.
-- Rebuilding the administrative dashboard beyond the new invitation action and the server-side authorization it requires.
+- Rebuilding unrelated parts of the administrative dashboard.
 - Implementing the attendee app at the destination domain.
-- A schedule-management admin interface, unless later explicitly requested.
 - General framework upgrades or unrelated legacy cleanup.
 
-Production database-backed schedule authoring is deferred by the request. Persistent booking capacity is a separate requirement and cannot be assumed deferred with the catalog.
+The requested Schedule admin page now supports persistent overrides. Mock defaults remain in the frontend data file; no schedule seeds are inserted into database tables.
 
 ## Further Notes
 
@@ -194,6 +194,7 @@ Production database-backed schedule authoring is deferred by the request. Persis
 24. Add an optional Voucher input at the end of `/reg2026`. The code `freepass26` makes all selected competition entries and lunch meals free, including checkout fees. Confirm these submissions without Stripe, while preserving class/pass/role/capacity rules and one-time registration. Reject unknown codes. Previously purchased festival passes remain unchanged.
 25. Submit paid choices directly to Stripe without an intermediate checkout-review screen. Keep resume/cancel/status recovery for participants who return without paying or reopen a pending registration.
 26. Add Generate link in the last column of both organizer dashboards. Generate a copyable registration URL with `buildRegistrationPath` from the participant's stored identity, without sending an email or changing their registration. Keep signing server-side and require organizer authentication; unconfirmed or ambiguous participants cannot receive a working link. Use the existing one-time registration behavior and signed-link format.
+27. Keep database schedule/capacity tables empty initially, render frontend mock classes and persist admin edits as overrides. Add `/dashboard/schedule` for titles, descriptions, teachers, rooms, times, class type and capacities. Preserve class identifiers and existing bookings; booked class timing/type is fixed. Use the effective catalog everywhere and reject stale or unauthorized edits.
 
 ### Launch inputs and deferred details
 

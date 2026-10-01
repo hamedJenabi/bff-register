@@ -19,7 +19,7 @@ export default async function handler(req, res) {
     let open = true;
     try { assertRegistrationOpen(); } catch { open = false; }
     return res.json({ participant: publicParticipant(participant), choices: choicesFromParticipant(participant),
-      availability: await store.availability(participant.id), order: publicOrder(order), open, completed,
+      availability: await store.availability(participant.id), schedule: await store.schedule(), order: publicOrder(order), open, completed,
       pendingDraft: ["provisional", "payment_pending"].includes(order?.status) ? order.draft : null });
   } catch (error) { return apiError(res, error); }
 }

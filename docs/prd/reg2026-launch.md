@@ -1,6 +1,6 @@
 # 2026 registration setup and verification
 
-Implementation status: the five local steps in [the roadmap](./implementation-roadmap.md) are complete. No operational migration, deployment, real email send or live payment was performed.
+Implementation status: the five local steps in [the roadmap](./implementation-roadmap.md) and the organizer Schedule editor are complete. The local development database is migrated through migration 9. No production migration, deployment, real email send or live payment was performed.
 
 ## Environment
 
@@ -26,13 +26,15 @@ Do not commit secret values. Cookie `Secure` is enabled in production, so produc
 
 ## Database and catalog
 
-Use the existing Ley workflow (`npm run migrate -- up`) against a backed-up staging database first. Apply migrations through `00008-reg2026-order-safety.js` before deploying these routes. Migration 7 creates bookings/orders without inserting mock capacity rows. Migration 8 adds submission idempotency, one active order per participant, processing-payment status, and delivery deduplication.
+Use the existing Ley workflow (`npm run migrate -- up`) against a backed-up staging database first. Apply migrations through `00009-create-schedule-overrides-2026.js` before deploying these routes. Migration 7 creates bookings/orders without inserting mock capacity rows. Migration 8 adds submission idempotency, one active order per participant, processing-payment status, and delivery deduplication. Migration 9 creates an empty schedule-override table.
 
 Mock class metadata and capacity defaults now live in `mockdata/schedule2026.js`, shared by the frontend and server validation. Fresh capacity tables stay empty; availability subtracts real bookings from mock defaults unless an organizer has saved a capacity override. Existing non-default capacity rows remain effective. Keep occurrence IDs stable to preserve participant bookings. Final festival dates/content remain organizer inputs.
 
+Open `/dashboard/schedule` from the Schedule navigation link on either dashboard. Search/filter classes and edit title, teachers, description, classroom, day/times, solo/partner format and capacities. Saving writes only that class's changed metadata and non-default capacities; other classes continue to use the mock file. The merged catalog is used by the participant form, organizer class dialog, server validation, capacity accounting and confirmation templates. Changing timing/type is blocked for classes referenced by registrations/orders. Existing bookings remain valid when capacity is reduced; no new places are offered beyond the limit. Version checks reject stale saves, and schedule edits serialize against booking writes. Saving metadata queues no email and changes no financial order.
+
 Audit legacy lunch/competition records before launch: the first registration credits existing saved add-ons and charges only additional selections. The old routes previously recorded amounts due without verified payment. Reconcile unpaid entries before invitations so they do not become free entitlements. If any versioned class choices were populated manually, backfill corresponding confirmed bookings before opening capacity.
 
-The legacy lunch/competition write APIs return 410 while the new flow is enabled and for participants who already have a new-flow order, preventing those routes from overwriting verified choices. After completion, participants must request all changes from organizers; changing structured `theme_class` through the old dashboard field editor does not reconcile class booking rows. Organizer refunds/removals and a capacity editor remain outside this PRD.
+The legacy lunch/competition write APIs return 410 while the new flow is enabled and for participants who already have a new-flow order, preventing those routes from overwriting verified choices. After completion, participants must request all changes from organizers; changing structured `theme_class` through the old dashboard field editor does not reconcile class booking rows. Use the class dialog for organizer replacements and Schedule for catalog/capacity changes. Refunds remain separate work.
 
 ## One-time registration
 
@@ -82,6 +84,7 @@ Log in at `/login/admin`, then use the current dashboard's 2026 delivery panel. 
 - One-time browser QA: an empty Party Pass submission completes immediately; reopening the original signed link shows completion and organizer contact with no form inputs. The paid-confirmation fixture also shows completion, and pending checkout shows only payment actions and the total. The completion card fits the 390px mobile viewport.
 - Organizer class-view browser QA: both dashboard routes show the saved count and participant-specific dialog; a three-class fixture covers solo, lead and follow roles. Empty registrations, 390px mobile layout, Escape/close dismissal and restored focus to the opening button were checked. A dropdown replacement with a new partner role persisted after reload. Integration tests cover organizer authorization, stale edits, capacity, atomic booking replacement and unchanged payment/email records.
 - Direct-checkout browser QA: a fresh paid submission redirected automatically to the local checkout stand-in with the server-calculated amount. Returning without paying showed pending recovery, and resuming reopened the same checkout/order. Real Stripe test-mode handoff remains a staging check.
+- Schedule-editor QA: empty schema tables render all mock classes. Saving a title, description and capacity persisted after reload and updated the participant card/modal. Integration tests cover role/type changes before booking, current server validation, stored overrides, reduced capacity, stale edits, organizer access and protection of registered sessions.
 
 Browser draft storage is disabled: reloads load only confirmed server choices or a pending server order. The schedule uses two columns on desktop and one on mobile, hides room names and daily counts, and disables other classes in an occupied time slot until its selected class is removed. At five selected classes, all unselected classes are disabled; remove one to choose a replacement. The shared form/API validator enforces the same festival-wide cap. A sticky summary shows the total class count at the left on desktop and above the form on mobile. Hover and dialog transitions are subtle and respect reduced motion.
 
