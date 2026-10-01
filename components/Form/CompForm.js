@@ -97,7 +97,7 @@ export default function CompForm({ form, tickets, isClicked }) {
               {compettionsInfo.map(({ value, label }) => {
                 if (value === "solo_battle") return null;
                 return (
-                  <label>
+                  <label key={value}>
                     <FormCheckbox {...form} name="competitions" value={value} />{" "}
                     {label}
                   </label>
@@ -106,7 +106,7 @@ export default function CompForm({ form, tickets, isClicked }) {
             </div>
             <div className={styles.radioGroup}>
               {roleNeededComps.map((comp) => (
-                <div className={styles.radioGroup}>
+                <div key={comp} className={styles.radioGroup}>
                   <h4 className={styles.title}>
                     Your role in the{" "}
                     <span style={{ fontSize: "13px" }}>{titleCase(comp)}</span>{" "}

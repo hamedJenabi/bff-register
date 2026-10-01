@@ -38,6 +38,20 @@
   box-shadow: 0 12px 32px rgba(20, 43, 41, 0.08);
 }
 
+.classRegistration {
+  display: grid;
+  gap: 12px;
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+
+  h2 { font-size: 22px; }
+  p { line-height: 1.5; }
+  button { width: fit-content; max-width: 100%; }
+  button:disabled { opacity: 0.55; cursor: default; }
+}
+
 .linkButton,
 .button {
   display: inline-flex;

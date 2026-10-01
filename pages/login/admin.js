@@ -16,12 +16,7 @@ import {
 export default function Admin({ tickets }) {
   const isMobile = useMedia({ maxWidth: "768px" });
 
-  if (typeof window !== "undefined") {
-    const admin = localStorage.getItem("login_admin");
-    if (admin === "true") {
-      Router.push("/dashboard/fdjhfdskjfhdskjh");
-    }
-  }
+
 
   const form = useFormState({
     values: {
@@ -51,11 +46,10 @@ export default function Admin({ tickets }) {
       })
         .then((response) => {
           if (response.status === 200) {
-            localStorage.setItem("login_admin", true);
             Router.push("/dashboard/fdjhfdskjfhdskjh");
           }
-          if (response.status === 401) {
-            alert("Wrong username or password");
+          if (response.status !== 200) {
+            alert("Login failed. Check your credentials or contact the administrator.");
           }
         })
         .catch((error) => console.log(error));

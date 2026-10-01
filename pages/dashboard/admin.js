@@ -1,3 +1,6 @@
+import { adminPageRedirect } from "../../lib/admin/session";
+import RegisteredClasses from "../../components/Reg2026/RegisteredClasses";
+import RegistrationLink from "../../components/Reg2026/RegistrationLink";
 import Head from "next/head";
 import useMedia from "use-media";
 import Router from "next/router";
@@ -9,7 +12,7 @@ import styles from "./Dashboard.module.scss";
 import Header from "../../components/Header/Header.js";
 import { unstable_useFormState as useFormState } from "reakit/Form";
 import classNames from "classnames";
-import { levelsToShow, titleCase } from "../../utils/functions";
+import { finalLevelsToShow as levelsToShow, titleCase } from "../../utils/functions";
 export default function Dashboard({ users, tickets }) {
   const [nameSearch, setNameSearch] = useState("");
   const [activeSideBar, setActiveSideBar] = useState("all");
@@ -17,12 +20,7 @@ export default function Dashboard({ users, tickets }) {
   const [userToShow, setUserToShow] = useState(users || []);
   const isMobile = useMedia({ maxWidth: "768px" });
 
-  if (typeof window !== "undefined") {
-    const admin = localStorage.getItem("login_admin");
-    if (admin !== "true") {
-      Router.push("/login/admin");
-    }
-  }
+
 
   const handleSideBarClick = (item) => {
     if (item !== "capacity") {
@@ -61,10 +59,12 @@ export default function Dashboard({ users, tickets }) {
       "ticket",
       "role",
       "level",
+      "classes",
       "shirt",
       "shirt_size",
       "country",
       "terms",
+      "registration link",
     ];
     return header.map((key, index) => {
       return <th key={index}>{key.toUpperCase()}</th>;
@@ -136,6 +136,7 @@ export default function Dashboard({ users, tickets }) {
           shirt_size,
           ticket,
           email,
+          theme_class,
         }) => {
           return (
             <tr
@@ -160,10 +161,16 @@ export default function Dashboard({ users, tickets }) {
               <td>{ticket}</td>
               <td>{role}</td>
               <td>{level}</td>
+              <td>
+                <RegisteredClasses id={id} firstname={firstname} lastname={lastname} themeClass={theme_class} buttonClassName={styles.button} />
+              </td>
               <td>{shirt}</td>
               <td>{shirt_size}</td>
               <td>{country}</td>
               <td>Yes</td>
+              <td>
+                <RegistrationLink id={id} firstname={firstname} lastname={lastname} buttonClassName={styles.button} />
+              </td>
             </tr>
           );
         },
@@ -179,6 +186,10 @@ export default function Dashboard({ users, tickets }) {
         isAdmin
         title="VSB DASHBOARD"
         menuItems={[
+          {
+            title: "SCHEDULE",
+            link: "/dashboard/schedule",
+          },
           {
             title: "LOG OUT ",
             link: "/login/admin",
@@ -310,7 +321,9 @@ export default function Dashboard({ users, tickets }) {
   );
 }
 
-export async function getServerSideProps() {
+export async function getServerSideProps({ req, res }) {
+  const redirect = adminPageRedirect(req, res);
+  if (redirect) return redirect;
   const { getAllUsers, getTickets } = await import("../../db/db");
 
   const users = await getAllUsers();
