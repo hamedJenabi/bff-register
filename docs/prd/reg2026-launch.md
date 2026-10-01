@@ -1,6 +1,6 @@
 # 2026 registration setup and verification
 
-Implementation status: the five local steps in [the roadmap](./implementation-roadmap.md) and the organizer Schedule editor are complete. The local development database is migrated through migration 9. No production migration, deployment, real email send or live payment was performed.
+Implementation status: the five local steps in [the roadmap](./implementation-roadmap.md), the organizer Schedule editor, and organizer class-registration reopening are complete. The local development database is migrated through migration 10. No production migration, deployment, real email send or live payment was performed.
 
 ## Environment
 
@@ -19,14 +19,13 @@ The flow is closed until `REG2026_ENABLED=true`. Signed participants can still v
 | `SENDGRID_API_KEY` | SendGrid delivery credentials |
 | `REG2026_EMAIL_FROM` | Verified sender (default `registration@bluesfever.eu`) |
 | `REG2026_INVITATION_TEMPLATE_ID` | Invitation template |
-| `REG2026_CONFIRMATION_TEMPLATE_ID` | Confirmation template |
 | `REG2026_CATALOG_REVIEWED` | Set `true` only after final catalog/capacity review; otherwise invitations cannot be queued |
 
 Do not commit secret values. Cookie `Secure` is enabled in production, so production organizer login requires HTTPS. Login fails closed when its credentials or session secret are missing.
 
 ## Database and catalog
 
-Use the existing Ley workflow (`npm run migrate -- up`) against a backed-up staging database first. Apply migrations through `00009-create-schedule-overrides-2026.js` before deploying these routes. Migration 7 creates bookings/orders without inserting mock capacity rows. Migration 8 adds submission idempotency, one active order per participant, processing-payment status, and delivery deduplication. Migration 9 creates an empty schedule-override table.
+Use the existing Ley workflow (`npm run migrate -- up`) against a backed-up staging database first. Apply migrations through `00010-reg2026-reopen-registration.js` before deploying these routes. Migration 7 creates bookings/orders without inserting mock capacity rows. Migration 8 adds submission idempotency, one active order per participant, processing-payment status, and delivery deduplication. Migration 9 creates an empty schedule-override table. Migration 10 adds the order reopening timestamp, preserving historical confirmed payments while removing their completion lock.
 
 Mock class metadata and capacity defaults now live in `mockdata/schedule2026.js`, shared by the frontend and server validation. Fresh capacity tables stay empty; availability subtracts real bookings from mock defaults unless an organizer has saved a capacity override. Existing non-default capacity rows remain effective. Keep occurrence IDs stable to preserve participant bookings. Final festival dates/content remain organizer inputs.
 
@@ -38,7 +37,9 @@ The legacy lunch/competition write APIs return 410 while the new flow is enabled
 
 ## One-time registration
 
-A confirmed `reg2026_orders` row marks the participant as registered, including an empty or class-only submission. No additional migration is needed. The participant row lock prevents concurrent first submissions from creating two confirmed registrations. Identical submission-key retries return the same order; different keys or choices cannot edit a completed registration.
+A confirmed `reg2026_orders` row with no `reopened_at` marks the participant as registered, including an empty or class-only submission. Saved structured class selections in `theme_class` also mark registration complete when no confirmed order exists, including choices saved by an organizer. Generated links check these saved classes before showing the form and display the completion message with organizer contact details instead. Older pass-purchase fields alone do not mark completion. The participant row lock prevents concurrent first submissions from creating two confirmed registrations. Identical submission-key retries return the same order; different keys or choices cannot edit a completed registration.
+
+In either dashboard, use **Actions → Edit → Remove all classes and reopen registration** for a confirmed Full/Parent pass. This clears class selections and bookings, releases their places, and retires existing completion locks. The same participant link then opens the form again. Paid competition/lunch choices and historical orders remain intact and are credited on the new submission. Pending checkout must be finished or cancelled first; stale edits are rejected. Retired orders cannot be replayed to restore classes, and their unsent confirmation emails are excluded from delivery/retry. Resetting classes sends no email and issues no refund.
 
 Completed links show only a confirmation, a link back to the festival website and `registration@bluesfever.eu` for all later changes. Competition/lunch controls do not show “Already booked” labels. Legacy add-ons alone do not mark the supplemental form complete; their purchases remain credited. Unfinished checkout stays accessible, and expired or failed attempts may be retried. Browser storage remains disabled.
 
@@ -60,6 +61,8 @@ Card, SEPA debit and iDEAL are requested by the adapter; verify their availabili
 The form displays subtotal, fee and total before submission. A successful paid submission redirects immediately to the server-created Stripe checkout URL, without an intermediate review page or second checkout click. Controls stay disabled while navigation begins. Reopening or returning from an unpaid checkout supports resume/cancel and status checks. Free submissions complete directly. Submission retries use a request key and the same Stripe order idempotency key. A server failure after Stripe creates a session can be recovered by retrying that order creation. If Stripe is unavailable, no payment is inferred.
 
 ## Email templates and operations
+
+The classes, competitions, and lunch confirmation template ID is set directly in `lib/reg2026/email.js` to `d-4f77d740ec504650aa9ea1a78e785cae`.
 
 Both organizer dashboard routes include a Classes column. Each participant's `View (count)` button opens a Reakit dialog with their saved class titles, day/time, teachers and lead/follow or solo role. The dialog reads the versioned `theme_class` selections; pending checkout drafts are not presented as registered classes. Participants without saved classes see an explicit empty state.
 

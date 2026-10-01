@@ -47,7 +47,7 @@ const http = require('node:http');
     started = true;
     const url = `postgres://${encodeURIComponent(os.userInfo().username)}@127.0.0.1:${port}/postgres`;
     const sql = postgres(url, { onnotice: () => {} });
-    for (const file of ['00004-CREAT-registraion-2026', '00006-create-class-capacities-2026', '00007-create-reg2026-bookings', '00008-reg2026-order-safety', '00009-create-schedule-overrides-2026']) {
+    for (const file of ['00004-CREAT-registraion-2026', '00006-create-class-capacities-2026', '00007-create-reg2026-bookings', '00008-reg2026-order-safety', '00009-create-schedule-overrides-2026', '00010-reg2026-reopen-registration']) {
       await sql.begin((tx) => require(`../migrations/${file}`).up(tx));
     }
     await sql`CREATE TABLE tickets_26 (id SERIAL, name TEXT, label TEXT, capacity INTEGER, waiting_list INTEGER)`;
@@ -58,9 +58,10 @@ const http = require('node:http');
       ('2026','confirmed','advanced','partyPass','Complete','Dancer','demo+complete@example.com','Austria'),
       ('2026','confirmed','advanced','fullpass','Hamed','Demo','demo+classes@example.com','Austria') RETURNING *`;
     const store = require('../lib/reg2026/store').createRegistrationStore(sql);
-    await store.submit(people[4], { classes: [{ sessionId: 'fri-1330-kantine', role: 'lead' },
+    // Reproduce saved classes without a completed supplemental order.
+    await store.editClasses(people[4].id, [{ sessionId: 'fri-1330-kantine', role: 'lead' },
       { sessionId: 'sat-1130-superar-1' }, { sessionId: 'sun-1130-ankersaal', role: 'follow' }],
-      competitions: [], competitionRoles: {}, lunch: [] }, 'preview-classes-01');
+      '');
     const paidDraft = { classes: [], competitions: ['solo_battle'], competitionRoles: {}, lunch: ['saturday'] };
     await store.submit(people[2], paidDraft, 'preview-pending-001');
     const confirmed = await store.submit(people[3], paidDraft, 'preview-complete-01');

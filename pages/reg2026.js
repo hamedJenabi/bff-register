@@ -44,12 +44,10 @@ export default function Registration({ initial, access, loadError }) {
   const [redirecting, setRedirecting] = useState(false);
   const [networkBusy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
-  const pending = ["provisional", "payment_pending"].includes(
+  const completed = !!(data?.completed || data?.order?.status === "confirmed");
+  const pending = !completed && ["provisional", "payment_pending"].includes(
     data?.order?.status,
   );
-
-  const completed =
-    !pending && !!(data?.completed || data?.order?.status === "confirmed");
 
   const form = useFormState({
     baseId: "reg2026",
@@ -149,6 +147,7 @@ export default function Registration({ initial, access, loadError }) {
     };
   }, []);
   useEffect(() => {
+    setData(initial);
     if (!initial) return;
     Object.entries(
       registrationFormValues(initial.pendingDraft || initial.choices),
@@ -302,11 +301,12 @@ export default function Registration({ initial, access, loadError }) {
             )}
             {completed ? (
               <section aria-labelledby="complete-title">
-                <h2 id="complete-title">Registration complete</h2>
-                <p>Your festival choices are confirmed. Thank you!</p>
+                <h2 id="complete-title">You have already registered</h2>
+                <p>Your classes, competitions and lunch registration is complete. Thank you!</p>
                 <p>
                   For any changes, contact{" "}
-                  <a href="mailto:registration@bluesfever.eu">the organizers</a>.
+                  the organizers at{" "}
+                  <a href="mailto:registration@bluesfever.eu">registration@bluesfever.eu</a>.
                 </p>
                 <a href="https://www.bluesfever.eu/">Back to Blues Fever</a>
               </section>
@@ -462,11 +462,9 @@ export async function getServerSideProps({ query, res }) {
     const { choicesFromParticipant } =
       await import("../lib/reg2026/serialization");
     const { publicOrder } = await import("../lib/reg2026/http");
+    const { loadRegistrationState } = await import("../lib/reg2026/state");
     const participant = await resolveParticipant(access, store);
-    const order =
-      typeof query.order === "string" && /^\d+$/.test(query.order)
-        ? await store.order(query.order, participant.id)
-        : await store.activeOrder(participant.id) || await store.completedOrder(participant.id);
+    const { order, completed } = await loadRegistrationState(store, participant, query.order);
     let open = true;
     try {
       assertRegistrationOpen();
@@ -479,7 +477,7 @@ export async function getServerSideProps({ query, res }) {
       availability: await store.availability(participant.id),
       schedule: await store.schedule(),
       open,
-      completed: !!(await store.completedOrder(participant.id)),
+      completed,
       order: publicOrder(order),
       pendingDraft: ["provisional", "payment_pending"].includes(order?.status)
         ? order.draft

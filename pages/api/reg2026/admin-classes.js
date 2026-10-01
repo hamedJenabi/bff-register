@@ -19,7 +19,10 @@ export default async function handler(req, res) {
     if (typeof req.body.version !== "string" || req.body.version.length > 10000) {
       throw new RegistrationError(422, "Reload the current class choices before saving.");
     }
-    const saved = await store.editClasses(id, req.body.classes, req.body.version);
+    if (req.body.action && req.body.action !== "reopen") throw new RegistrationError(422, "Unknown class action.");
+    const saved = req.body.action === "reopen"
+      ? await store.reopenClasses(id, req.body.version)
+      : await store.editClasses(id, req.body.classes, req.body.version);
     return res.json({ ...saved, availability: (await store.availability(id)).classes });
   } catch (error) { return apiError(res, error); }
 }
