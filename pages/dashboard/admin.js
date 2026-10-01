@@ -1,4 +1,5 @@
 import { adminPageRedirect } from "../../lib/admin/session";
+import RegisteredClasses from "../../components/Reg2026/RegisteredClasses";
 import Head from "next/head";
 import useMedia from "use-media";
 import Router from "next/router";
@@ -57,6 +58,7 @@ export default function Dashboard({ users, tickets }) {
       "ticket",
       "role",
       "level",
+      "classes",
       "shirt",
       "shirt_size",
       "country",
@@ -132,6 +134,7 @@ export default function Dashboard({ users, tickets }) {
           shirt_size,
           ticket,
           email,
+          theme_class,
         }) => {
           return (
             <tr
@@ -156,6 +159,9 @@ export default function Dashboard({ users, tickets }) {
               <td>{ticket}</td>
               <td>{role}</td>
               <td>{level}</td>
+              <td>
+                <RegisteredClasses id={id} firstname={firstname} lastname={lastname} themeClass={theme_class} buttonClassName={styles.button} />
+              </td>
               <td>{shirt}</td>
               <td>{shirt_size}</td>
               <td>{country}</td>

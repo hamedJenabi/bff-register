@@ -28,7 +28,7 @@ Final catalog and capacity review; invitation/confirmation SendGrid templates an
 - Step 1: implemented; rule checks run with `npm test`.
 - Step 2: implemented; isolated Postgres tests cover free saves, retries, failed edits, paid fulfillment, processing, expiry and email failure.
 - Step 3: implemented; participant page, responsive class schedule/dialogs, reusable add-on sections, one-time completion, combined review, and pending checkout/status actions. Production build passes with pre-existing legacy import warnings.
-- Step 4: implemented; signed HttpOnly organizer sessions protect dashboard data, edits and email APIs. Invitations select unambiguous confirmed participants on the server, deduplicate delivery records, and expose bounded queue/send/retry actions.
+- Step 4: implemented; signed HttpOnly organizer sessions protect dashboard data, edits and email APIs. Invitations select unambiguous confirmed participants on the server, deduplicate delivery records, and expose bounded queue/send/retry actions. A Classes column opens a participant-specific dialog showing saved sessions and roles.
 - Step 5: implemented; automated isolated database/HTTP/webhook checks, non-interactive lint, production build, desktop/tablet/mobile browser QA, and launch setup documentation in `reg2026-launch.md`.
 
 The attendee-app token contract, reviewed catalog, email templates and deployment configuration remain external launch inputs. The wider pass-purchase security and UX modernization backlog remains separate follow-up work.

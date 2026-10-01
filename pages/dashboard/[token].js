@@ -1,4 +1,5 @@
 import OrganizerDelivery from "../../components/Reg2026/OrganizerDelivery";
+import RegisteredClasses from "../../components/Reg2026/RegisteredClasses";
 import { adminPageRedirect } from "../../lib/admin/session";
 import Head from "next/head";
 import useMedia from "use-media";
@@ -416,7 +417,7 @@ export default function Dashboard({ users, tickets }) {
       "parent_partner",
       "level",
       "role",
-      // "themed class",
+      "classes",
       "competition",
       "competitions",
       "Open MnM role",
@@ -568,6 +569,7 @@ export default function Dashboard({ users, tickets }) {
           newcomers_mixnmatch_role,
           strictly_role,
           competitions,
+          theme_class,
           tshirt,
           lunch,
           donation,
@@ -619,7 +621,9 @@ export default function Dashboard({ users, tickets }) {
               <td>{parent_partner}</td>
               <td>{role}</td>
               <td>{level}</td>
-              {/* <td>{titleCase(theme_class)}</td> */}
+              <td>
+                <RegisteredClasses id={id} firstname={firstname} lastname={lastname} themeClass={theme_class} buttonClassName={styles.button} />
+              </td>
               <td>{competition}</td>
               <td>
                 {competitions && (

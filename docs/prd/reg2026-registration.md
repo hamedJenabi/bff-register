@@ -190,6 +190,7 @@ Production database-backed schedule authoring is deferred by the request. Persis
 20. Desktop shows the schedule as a room-by-time grid. Mobile shows a day-by-day list grouped by time slot, with a class card for each room; class details open full-screen.
 21. Browser draft storage is disabled. Unsaved choices reset on reload. Pending payment choices are recovered from the server; confirmed registrations show only completion.
 22. If SendGrid fails after payment and booking confirmation, keep the booking confirmed, show the participant success, and queue the failed confirmation email for organizer retry.
+23. Add a Classes column to the organizer dashboard with a registered class count and a button opening participant-specific details. Show saved class titles, day/time, teachers and lead/follow or solo roles in an accessible dialog, including an explicit empty state. Pending checkout drafts are not confirmed registrations.
 
 ### Launch inputs and deferred details
 
@@ -202,7 +203,7 @@ Production database-backed schedule authoring is deferred by the request. Persis
 ## Decision Log
 
 - **Goal:** Let confirmed 2026 participants register classes, competitions, and lunch through one personalized page.
-- **Scope:** `/reg2026`, persistent booking state, Stripe checkout and webhook confirmation, confirmation email, and a signed-link invitation button beside the existing dashboard email action.
+- **Scope:** `/reg2026`, persistent booking state, Stripe checkout and webhook confirmation, confirmation email, a signed-link invitation button beside the existing dashboard email action, and organizer visibility of registered classes.
 - **Non-goals:** Replace pass purchase, build the attendee app, add schedule administration, or automate paid add-on refunds.
 - **UX and behavior:** Full and Parent passes can choose classes; Party Pass cannot. Choose at most one class per slot and five in total across the festival. Partner-class roles are chosen per session. Mobile uses a time-slot list and full-screen details. Browser draft storage is disabled; unsaved choices reset on reload. Registration is one-time; completed links show only confirmation and organizer contact.
 - **Payment:** Lunch is €15 per day and competitions are €10 each, with no free entry. Add the existing Stripe fee. Create provisional bookings before paid checkout; expire uncompleted checkouts after one hour; confirm and email only after verified payment. Class-only submissions confirm immediately.

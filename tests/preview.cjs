@@ -36,8 +36,12 @@ const net = require('node:net');
       VALUES ('2026','confirmed','advanced','fullpass','Demo','Dancer','demo+full@example.com','Austria'),
       ('2026','confirmed','advanced','partyPass','Party','Dancer','demo+party@example.com','Austria'),
       ('2026','confirmed','advanced','partyPass','Pending','Dancer','demo+pending@example.com','Austria'),
-      ('2026','confirmed','advanced','partyPass','Complete','Dancer','demo+complete@example.com','Austria') RETURNING *`;
+      ('2026','confirmed','advanced','partyPass','Complete','Dancer','demo+complete@example.com','Austria'),
+      ('2026','confirmed','advanced','fullpass','Hamed','Demo','demo+classes@example.com','Austria') RETURNING *`;
     const store = require('../lib/reg2026/store').createRegistrationStore(sql);
+    await store.submit(people[4], { classes: [{ sessionId: 'fri-1330-kantine', role: 'lead' },
+      { sessionId: 'sat-1130-superar-1' }, { sessionId: 'sun-1130-ankersaal', role: 'follow' }],
+      competitions: [], competitionRoles: {}, lunch: [] }, 'preview-classes-01');
     const paidDraft = { classes: [], competitions: ['solo_battle'], competitionRoles: {}, lunch: ['saturday'] };
     await store.submit(people[2], paidDraft, 'preview-pending-001');
     const confirmed = await store.submit(people[3], paidDraft, 'preview-complete-01');
@@ -57,6 +61,7 @@ const net = require('node:net');
     console.log('PARTY_PASS_URL=http://localhost:31026' + buildRegistrationPath({ firstname: 'Party', email: 'demo+party@example.com' }));
     console.log('PENDING_URL=http://localhost:31026' + buildRegistrationPath({ firstname: 'Pending', email: 'demo+pending@example.com' }));
     console.log('COMPLETED_URL=http://localhost:31026' + buildRegistrationPath({ firstname: 'Complete', email: 'demo+complete@example.com' }));
+    console.log('CLASSES_URL=http://localhost:31026' + buildRegistrationPath({ firstname: 'Hamed', email: 'demo+classes@example.com' }));
     child = spawn(process.execPath, ['node_modules/next/dist/bin/next', 'dev', '-H', '127.0.0.1', '-p', '31026'], { env, stdio: 'inherit' });
     for (const signal of ['SIGINT', 'SIGTERM']) process.on(signal, () => { cleanup(); process.exit(0); });
     await new Promise((resolve) => child.on('exit', resolve));

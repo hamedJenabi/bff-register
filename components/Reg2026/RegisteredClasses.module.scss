@@ -1,0 +1,94 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(15, 31, 30, .6);
+  opacity: 0;
+  transition: opacity 180ms ease;
+}
+
+.dialog {
+  width: min(620px, 100%);
+  max-height: calc(100dvh - 40px);
+  overflow-y: auto;
+  border: 1px solid #dce6e5;
+  border-radius: 12px;
+  background: white;
+  color: #172023;
+  padding: 24px;
+  box-shadow: 0 24px 64px rgba(15, 31, 30, .25);
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 180ms ease, transform 180ms ease;
+
+  h2 { font-size: 24px; line-height: 1.3; }
+  h3 { font-size: 17px; line-height: 1.4; }
+  p { font-size: 14px; letter-spacing: normal; line-height: 1.5; }
+  :focus-visible { outline: 3px solid #2f766f; outline-offset: 3px; }
+}
+
+.backdrop[data-enter],
+.backdrop[data-animated="false"] { opacity: 1; }
+.dialog[data-enter],
+.dialog[data-animated="false"] { opacity: 1; transform: none; }
+.backdrop[data-leave],
+.dialog[data-leave] { opacity: 0; }
+.dialog[data-leave] { transform: translateY(8px); }
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+
+  p { margin-top: 6px; color: #62716f; }
+}
+
+.close {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border: 1px solid #dce6e5;
+  border-radius: 6px;
+  background: #eef4f2;
+  color: #225a55;
+  font-size: 26px;
+  cursor: pointer;
+  &:hover { background: #dcefed; }
+}
+
+.summary { margin-top: 20px; }
+.classes {
+  list-style: none;
+  padding: 0;
+  margin: 16px 0 0;
+
+  li { border-top: 1px solid #dce6e5; padding: 16px 0; }
+  li:last-child { padding-bottom: 0; }
+  h3 { margin: 5px 0; }
+  .time { color: #62716f; font-size: 12px; }
+}
+
+.role {
+  display: inline-block;
+  margin-top: 10px;
+  border-radius: 4px;
+  background: #eef4f2;
+  color: #225a55;
+  padding: 4px 8px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+@media (max-width: 600px) {
+  .backdrop { padding: 12px; }
+  .dialog { max-height: calc(100dvh - 24px); padding: 20px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .backdrop, .dialog { transition: none; }
+}
