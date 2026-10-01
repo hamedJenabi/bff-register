@@ -190,7 +190,7 @@ Production database-backed schedule authoring is deferred by the request. Persis
 20. Desktop shows the schedule as a room-by-time grid. Mobile shows a day-by-day list grouped by time slot, with a class card for each room; class details open full-screen.
 21. Browser draft storage is disabled. Unsaved choices reset on reload. Pending payment choices are recovered from the server; confirmed registrations show only completion.
 22. If SendGrid fails after payment and booking confirmation, keep the booking confirmed, show the participant success, and queue the failed confirmation email for organizer retry.
-23. Add a Classes column to the organizer dashboard with a registered class count and a button opening participant-specific details. Show saved class titles, day/time, teachers and lead/follow or solo roles in an accessible dialog, including an explicit empty state. Pending checkout drafts are not confirmed registrations.
+23. Add a Classes column to the organizer dashboard with a registered class count and a button opening participant-specific details. Show saved class titles, day/time, teachers and lead/follow or solo roles in an accessible dialog, including an explicit empty state. Organizers can remove classes and add replacements from a dropdown, with roles, then save atomically without email or payment actions. Preserve five-class, time-slot, eligibility and capacity rules; prevent stale edits and edits during pending checkout. Pending checkout drafts are not confirmed registrations.
 
 ### Launch inputs and deferred details
 
