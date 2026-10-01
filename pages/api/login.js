@@ -11,11 +11,7 @@ export default async function login(req, res) {
   }
   if (!sameOrigin(req))
     return res.status(403).json({ error: "Origin is not allowed" });
-  if (
-    !process.env.ADMIN_USER ||
-    !process.env.HASHED_PASS ||
-    !process.env.ADMIN_SESSION_SECRET
-  ) {
+  if (!process.env.ADMIN_USER || !process.env.HASHED_PASS) {
     return res
       .status(503)
       .json({ error: "Organizer login is not configured." });
