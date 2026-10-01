@@ -1,5 +1,6 @@
 import { adminPageRedirect } from "../../lib/admin/session";
 import RegisteredClasses from "../../components/Reg2026/RegisteredClasses";
+import RegistrationLink from "../../components/Reg2026/RegistrationLink";
 import Head from "next/head";
 import useMedia from "use-media";
 import Router from "next/router";
@@ -63,6 +64,7 @@ export default function Dashboard({ users, tickets }) {
       "shirt_size",
       "country",
       "terms",
+      "registration link",
     ];
     return header.map((key, index) => {
       return <th key={index}>{key.toUpperCase()}</th>;
@@ -166,6 +168,9 @@ export default function Dashboard({ users, tickets }) {
               <td>{shirt_size}</td>
               <td>{country}</td>
               <td>Yes</td>
+              <td>
+                <RegistrationLink id={id} firstname={firstname} lastname={lastname} buttonClassName={styles.button} />
+              </td>
             </tr>
           );
         },

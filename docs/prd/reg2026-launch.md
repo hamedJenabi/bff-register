@@ -63,6 +63,10 @@ Both organizer dashboard routes include a Classes column. Each participant's `Vi
 
 Organizers can use Edit classes, remove selections, add a replacement from a dropdown with its dance role, then Save changes. The authenticated `/api/reg2026/admin-classes` endpoint locks the participant and updates both `theme_class` and confirmed capacity bookings atomically. It checks pass eligibility, five-class/slot/role rules, remaining capacity and the loaded class version. Pending checkout blocks edits so fulfillment cannot overwrite them. Add-ons, financial order snapshots and email delivery records are untouched; saving an admin class edit creates no email or payment action.
 
+Both dashboards end with a Registration link column. Generate link opens a dialog with a read-only URL, Copy link and Open registration. The organizer-only POST `/api/reg2026/link` endpoint reads the selected participant by ID and calls `buildRegistrationPath` on the stored email and first name, using the configured canonical origin. Unconfirmed or ambiguous identities are rejected. Generating a link sends no email and changes no registration or payment state. It uses the existing signed-link format without a separate expiry; completed registrations remain closed to participant edits.
+
+Link-generation tests verify organizer authentication/origin checks, stored identity selection, signature validity, confirmed/unambiguous eligibility and unchanged registration/order/email records. Browser QA on both dashboard routes verified the final column, generated URL, copying, opening the correct participant form, Escape dismissal and restored button focus.
+
 Invitation dynamic data: `firstname`, `lastname`, `registrationUrl`.
 
 Confirmation dynamic data: `firstname`, `lastname`, `classes` (session metadata and role), `competitions` (label and role), and `lunch` (day strings). This is an explicit contract for the templates. The attendee-app link is omitted until its external token/encoding contract is supplied; the implementation does not invent an authentication token.

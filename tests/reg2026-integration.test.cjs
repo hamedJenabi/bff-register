@@ -197,6 +197,48 @@ test("registration orders on isolated Postgres", { skip: !process.env.TEST_DATAB
       await queueInvitations(store);
       assert.equal(await processDeliveryBatch(store, false, async () => { throw new Error("must not resend"); }), 0);
     });
+    await t.test("organizers generate links from stored identities without changing registrations or sending emails", async () => {
+      require.cache[require.resolve("../db/reg2026")] = { loaded: true, exports: { registrationStore: store } };
+      process.env.ADMIN_SESSION_SECRET = "test-admin-secret"; process.env.ADMIN_USER = "test-admin";
+      const { setAdminSession } = require("../lib/admin/session");
+      const { buildRegistrationPath, verifyIdentitySignature } = require("../lib/reg2026/security");
+      const { resolveParticipant } = require("../lib/reg2026/access");
+      const generate = require("../pages/api/reg2026/link").default;
+      const response = () => ({ headers: {}, code: 200, setHeader(k,v) { this.headers[k] = v; }, status(c) { this.code = c; return this; }, json(body) { this.body = body; return this; }, end() { return this; } });
+      const sessionResponse = response(); setAdminSession(sessionResponse);
+      const headers = { cookie: sessionResponse.headers["Set-Cookie"].split(";")[0], host: "localhost:3000", origin: "http://localhost:3000" };
+      const unauthorized = response(); await generate({ method: "POST", headers: {}, body: { id: participant.id } }, unauthorized);
+      assert.equal(unauthorized.code, 401);
+      const crossOrigin = response(); await generate({ method: "POST", headers: { ...headers, origin: "https://outside.example.com" }, body: { id: participant.id } }, crossOrigin);
+      assert.equal(crossOrigin.code, 403);
+      const wrongMethod = response(); await generate({ method: "GET", headers, query: { id: participant.id } }, wrongMethod);
+      assert.equal(wrongMethod.code, 405); assert.equal(wrongMethod.headers.Allow, "POST");
+      const malformed = response(); await generate({ method: "POST", headers, body: { id: "1 OR 1=1" } }, malformed);
+      assert.equal(malformed.code, 422);
+      const missing = response(); await generate({ method: "POST", headers, body: { id: 2147483647 } }, missing);
+      assert.equal(missing.code, 404);
+      const unconfirmed = await createPerson("LinkUnconfirmed");
+      await sql`UPDATE registrations_26 SET status = 'waitinglist' WHERE id = ${unconfirmed.id}`;
+      const ineligible = response(); await generate({ method: "POST", headers, body: { id: unconfirmed.id } }, ineligible);
+      assert.equal(ineligible.code, 409);
+      const [duplicate] = await sql`SELECT id FROM registrations_26 WHERE email = 'duplicate@example.com' LIMIT 1`;
+      const ambiguous = response(); await generate({ method: "POST", headers, body: { id: duplicate.id } }, ambiguous);
+      assert.equal(ambiguous.code, 409);
+      const before = await sql`SELECT * FROM registrations_26 WHERE id = ${participant.id}`;
+      const ordersBefore = await sql`SELECT * FROM reg2026_orders WHERE registration_id = ${participant.id}`;
+      const emailsBefore = await sql`SELECT * FROM registration_email_retries_26 WHERE registration_id = ${participant.id}`;
+      const generated = response(); await generate({ method: "POST", headers,
+        body: { id: participant.id, firstname: "Forged", email: "forged@example.com" } }, generated);
+      assert.equal(generated.code, 200); assert.equal(generated.headers["Cache-Control"], "private, no-store");
+      assert.equal(generated.body.registrationUrl, process.env.REG2026_ORIGIN + buildRegistrationPath(participant));
+      const url = new URL(generated.body.registrationUrl);
+      assert.equal(url.searchParams.get("user"), "test+one@example.com+Test");
+      assert.equal(verifyIdentitySignature(url.searchParams.get("user"), url.searchParams.get("sig")), true);
+      assert.equal((await resolveParticipant(Object.fromEntries(url.searchParams), store)).id, participant.id);
+      assert.deepEqual(await sql`SELECT * FROM registrations_26 WHERE id = ${participant.id}`, before);
+      assert.deepEqual(await sql`SELECT * FROM reg2026_orders WHERE registration_id = ${participant.id}`, ordersBefore);
+      assert.deepEqual(await sql`SELECT * FROM registration_email_retries_26 WHERE registration_id = ${participant.id}`, emailsBefore);
+    });
     await t.test("HTTP endpoints enforce signed access, complete drafts and server-owned checkout", async () => {
       const { signIdentity } = require("../lib/reg2026/security");
       const payments = require("../lib/reg2026/payments");
