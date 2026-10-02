@@ -1,4 +1,3 @@
-import OrganizerDelivery from "../../components/Reg2026/OrganizerDelivery";
 import RegisteredClasses from "../../components/Reg2026/RegisteredClasses";
 import RegistrationLink from "../../components/Reg2026/RegistrationLink";
 import { adminPageRedirect } from "../../lib/admin/session";
@@ -939,7 +938,6 @@ export default function Dashboard({ users, tickets }) {
           >
             Send Email to All confirmed
           </button>
-          <OrganizerDelivery />
         </div>
       </main>
 

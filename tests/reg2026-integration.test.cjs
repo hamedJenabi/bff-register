@@ -3,11 +3,14 @@ const assert = require("node:assert/strict");
 const postgres = require("postgres");
 const { createRegistrationStore } = require("../lib/reg2026/store");
 const { checkoutForOrder } = require("../lib/reg2026/payments");
-const { deliverOrderConfirmation } = require("../lib/reg2026/email");
+const sgMail = require("@sendgrid/mail");
 const empty = () => ({ classes: [], competitions: [], competitionRoles: {}, lunch: [] });
 
 test("registration orders on isolated Postgres", { skip: !process.env.TEST_DATABASE_URL }, async (t) => {
   const sql = postgres(process.env.TEST_DATABASE_URL, { onnotice: () => {} });
+  const originalSend = sgMail.send;
+  let emailSends = 0;
+  sgMail.send = async () => { emailSends += 1; throw new Error("Registration must not send emails"); };
   try {
     for (const file of ["00004-CREAT-registraion-2026", "00006-create-class-capacities-2026", "00007-create-reg2026-bookings", "00008-reg2026-order-safety", "00009-create-schedule-overrides-2026", "00010-reg2026-reopen-registration"]) {
       await sql.begin((tx) => require(`../migrations/${file}`).up(tx));
@@ -33,6 +36,11 @@ test("registration orders on isolated Postgres", { skip: !process.env.TEST_DATAB
       (date,status,role,ticket,firstname,lastname,email,country)
       VALUES ('2026','confirmed','advanced',${ticket},${name},'Participant',${name + "@example.com"},'Austria') RETURNING *`)[0];
     const freeParticipant = await createPerson("Free");
+    // Preserve historical queued messages without delivering or changing them.
+    await sql`INSERT INTO registration_email_retries_26
+      (registration_id, kind, payload, last_error, attempts, delivery_status)
+      VALUES (${participant.id}, 'invitation', '{}'::jsonb, '', 0, 'pending')`;
+    const historicalDeliveries = await sql`SELECT * FROM registration_email_retries_26 ORDER BY id`;
     // Older pass-purchase fields do not count as a completed /reg2026 submission.
     await sql`UPDATE registrations_26 SET theme_class = 'legacy-class-ankersaal' WHERE id = ${participant.id}`;
     await sql`INSERT INTO class_bookings_26 (registration_id,session_id,pool,status) VALUES (${participant.id},'fri-1330-ankersaal','total','confirmed')`;
@@ -44,7 +52,7 @@ test("registration orders on isolated Postgres", { skip: !process.env.TEST_DATAB
       assert.equal(repeated.id, order.id);
       const [counts] = await sql`SELECT COUNT(*)::INTEGER AS count FROM class_bookings_26 WHERE registration_id = ${freeParticipant.id}`;
       assert.equal(counts.count, 1);
-      assert.equal((await store.deliveriesForOrder(order.id)).length, 1);
+      assert.equal((await sql`SELECT id FROM registration_email_retries_26 WHERE order_id = ${order.id}`).length, 0);
       assert.equal((await store.completedOrder(freeParticipant.id)).id, order.id);
       await assert.rejects(store.submit(freeParticipant, empty(), "free-request-0001"), /different choices/);
     });
@@ -99,14 +107,8 @@ test("registration orders on isolated Postgres", { skip: !process.env.TEST_DATAB
       const [person] = await sql`SELECT lunch, price FROM registrations_26 WHERE id = ${participant.id}`;
       assert.equal(person.lunch, "saturday");
       assert.equal(person.price, "200");
-      assert.equal((await store.deliveriesForOrder(pending.id)).length, 1);
+      assert.equal((await sql`SELECT id FROM registration_email_retries_26 WHERE order_id = ${pending.id}`).length, 0);
       await assert.rejects(store.submit(participant, empty(), "remove-paid-0001"), /contact the organizers/);
-    });
-    await t.test("failed email is durable while booking stays confirmed", async () => {
-      process.env.REG2026_CONFIRMATION_TEMPLATE_ID = "d-test";
-      await deliverOrderConfirmation(store, pending.id, async () => { throw new Error("test delivery unavailable"); });
-      assert.equal((await store.order(pending.id, participant.id)).status, "confirmed");
-      assert.equal((await store.deliveriesForOrder(pending.id))[0].delivery_status, "failed");
     });
     await t.test("expired checkout releases provisional places and permits an unfinished registration to retry", async () => {
       const person = await createPerson("Expiry");
@@ -215,10 +217,6 @@ test("registration orders on isolated Postgres", { skip: !process.env.TEST_DATAB
       // A retried webhook or old form submission cannot restore removed classes.
       await store.applyPayment(payment, "checkout.session.completed");
       assert.deepEqual((await store.organizerClasses(person.id)).classes, []);
-      await deliverOrderConfirmation(store, original.id, async () => { throw new Error("Old confirmation must not be sent"); });
-      const [oldDelivery] = await sql`SELECT id FROM registration_email_retries_26 WHERE order_id = ${original.id}`;
-      assert.equal(await store.claimDelivery(oldDelivery.id), undefined);
-      assert.ok(!(await store.deliveryBatch(false)).some((item) => item.id === oldDelivery.id));
       await assert.rejects(store.submit(person, draft, "reopen-original-01"), /Reload the form/);
       const replacement = { ...draft, classes: [{ sessionId: "fri-1515-lot" }] };
       const next = await store.submit(participantAfter, replacement, "reopen-replacement-01");
@@ -243,28 +241,10 @@ test("registration orders on isolated Postgres", { skip: !process.env.TEST_DATAB
       assert.equal((await store.submit(person, draft, "voucher-request-01")).id, confirmed.id);
       await assert.rejects(store.submit(person, draft, "voucher-new-key-01"), /contact the organizers/);
     });
-    await t.test("invitations skip ambiguous identities, survive failures and never blindly resend", async () => {
-      const { queueInvitations, processDeliveryBatch } = require("../lib/reg2026/invitations");
-      process.env.REG2026_ENABLED = "true";
-      process.env.REG2026_CATALOG_REVIEWED = "true";
-      process.env.REG2026_INVITATION_TEMPLATE_ID = "d-invite-test";
+    await t.test("organizers generate links from stored identities without changing registrations or sending emails", async () => {
       await sql`INSERT INTO registrations_26 (date,status,role,ticket,firstname,lastname,email,country)
         VALUES ('2026','confirmed','advanced','partyPass','Duplicate','One','duplicate@example.com','Austria'),
           ('2026','confirmed','advanced','partyPass','Duplicate','Two','duplicate@example.com','Austria')`;
-      const eligible = await store.confirmedRecipients();
-      assert.ok(eligible.every((person) => person.email !== "duplicate@example.com"));
-      assert.equal(await queueInvitations(store), eligible.length);
-      assert.equal(await queueInvitations(store), eligible.length);
-      const records = await sql`SELECT * FROM registration_email_retries_26 WHERE kind = 'invitation'`;
-      assert.equal(records.length, eligible.length);
-      assert.ok(records[0].payload.dynamicTemplateData.registrationUrl.includes("sig="));
-      await processDeliveryBatch(store, false, async () => { throw new Error("temporary failure"); });
-      await processDeliveryBatch(store, true, async () => {});
-      assert.ok((await sql`SELECT delivery_status FROM registration_email_retries_26 WHERE kind = 'invitation'`).every((record) => record.delivery_status === "sent"));
-      await queueInvitations(store);
-      assert.equal(await processDeliveryBatch(store, false, async () => { throw new Error("must not resend"); }), 0);
-    });
-    await t.test("organizers generate links from stored identities without changing registrations or sending emails", async () => {
       require.cache[require.resolve("../db/reg2026")] = { loaded: true, exports: { registrationStore: store } };
       process.env.ADMIN_SESSION_SECRET = "test-admin-secret"; process.env.ADMIN_USER = "test-admin";
       const { setAdminSession } = require("../lib/admin/session");
@@ -365,14 +345,11 @@ test("registration orders on isolated Postgres", { skip: !process.env.TEST_DATAB
       const person = await createPerson("ScheduleParticipant");
       const choice = { ...empty(), classes: [{ sessionId: base.id, role: "lead" }] };
       assert.equal(validateDraft({ ...choice, classes: [{ sessionId: base.id }] }, person, reloaded).valid, false);
-      const order = await store.submit(person, choice, "schedule-choice-01");
+      await store.submit(person, choice, "schedule-choice-01");
       const availability = await store.availability();
       assert.equal(availability.classes[base.id].lead.remaining, 1); assert.equal(availability.classes[base.id].follow.remaining, 3);
       const organizerView = await store.organizerClasses(person.id);
       assert.equal(organizerView.schedule.find((session) => session.id === base.id).title, changed.title);
-      const message = require("../lib/reg2026/email").confirmationMessage(person, order.draft, await store.schedule());
-      assert.equal(message.dynamicTemplateData.classes[0].title, changed.title);
-      assert.equal(message.dynamicTemplateData.classes[0].role, "lead");
       await assert.rejects(store.editSchedule(base.id, changed, 0), /changed in another session/);
       await assert.rejects(store.editSchedule(base.id, { ...changed, partnerClass: false }, 1), /has registrations/);
       await assert.rejects(store.editSchedule(base.id, { ...changed, start: "16:00" }, 1), /has registrations/);
@@ -383,6 +360,7 @@ test("registration orders on isolated Postgres", { skip: !process.env.TEST_DATAB
       assert.deepEqual(booking, { pool: "lead", status: "confirmed" });
     });
     await t.test("HTTP endpoints enforce signed access, complete drafts and server-owned checkout", async () => {
+      process.env.REG2026_ENABLED = "true";
       const { signIdentity } = require("../lib/reg2026/security");
       const payments = require("../lib/reg2026/payments");
       const sessions = new Map();
@@ -492,10 +470,6 @@ test("registration orders on isolated Postgres", { skip: !process.env.TEST_DATAB
       assert.equal(repeat.code, 200); assert.equal(repeat.body.order.id, paid.body.order.id);
       const wrongOrder = res(); await load({ method: "GET", query: { ...access, order: "999999" } }, wrongOrder);
       assert.equal(wrongOrder.body.completed, true);
-      process.env.ADMIN_SESSION_SECRET = "test-admin-secret"; process.env.ADMIN_USER = "test-admin";
-      const invitations = require("../pages/api/reg2026/invitations").default;
-      const unauthenticated = res(); await invitations({ method: "POST", headers: {}, body: { action: "queue", recipients: [person] } }, unauthenticated);
-      assert.equal(unauthenticated.code, 401);
       require.cache[require.resolve("../db/db")] = { loaded: true, exports: {
         getConfirmedUserByEmailAndName: async () => person,
         setUserLunchById: () => { throw new Error("Legacy writes must not be reached"); },
@@ -510,5 +484,9 @@ test("registration orders on isolated Postgres", { skip: !process.env.TEST_DATAB
       } }, protectedBooking);
       assert.equal(protectedBooking.code, 410);
     });
-  } finally { await sql.end(); }
+    await t.test("registration, webhooks and status checks neither send nor queue emails", async () => {
+      assert.equal(emailSends, 0);
+      assert.deepEqual(await sql`SELECT * FROM registration_email_retries_26 ORDER BY id`, historicalDeliveries);
+    });
+  } finally { sgMail.send = originalSend; await sql.end(); }
 });

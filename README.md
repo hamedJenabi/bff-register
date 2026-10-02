@@ -21,6 +21,6 @@ The integration suite needs PostgreSQL `initdb` and `pg_ctl` on PATH. It creates
 
 - [Product requirements](docs/prd/reg2026-registration.md)
 - [Audit and large-step roadmap](docs/prd/implementation-roadmap.md)
-- [Environment, migrations, webhook, templates and launch inputs](docs/prd/reg2026-launch.md)
+- [Environment, migrations, webhook and launch inputs](docs/prd/reg2026-launch.md)
 
-The new flow is closed by default. Organizer login now requires a configured `ADMIN_SESSION_SECRET` and a server-issued cookie; browser local-storage flags do not authorize access. See the launch guide before enabling registration or sending invitations.
+The new flow is closed by default. Organizer login now requires a configured `ADMIN_SESSION_SECRET` and a server-issued cookie; browser local-storage flags do not authorize access. See the launch guide before enabling registration. The 2026 invitation/confirmation delivery panel and automatic registration emails have been removed; organizers can still generate participant links. Legacy pass-purchase emails and the separate dashboard email action remain available.

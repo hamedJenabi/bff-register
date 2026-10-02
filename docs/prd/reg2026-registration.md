@@ -1,5 +1,7 @@
 # PRD: 2026 Class, Competition, and Lunch Registration
 
+Current scope update (3 October 2026): the registration invitation/confirmation panel, invitation API, email queues/retries and automatic supplemental-registration emails have been removed at the user’s request. The email requirements and implementation history below are superseded by this update. Registration, payment verification, completion screens, organizer authentication and manual participant-link generation remain available. Existing delivery records and legacy email actions are preserved; a future email workflow is deferred. See [current launch setup](./reg2026-launch.md).
+
 Status: Product decisions resolved for the first implementation. External email templates, the attendee-app token contract, and final class catalog content remain launch dependencies.
 
 Workflow: Keep this PRD locally under `docs/prd/`, as configured for this repository. No remote issue or commit is part of this phase.

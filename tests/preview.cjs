@@ -74,8 +74,7 @@ const http = require('node:http');
       REG2026_ENABLED: 'true', REG2026_SIGNING_SECRET: 'preview-only-signing-secret', REG2026_ORIGIN: 'http://localhost:31026',
       REG2026_CLOSES_AT: '2099-01-01T00:00:00Z', ADMIN_SESSION_SECRET: 'preview-only-admin-secret',
       ADMIN_USER: 'preview', HASHED_PASS: 'preview', STRIPE_SECRET_KEY: 'sk_test_preview_only', SENDGRID_API_KEY: '',
-      PREVIEW_CHECKOUT_ORIGIN: checkoutOrigin,
-      REG2026_CONFIRMATION_TEMPLATE_ID: '', REG2026_INVITATION_TEMPLATE_ID: '', REG2026_CATALOG_REVIEWED: 'false' };
+      PREVIEW_CHECKOUT_ORIGIN: checkoutOrigin };
     process.env.REG2026_SIGNING_SECRET = env.REG2026_SIGNING_SECRET;
     const { buildRegistrationPath } = require('../lib/reg2026/security');
     console.log('FULL_PASS_URL=http://localhost:31026' + buildRegistrationPath({ firstname: 'Demo', email: 'demo+full@example.com' }));

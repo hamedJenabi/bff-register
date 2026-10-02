@@ -3,7 +3,6 @@ import { resolveParticipant, assertRegistrationOpen, publicParticipant } from ".
 import { choicesFromParticipant } from "../../../lib/reg2026/serialization";
 import { loadRegistrationState } from "../../../lib/reg2026/state";
 import { reconcileOrder } from "../../../lib/reg2026/payments";
-import { deliverOrderConfirmation } from "../../../lib/reg2026/email";
 import { allowMethod, apiError, publicOrder } from "../../../lib/reg2026/http";
 
 export default async function handler(req, res) {
@@ -15,10 +14,6 @@ export default async function handler(req, res) {
       order = await reconcileOrder(store, order);
       participant = await resolveParticipant(req.query, store);
       ({ order, completed } = await loadRegistrationState(store, participant, String(order.id)));
-    }
-    if (order?.status === "confirmed") {
-      await deliverOrderConfirmation(store, order.id);
-      participant = await resolveParticipant(req.query, store);
     }
     let open = true;
     try { assertRegistrationOpen(); } catch { open = false; }

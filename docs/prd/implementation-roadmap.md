@@ -1,5 +1,7 @@
 # 2026 implementation roadmap
 
+Current scope update (3 October 2026): the registration invitation/confirmation panel, invitation API, email queues/retries and automatic supplemental-registration emails have been removed at the user’s request. The email requirements and implementation history below are superseded by this update. Registration, payment verification, completion screens, organizer authentication and manual participant-link generation remain available. Existing delivery records and legacy email actions are preserved; a future email workflow is deferred. See [current launch setup](./reg2026-launch.md).
+
 Primary scope: `reg2026-registration.md`. The public-form redesign and wider code/UX backlog remain separate follow-up work, except organizer authorization required for invitations.
 
 ## Audit of the starting point
