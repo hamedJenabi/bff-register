@@ -14,18 +14,17 @@ import {
   levelsToShow,
   discounts,
 } from "../../utils/functions";
+import { isBlockedRegistration } from "../../utils/blockedRegistration";
 
 import Stripe from "stripe";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-
 const sgMail = require("@sendgrid/mail");
-sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 const time = new Date();
 
 //******** Send Email *********/
 const sendEmail = async (msg) => {
+  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
   sgMail
     .send(msg)
     .then(() => {
@@ -69,6 +68,10 @@ const getTicketLabel = (ticket) => {
 //******** prepare GOOGLE SHEET *********/
 
 export default async function register(req, response) {
+  if (isBlockedRegistration(req.body)) {
+    return response.status(403).json({ code: "REGISTRATION_UNAVAILABLE" });
+  }
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
   const requestData = {
     date: time.toDateString(),
     email: req.body.email.trim().toLowerCase(),

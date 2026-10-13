@@ -1,11 +1,13 @@
 import Stripe from "stripe";
 import { getUserByEmailAndName } from "../../db/db";
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+import { isBlockedRegistration } from "../../utils/blockedRegistration";
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method Not Allowed" });
+  }
+  if (isBlockedRegistration(req.body?.user)) {
+    return res.status(403).json({ code: "REGISTRATION_UNAVAILABLE" });
   }
   const price = req.body.price;
   let grossPrice;
@@ -33,6 +35,7 @@ export default async function handler(req, res) {
   }
 
   try {
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card", "ideal", "sepa_debit", "sofort", "klarna"],
       line_items: [

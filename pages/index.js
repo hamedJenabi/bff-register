@@ -162,6 +162,14 @@ export default function Home({ tickets, users }) {
       Router.push("/alreadyRegistered");
       return;
     }
+    if (res.status === 403) {
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("accepted_user");
+        localStorage.removeItem(REGISTRATION_DRAFT_STORAGE_KEY);
+      }
+      Router.push("/registration-failed");
+      return;
+    }
     const data = await res.json();
     if (data.url) {
       if (typeof window !== "undefined") {

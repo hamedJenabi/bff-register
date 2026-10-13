@@ -83,6 +83,12 @@
   }
 }
 
+.contactLink {
+  color: var(--text);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 .row {
   display: grid;
   grid-template-columns: minmax(110px, 0.35fr) minmax(0, 1fr);

@@ -46,6 +46,9 @@ export default function Home({ tickets }) {
         if (response.status === 301) {
           Router.push("/soldout");
         }
+        if (response.status === 403) {
+          Router.push("/registration-failed");
+        }
         if (response.status === 302) {
           Router.push("/alreadyRegistered");
         }
