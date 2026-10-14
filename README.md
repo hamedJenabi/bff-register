@@ -19,6 +19,8 @@ The integration suite needs PostgreSQL `initdb` and `pg_ctl` on PATH. It creates
 
 ## 2026 implementation
 
+- [Participant app API, personal links, and SendGrid setup](docs/prd/attendee-app-integration.md)
+
 - [Product requirements](docs/prd/reg2026-registration.md)
 - [Audit and large-step roadmap](docs/prd/implementation-roadmap.md)
 - [Environment, migrations, webhook and launch inputs](docs/prd/reg2026-launch.md)
