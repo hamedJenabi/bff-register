@@ -6,6 +6,8 @@ Status: Product decisions resolved for the first implementation. External email 
 
 Current schedule/capacity decision (27 October 2026): Google Sheets `APP_SCHEDULE` is the editing source for validated publications. Testing placeholders are **20 lead / 20 follow for partner classes** and **30 total for solo classes**. **Talks are open with no capacity limit**; their capacity cells stay blank.
 
+Organizers can edit published class capacities from `/dashboard/schedule`: Lead/Follow for partner classes and Total for solo classes. Saves must write back to the authoritative Google Sheet and publish only the verified capacity change, preserve all existing bookings, reject stale edits and unsynced source changes, and retain unlimited talks. The service account requires approved workbook Editor access; no local-only capacity override is introduced.
+
 - [ ] **Make capacities production-ready before launch:** confirm the real per-session and role capacities with organizers against the final rooms, replace the placeholder formulas/values in Google Sheets, sync the reviewed catalog, and verify remaining availability. Successful test sync does not complete this launch task. Talks remain unlimited unless organizers explicitly change that policy.
 
 Workflow: Keep this PRD locally under `docs/prd/`, as configured for this repository. No remote issue or commit is part of this phase.

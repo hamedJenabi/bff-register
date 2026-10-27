@@ -87,7 +87,52 @@ const publishedTime = (value) => new Intl.DateTimeFormat("en-GB", {
   dateStyle: "medium", timeStyle: "short", timeZone: "Europe/Vienna",
 }).format(new Date(value));
 
-function ClassPreview({ session }) {
+function CapacityEditor({ session, version, onSave, disabled, onBusyChange }) {
+  const pools = session.partnerClass ? ["lead", "follow"] : ["total"];
+  const form = useFormState({
+    baseId: `capacity-editor-${session.id}`, resetOnUnmount: false,
+    values: { leadCapacity: String(session.capacity.lead ?? ""), followCapacity: String(session.capacity.follow ?? ""),
+      totalCapacity: String(session.capacity.total ?? ""), formError: "" },
+    onValidate: (values) => {
+      const result = validateSchedule({ ...session, ...values });
+      if (!result.valid) throw result.errors;
+    },
+    onSubmit: async (values) => {
+      onBusyChange(true);
+      try {
+        const response = await fetch("/api/reg2026/schedule", { method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "capacity", id: session.id, version,
+            capacity: Object.fromEntries(pools.map((pool) => [pool, values[`${pool}Capacity`]])) }) });
+        const result = await response.json();
+        if (!response.ok) throw { ...result.errors, formError: result.error || "Could not save capacity." };
+        onSave(result);
+      } catch (error) {
+        if (error.formError) throw error;
+        throw { formError: "Could not save capacity. Please reload the dashboard before retrying." };
+      } finally { onBusyChange(false); }
+    },
+  });
+  const changed = pools.some((pool) => form.values[`${pool}Capacity`] !== String(session.capacity[pool]));
+  return <Form {...form} className={styles.capacityEditor} aria-busy={form.submitting}>
+    <h3>Edit capacity</h3>
+    <div className={styles.grid}>{pools.map((pool) => {
+      const field = `${pool}Capacity`;
+      return <div className={styles.field} key={pool}>
+        <FormLabel {...form} name={field}>{pool === "lead" ? "Lead capacity" : pool === "follow" ? "Follow capacity" : "Total capacity"}</FormLabel>
+        <FormInput {...form} name={field} type="number" min={0} max={1000} step={1} disabled={disabled || form.submitting} />
+        <FormMessage {...form} name={field} />
+      </div>;
+    })}</div>
+    <p className={styles.hint}>Saves to Google Sheets and publishes the new capacity. Existing bookings are kept.</p>
+    <FormMessage {...form} name="formError" />
+    <div className={styles.actions}>
+      <FormSubmitButton {...form} disabled={disabled || form.submitting || !changed}>{form.submitting ? "Saving capacity…" : "Save capacity"}</FormSubmitButton>
+      <button type="button" className={styles.secondary} disabled={form.submitting || !changed} onClick={form.reset}>Discard changes</button>
+    </div>
+  </Form>;
+}
+
+function ClassPreview({ session, source, onSave, disabled, onBusyChange }) {
   return <section className={styles.preview} aria-labelledby="published-class-title">
     <p className={styles.eyebrow}>Published class</p>
     <h2 id="published-class-title">{session.title}</h2>
@@ -102,9 +147,11 @@ function ClassPreview({ session }) {
         : session.format === "talk" ? "Open · no capacity limit" : `${session.capacity.total} places`}</dd></div>
       {session.bookable === false && <div><dt>Registration</dt><dd>Not available for self-service booking</dd></div>}
     </dl>
+    {session.format !== "talk" && <CapacityEditor session={session} version={source.publication.id} onSave={onSave}
+      disabled={disabled || !source.credentialsConfigured} onBusyChange={onBusyChange} />}
     <h3>Description</h3>
     <p className={styles.description}>{session.description || "No description provided."}</p>
-    <p className={styles.hint}>Edit these details in Google Sheets, then sync the schedule to publish your changes.</p>
+    <p className={styles.hint}>Edit class details in Google Sheets, then sync the schedule to publish your changes.</p>
   </section>;
 }
 
@@ -116,6 +163,7 @@ export default function ScheduleAdmin({ initial, source: initialSource, loadErro
   const [day, setDay] = useState("");
   const [message, setMessage] = useState("");
   const [syncing, setSyncing] = useState(false);
+  const [savingCapacity, setSavingCapacity] = useState(false);
   const [syncError, setSyncError] = useState("");
   const [diagnostics, setDiagnostics] = useState([]);
   const sheetsMode = !!(source?.configured || source?.publication);
@@ -158,7 +206,7 @@ export default function ScheduleAdmin({ initial, source: initialSource, loadErro
       <Link href="/dashboard/admin">Registrations</Link><Link href="/dashboard/schedule" aria-current="page">Schedule</Link>
     </nav>
     <header className={styles.header}><h1>Schedule</h1><p>{sheetsMode
-      ? "Edit the schedule in Google Sheets, then sync it here to publish a complete update."
+      ? "Edit class capacities here, or update the schedule in Google Sheets and sync it to publish a complete update."
       : "Edit class details for the registration form. Mock classes appear until you save changes."}</p></header>
     {sheetsMode && <section className={styles.source} aria-labelledby="schedule-source-title" aria-busy={syncing}>
       <h2 id="schedule-source-title">Google Sheets schedule</h2>
@@ -168,7 +216,7 @@ export default function ScheduleAdmin({ initial, source: initialSource, loadErro
       {!source.credentialsConfigured && <p>Google access needs to be configured before the schedule can be synced.</p>}
       <div className={styles.actions}>
         {source.url && <a href={source.url} target="_blank" rel="noreferrer">Open schedule in Google Sheets</a>}
-        <button type="button" onClick={syncSchedule} disabled={syncing || !source.configured || !source.credentialsConfigured}>
+        <button type="button" onClick={syncSchedule} disabled={syncing || savingCapacity || !source.configured || !source.credentialsConfigured}>
           {syncing ? "Syncing schedule…" : "Sync schedule"}
         </button>
       </div>
@@ -194,7 +242,7 @@ export default function ScheduleAdmin({ initial, source: initialSource, loadErro
           </select></label>
           <p className={styles.count}>{filtered.length} classes</p>
           <div className={styles.sessions}>
-            {filtered.map((session) => <button type="button" key={session.id} aria-pressed={selected === session.id}
+            {filtered.map((session) => <button type="button" key={session.id} aria-pressed={selected === session.id} disabled={savingCapacity || syncing}
               aria-label={`${sheetsMode ? "View" : "Edit"} ${session.title}, ${session.day} ${session.start}`}
               onClick={() => { setSelected(session.id); setMessage(""); }}>
               <span>{session.day} · {session.start}–{session.end}</span><strong>{session.title}</strong>
@@ -204,7 +252,11 @@ export default function ScheduleAdmin({ initial, source: initialSource, loadErro
             {!filtered.length && <p>{sheetsMode && !sessions.length ? "No published classes yet." : "No classes match your search."}</p>}
           </div>
         </section>
-        {active ? sheetsMode ? <ClassPreview session={active} /> : <ClassEditor key={`${active.id}-${active.version}`} session={active}
+        {active ? sheetsMode ? <ClassPreview key={`${active.id}-${source.publication?.id}`} session={active} source={source}
+          disabled={syncing} onBusyChange={setSavingCapacity} onSave={(result) => {
+            updatePublished(result); setSyncError(""); setDiagnostics([]);
+            setMessage(result.unchanged ? "Capacity is already up to date." : "Capacity saved to Google Sheets and published.");
+          }} /> : <ClassEditor key={`${active.id}-${active.version}`} session={active}
           onSave={(schedule) => { setSessions(schedule); setMessage("Class saved. The registration form now shows these details."); }} />
           : sheetsMode && <section className={styles.preview}><h2>Published schedule</h2><p>Published classes will appear here after the first successful sync.</p></section>}
       </div>

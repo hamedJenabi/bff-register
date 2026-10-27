@@ -162,6 +162,56 @@ test("sheet schedules publish atomically and protect real registrations on isola
       assert.equal((await sql`SELECT id FROM class_bookings_26 WHERE session_id = ${talk.id}`).length, 37);
       assert.deepEqual((await store.availability()).classes[talk.id].total, open);
     });
+
+    await t.test("dashboard capacity edits write the source before publishing and keep bookings and other class fields", async () => {
+      const before = await store.schedule();
+      const writes = [];
+      const updateSheet = async (request) => {
+        assert.equal(request.publication.id, publication.id);
+        assert.equal(request.id, "sheet-session-b");
+        assert.deepEqual(request.capacity, { lead: 12, follow: 13 });
+        writes.push(request);
+      };
+      const oldVersion = publication.id;
+      publication = await store.editPublishedCapacity("sheet-session-b", { lead: "12", follow: "13" }, oldVersion, updateSheet);
+      assert.equal(writes.length, 1);
+      assert.ok(publication.id > oldVersion);
+      const after = await store.schedule();
+      assert.deepEqual(after.find((session) => session.id === "sheet-session-b").capacity, { lead: 12, follow: 13 });
+      const details = (sessions) => sessions.map(({ capacity, version, ...session }) => session);
+      assert.deepEqual(details(after), details(before));
+      const repeated = await store.editPublishedCapacity("sheet-session-b", { lead: 12, follow: 13 }, publication.id, updateSheet);
+      assert.equal(repeated.id, publication.id);
+      assert.equal(writes.length, 1);
+      await assert.rejects(store.editPublishedCapacity("sheet-session-b", { lead: 15, follow: 15 }, oldVersion, updateSheet), (error) => error.status === 409);
+      for (const invalid of [{ lead: "", follow: 15 }, { lead: -1, follow: 15 }, { lead: 1001, follow: 15 }, { lead: 12, follow: 13, total: 30 }]) {
+        await assert.rejects(store.editPublishedCapacity("sheet-session-b", invalid, publication.id, updateSheet), (error) => error.status === 422);
+      }
+      await assert.rejects(store.editPublishedCapacity("sheet-open-talk", {}, publication.id, updateSheet), (error) => error.status === 422);
+      assert.equal(writes.length, 1, "Invalid and stale saves must not contact Google");
+      const keepBookings = await sql`SELECT id FROM class_bookings_26 ORDER BY id`;
+      await store.editPublishedCapacity("sheet-session-a", { total: 0 }, publication.id, updateSheet);
+      assert.deepEqual(await sql`SELECT id FROM class_bookings_26 ORDER BY id`, keepBookings);
+      assert.equal((await store.availability()).classes["sheet-session-a"].total.remaining, 0);
+    });
+
+    await t.test("failed Sheet writes or changed sources keep the published schedule and simultaneous edits reject stale saves", async () => {
+      const before = await store.schedule();
+      for (const status of [503, 409]) {
+        await assert.rejects(store.editPublishedCapacity("sheet-session-b", { lead: 14, follow: 14 }, publication.id,
+          async () => { const error = new Error("Sheet update failed"); error.status = status; throw error; }), (error) => error.status === status);
+        assert.equal((await store.schedulePublication()).id, publication.id);
+        assert.deepEqual(await store.schedule(), before);
+      }
+      let writes = 0;
+      const version = publication.id;
+      const changes = await Promise.allSettled([11, 10].map((lead) => store.editPublishedCapacity("sheet-session-b", { lead, follow: 13 }, version,
+        async () => { writes += 1; })));
+      assert.equal(changes.filter((entry) => entry.status === "fulfilled").length, 1);
+      assert.equal(changes.find((entry) => entry.status === "rejected").reason.status, 409);
+      assert.equal(writes, 1);
+      publication = await store.schedulePublication();
+    });
   } finally {
     if (previousSheet === undefined) delete process.env.REG2026_SCHEDULE_SHEET_ID;
     else process.env.REG2026_SCHEDULE_SHEET_ID = previousSheet;
