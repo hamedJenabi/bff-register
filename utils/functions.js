@@ -239,6 +239,9 @@ export const getPrice = (requestData, isGroupDiscount, voucher = "") => {
     !isAfterTargetDate("2026-09-03T00:00:00+02:00")
   ) {
     initialPrice = initialPrice - 10; // 10 euro discount for bah10
+  } // 15% discount for allstars2026
+  else if (voucher === "allstars2026") {
+    initialPrice = Math.round((initialPrice / 100) * 85);
   }
 
   const ticketPrice = isGroupDiscount
