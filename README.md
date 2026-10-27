@@ -19,6 +19,8 @@ The integration suite needs PostgreSQL `initdb` and `pg_ctl` on PATH. It creates
 
 ## 2026 implementation
 
+- [Google Sheets schedule source and publishing](docs/prd/google-sheets-schedule.md)
+
 - [Participant app API, personal links, and SendGrid setup](docs/prd/attendee-app-integration.md)
 
 - [Product requirements](docs/prd/reg2026-registration.md)

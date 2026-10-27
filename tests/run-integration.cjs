@@ -15,7 +15,7 @@ const net = require("node:net");
     execFileSync("initdb", ["-D", data, "-A", "trust", "--no-locale", "-E", "UTF8"], { stdio: "pipe" });
     execFileSync("pg_ctl", ["-D", data, "-l", path.join(root, "postgres.log"), "-o", `-k ${root} -h 127.0.0.1 -p ${port}`, "-w", "start"], { stdio: "pipe" });
     started = true;
-    const result = spawnSync(process.execPath, ["-r", "./tests/register.cjs", "--test", "tests/reg2026-integration.test.cjs", "tests/app-integration.test.cjs", "tests/app-admin-integration.test.cjs"], {
+    const result = spawnSync(process.execPath, ["-r", "./tests/register.cjs", "--test", "tests/reg2026-integration.test.cjs", "tests/reg2026-sheet-integration.test.cjs", "tests/app-integration.test.cjs", "tests/app-admin-integration.test.cjs"], {
       stdio: "inherit", env: { ...process.env, TEST_DATABASE_URL: `postgres://${encodeURIComponent(os.userInfo().username)}@127.0.0.1:${port}/postgres` },
     });
     process.exitCode = result.status || (result.error ? 1 : 0);

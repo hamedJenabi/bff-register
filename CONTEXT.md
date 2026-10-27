@@ -27,8 +27,8 @@ _Avoid_: Track, when referring to a single scheduled occurrence
 **Time slot**:
 A day and time interval during which several class sessions can run in parallel. A participant can select at most one class session in that interval.
 
-**Daily class allowance**:
-The maximum number of class sessions a participant can book on one festival day: five, further limited by one session per time slot. Each session is selected independently, including repeated or numbered track sessions.
+**Festival class allowance**:
+The maximum number of class sessions a participant can book across the entire festival is five, further limited by one session per time slot. Each session is selected independently, including repeated or numbered track sessions.
 
 **Registration draft**:
 A participant's unsubmitted class, competition, and lunch choices. Adding a class to a draft does not reserve a place.

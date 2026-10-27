@@ -4,6 +4,10 @@ Current scope update (3 October 2026): the registration invitation/confirmation 
 
 Status: Product decisions resolved for the first implementation. External email templates, the attendee-app token contract, and final class catalog content remain launch dependencies.
 
+Current schedule/capacity decision (27 October 2026): Google Sheets `APP_SCHEDULE` is the editing source for validated publications. Testing placeholders are **20 lead / 20 follow for partner classes** and **30 total for solo classes**. **Talks are open with no capacity limit**; their capacity cells stay blank.
+
+- [ ] **Make capacities production-ready before launch:** confirm the real per-session and role capacities with organizers against the final rooms, replace the placeholder formulas/values in Google Sheets, sync the reviewed catalog, and verify remaining availability. Successful test sync does not complete this launch task. Talks remain unlimited unless organizers explicitly change that policy.
+
 Workflow: Keep this PRD locally under `docs/prd/`, as configured for this repository. No remote issue or commit is part of this phase.
 
 ## Problem Statement

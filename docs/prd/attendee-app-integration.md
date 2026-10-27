@@ -2,6 +2,18 @@
 
 The participant app is read-only for festival registrations and class bookings. This repo remains the source of truth. The new app API projects existing data and adds access credentials/sessions, announcements, and optional Web Push subscription/delivery records. Participant registrations and bookings remain read-only.
 
+## Next session: connect and verify bff-app
+
+Requested on 27 October 2026 and explicitly deferred to the next session. The registration backend already projects the published Google Sheets catalog and each participant's confirmed registration data through `/api/app/me`. The remaining work is to verify and complete the connection in the adjacent `bff-app` project.
+
+- [ ] Inspect the existing app client and configure `BFF_REGISTER_ORIGIN` for the intended backend environment, reusing the current participant-access/session flow.
+- [ ] Verify Full Schedule displays the published catalog: days, dates, times, rooms, teachers, descriptions, levels, class formats and bookable state, including open talks.
+- [ ] Verify My Schedule displays the signed-in participant's confirmed classes and per-class roles, and the app displays their saved competition and lunch choices.
+- [ ] Verify a Google Sheets sync refreshes schedule details in the app and a confirmed registration refreshes that participant's choices. Pending checkout must remain distinct from confirmed bookings.
+- [ ] Run an end-to-end check with two fictional participants, covering identity isolation, correct data, refresh behavior and mobile layout.
+
+Production class capacities remain a separate open launch task; the current 20 lead / 20 follow and 30 solo values are testing placeholders. Talks are unlimited. See [the schedule setup](./google-sheets-schedule.md).
+
 ## Configuration and launch
 
 Prepare these server-side variables in ticketing:

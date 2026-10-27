@@ -1,5 +1,9 @@
 # 2026 registration setup and verification
 
+Schedule source update: the app now supports an authoritative Google Sheets catalog with validated, versioned publication from the Schedule dashboard. The configured workbook's `APP_SCHEDULE` tab replaces mock/default metadata and local editing once enabled. See [Google Sheets setup and review](./google-sheets-schedule.md); apply migration 13 before deploying. Formats and capacities deliberately require organizer review before the first publication. The legacy schedule-editor details below apply only to unconfigured previews.
+
+- [ ] **Production capacity review remains open:** current Sheet formulas use testing placeholders of 20 lead / 20 follow for partner classes and 30 total for solo classes. Confirm real capacities for the final rooms and sessions, replace the placeholders, sync, and verify availability before opening production registration. Talks are open with no capacity limit and use blank capacity fields. A successful test sync does not make these placeholders production-ready.
+
 Implementation status: the five local steps in [the roadmap](./implementation-roadmap.md), the organizer Schedule editor, and organizer class-registration reopening are complete. The local development database is migrated through migration 10. No production migration, deployment, real email send or live payment was performed.
 
 Current email scope: the 2026 registration invitation/confirmation panel, its API, delivery queues/retries and automatic confirmation emails have been removed. Registration, payment verification, completion screens and manual participant-link generation remain available. Existing delivery records are preserved but are no longer processed. Legacy pass-purchase emails and the separate dashboard email action remain available. A future email workflow will be designed separately.

@@ -5,8 +5,8 @@ import {
   unstable_FormInput as FormInput, unstable_FormLabel as FormLabel,
   unstable_FormMessage as FormMessage, unstable_FormSubmitButton as FormSubmitButton,
 } from "reakit/Form";
-import { schedule as mockSchedule, CLASS_SELECTION_LIMIT } from "../../lib/reg2026/catalog";
-import { indexSchedule } from "../../lib/reg2026/schedule";
+import { CLASS_SELECTION_LIMIT } from "../../lib/reg2026/catalog";
+import { indexSchedule, remainingPlaces, sessionsOverlap } from "../../lib/reg2026/schedule";
 import { parseThemeClass } from "../../lib/reg2026/serialization";
 import { validateDraft } from "../../lib/reg2026/validation";
 import styles from "./RegisteredClasses.module.scss";
@@ -16,7 +16,7 @@ const readableClasses = (value) => parseThemeClass(value).filter((choice) => typ
 export default function RegisteredClasses({ id, firstname, lastname, themeClass, buttonClassName }) {
   const dialog = useDialogState({ baseId: `registered-classes-${id}`, animated: true });
   const [hasOpened, setHasOpened] = useState(false);
-  const [schedule, setSchedule] = useState(mockSchedule);
+  const [schedule, setSchedule] = useState([]);
   const scheduleById = indexSchedule(schedule);
   const [savedClasses, setSavedClasses] = useState(() => readableClasses(themeClass));
   const [version, setVersion] = useState(themeClass || "");
@@ -59,8 +59,8 @@ export default function RegisteredClasses({ id, firstname, lastname, themeClass,
   const titleId = `registered-classes-title-${id}`;
   const summaryId = `registered-classes-summary-${id}`;
   const chosen = scheduleById[editor.values.newClass];
-  const places = (session, role) => availability[session.id]?.[role]?.remaining || 0;
-  const optionBlocked = (session) => editor.values.classes.some((choice) => scheduleById[choice.sessionId]?.slotId === session.slotId)
+  const places = (session, role) => remainingPlaces(availability[session.id]?.[role]);
+  const optionBlocked = (session) => session.bookable === false || editor.values.classes.some((choice) => sessionsOverlap(session, scheduleById[choice.sessionId]))
     || (session.partnerClass ? places(session, "lead") + places(session, "follow") : places(session, "total")) <= 0;
   const canAdd = chosen && !optionBlocked(chosen) && editor.values.classes.length < CLASS_SELECTION_LIMIT
     && (!chosen.partnerClass || (["lead", "follow"].includes(editor.values.newRole) && places(chosen, editor.values.newRole) > 0));
@@ -102,9 +102,10 @@ export default function RegisteredClasses({ id, firstname, lastname, themeClass,
               const session = scheduleById[choice.sessionId];
               return <li key={`${choice.sessionId}-${index}`}>
                 {session ? <>
-                  <p className={styles.time}>{session.day} · {session.start}–{session.end}</p>
+                  <p className={styles.time}>{session.day}{session.date ? ` · ${session.date}` : ""} · {session.start}–{session.end}</p>
                   <h3>{session.title}</h3><p>{session.teachers}</p>
-                  <span className={styles.role}>{session.partnerClass ? choice.role === "lead" ? "Lead" : choice.role === "follow" ? "Follow" : "Role not recorded" : "Solo"}</span>
+                  {session.levels && <p>Levels: {Array.isArray(session.levels) ? session.levels.join(", ") : session.levels}</p>}
+                  <span className={styles.role}>{session.partnerClass ? choice.role === "lead" ? "Lead" : choice.role === "follow" ? "Follow" : "Role not recorded" : session.format === "talk" ? "Talk · open" : "Solo"}</span>
                 </> : <p>Class no longer in the schedule: {choice.sessionId}</p>}
                 {editing && <button type="button" className={styles.remove} disabled={busy}
                   aria-label={`Remove ${session?.title || choice.sessionId}, ${session?.day || ""} ${session?.start || ""}`}
@@ -118,7 +119,7 @@ export default function RegisteredClasses({ id, firstname, lastname, themeClass,
             <FormInput {...editor} name="newClass" as="select" disabled={busy || selections.length >= CLASS_SELECTION_LIMIT}
               onChange={() => editor.update("newRole", "")}>
               <option value="">Choose a class</option>
-              {schedule.map((session) => <option key={session.id} value={session.id} disabled={optionBlocked(session)}>
+              {schedule.filter((session) => session.bookable !== false).map((session) => <option key={session.id} value={session.id} disabled={optionBlocked(session)}>
                 {session.day} {session.start} · {session.title} · {session.teachers}
               </option>)}
             </FormInput>
