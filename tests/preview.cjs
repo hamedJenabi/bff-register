@@ -47,7 +47,7 @@ const http = require('node:http');
     started = true;
     const url = `postgres://${encodeURIComponent(os.userInfo().username)}@127.0.0.1:${port}/postgres`;
     const sql = postgres(url, { onnotice: () => {} });
-    for (const file of ['00004-CREAT-registraion-2026', '00006-create-class-capacities-2026', '00007-create-reg2026-bookings', '00008-reg2026-order-safety', '00009-create-schedule-overrides-2026', '00010-reg2026-reopen-registration', '00013-reg2026-sheet-schedule']) {
+    for (const file of ['00004-CREAT-registraion-2026', '00006-create-class-capacities-2026', '00007-create-reg2026-bookings', '00008-reg2026-order-safety', '00009-create-schedule-overrides-2026', '00010-reg2026-reopen-registration', '00013-reg2026-sheet-schedule', '00014-reg2026-schedule-invitations']) {
       await sql.begin((tx) => require(`../migrations/${file}`).up(tx));
     }
     await sql`CREATE TABLE tickets_26 (id SERIAL, name TEXT, label TEXT, capacity INTEGER, waiting_list INTEGER)`;
@@ -70,7 +70,9 @@ const http = require('node:http');
       client_reference_id: String(people[3].id), metadata: { reg2026OrderId: String(confirmed.id) },
       status: 'complete', payment_status: 'paid' }, 'checkout.session.completed');
     await sql.end();
-    const env = { ...process.env, DATABASE_URL: url, PGPORT: String(port), NODE_ENV: 'development', BFF_PREVIEW: 'true',
+    const env = { ...process.env, DATABASE_URL: url, BFF_PREVIEW_DATABASE_URL: url,
+      PGHOST: '127.0.0.1', PGPORT: String(port), PGDATABASE: 'postgres',
+      PGUSER: os.userInfo().username, PGPASSWORD: '', NODE_ENV: 'development', BFF_PREVIEW: 'true',
       REG2026_ENABLED: 'true', REG2026_SCHEDULE_SHEET_ID: '', REG2026_SIGNING_SECRET: 'preview-only-signing-secret', REG2026_ORIGIN: 'http://localhost:31026',
       REG2026_CLOSES_AT: '2099-01-01T00:00:00Z', ADMIN_SESSION_SECRET: 'preview-only-admin-secret',
       ADMIN_USER: 'preview', HASHED_PASS: 'preview', STRIPE_SECRET_KEY: 'sk_test_preview_only', SENDGRID_API_KEY: '',

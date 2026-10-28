@@ -8,7 +8,7 @@ The Schedule dashboard can edit class capacities after publication. Saving write
 
 Implementation status: the five local steps in [the roadmap](./implementation-roadmap.md), the organizer Schedule editor, and organizer class-registration reopening are complete. The local development database is migrated through migration 10. No production migration, deployment, real email send or live payment was performed.
 
-Current email scope: the 2026 registration invitation/confirmation panel, its API, delivery queues/retries and automatic confirmation emails have been removed. Registration, payment verification, completion screens and manual participant-link generation remain available. Existing delivery records are preserved but are no longer processed. Legacy pass-purchase emails and the separate dashboard email action remain available. A future email workflow will be designed separately.
+Current email scope: the older 2026 registration email panel remains removed. A separate organizer-triggered schedule invitation is available next to the legacy bulk email action. Newly confirmed `/reg2026` orders now queue an automatic confirmation email with their saved booking details. Historical delivery records remain preserved and are not processed by the new workflow. Legacy pass-purchase emails and the existing dashboard email action remain available.
 
 ## Environment
 
@@ -24,7 +24,9 @@ The flow is closed until `REG2026_ENABLED=true`. Signed participants can still v
 | `ADMIN_SESSION_SECRET` | Separate strong random secret for eight-hour signed organizer cookies |
 | `STRIPE_SECRET_KEY` | Stripe account key; use test mode for staging |
 | `REG2026_STRIPE_WEBHOOK_SECRET` | Signing secret for `/api/reg2026/webhook` |
-| `SENDGRID_API_KEY` | Credentials for legacy pass-purchase/dashboard emails; the supplemental `/reg2026` flow does not use SendGrid |
+| `SENDGRID_API_KEY` | Credentials for legacy pass-purchase/dashboard emails, schedule invitations, and automatic registration confirmations |
+| `REG2026_INVITATION_TEMPLATE_ID` | Optional override for the schedule invitation SendGrid dynamic template. The supplied ID `d-e5d1923545f34993b9694b4dbf215172` is the code default. |
+| `REG2026_CONFIRMATION_TEMPLATE_ID` | Optional override for the registration confirmation SendGrid dynamic template. The supplied ID `d-4f77d740ec504650aa9ea1a78e785cae` is the code default. |
 
 Do not commit secret values. Cookie `Secure` is enabled in production, so production organizer login requires HTTPS. Login fails closed when its credentials or session secret are missing.
 
@@ -48,6 +50,8 @@ In either dashboard, use **Actions → Edit → Remove all classes and reopen re
 
 Completed links show “Registration confirmed” and “Thank you! Your festival choices have been saved.” after submission and on return visits, with a link back to the festival website and `registration@bluesfever.eu` for all later changes. Competition/lunch controls do not show “Already booked” labels. Legacy add-ons alone do not mark the supplemental form complete; their purchases remain credited. Unfinished checkout stays accessible, and expired or failed attempts may be retried. Browser storage remains disabled.
 
+Each new confirmed order also queues the [registration confirmation email](../email/registration-confirmation.md) in the same database transaction as its saved choices. Free, empty Party Pass, and voucher submissions attempt delivery after confirmation; paid submissions attempt it only after verified Stripe payment. The message includes the confirmed classes, competitions, and lunch as a snapshot, including optional dance roles. Duplicate form requests, webhook events, and status checks do not resend an accepted email. Failed provider acceptance leaves the booking confirmed and can retry on a later confirmed-status request or verified webhook replay. A send interrupted after provider acceptance remains in `sending` for manual review rather than risking an automatic duplicate. The result records SendGrid acceptance, not inbox delivery. The preview captures confirmations without contacting SendGrid at `/api/reg2026/preview-confirmations` for an authenticated organizer.
+
 The optional Voucher field accepts `freepass26` (with surrounding whitespace trimmed). The normalized code is stored in the order draft, and server-owned pricing waives all new competition/lunch charges and Stripe fees. The resulting zero-total order confirms immediately without checkout. Unknown or malformed voucher values are rejected. Pass eligibility, dance roles, five-class/slot limits, capacities and paid add-on protections still apply; original festival pass purchases are untouched. Unit, database and HTTP tests cover the waiver, invalid codes, confirmed capacity and repeat submissions. Browser QA confirmed a paid draft became €0 and completed without Stripe.
 
 ## Stripe
@@ -66,6 +70,10 @@ Card, SEPA debit and iDEAL are requested by the adapter; verify their availabili
 The form displays subtotal, fee and total before submission. A successful paid submission redirects immediately to the server-created Stripe checkout URL, without an intermediate review page or second checkout click. Controls stay disabled while navigation begins. Reopening or returning from an unpaid checkout supports resume/cancel and status checks. Free submissions complete directly. Submission retries use a request key and the same Stripe order idempotency key. A server failure after Stripe creates a session can be recovered by retrying that order creation. If Stripe is unavailable, no payment is inferred.
 
 ## Organizer operations
+
+The separate **Send schedule invitations to all confirmed** action reads the dashboard's confirmed participant IDs and asks the server to send each invitation with bounded concurrency. A **Send schedule invitation** button in each confirmed participant's row sends to that one person through the same endpoint. The server rechecks confirmation, excludes people whose 2026 choices are complete (including saved classes without an order), rejects ambiguous link identities, and uses the same signed `/reg2026` link as **Generate link**. It requires registration to be open. SendGrid uses the dedicated [schedule invitation template](../email/schedule-registration-invitation.md), with the `regi2026link` dynamic field. The legacy **Send Email to All confirmed** button remains separate.
+
+Migration `00014-reg2026-schedule-invitations.js` adds a delivery ledger. A repeat click skips previously accepted invitations and retries failed ones. An interrupted send that cannot be confirmed becomes `uncertain` after ten minutes and is held for organizer review rather than sent again automatically. Dashboard counts describe SendGrid acceptance, not inbox delivery. Apply migration 14 to the target database before using this button. The local preview (`npm run preview:test`) uses fictional people and captures invitations without contacting SendGrid. Its server forces the disposable loopback database and fails closed if the preview database URL is missing. Open `http://localhost:31026/login/admin`, sign in with `preview` / `preview`, use the new button, and open the authenticated preview mailbox linked beneath it. Restarting the preview resets its disposable database and captured messages.
 
 Both organizer dashboard routes include a Classes column. Each participant's `View (count)` button opens a Reakit dialog with their saved class titles, day/time, teachers and lead/follow or solo role. The dialog reads the versioned `theme_class` selections; pending checkout drafts are not presented as registered classes. Participants without saved classes see an explicit empty state.
 

@@ -1,6 +1,7 @@
 import { registrationStore as store } from "../../../db/reg2026";
 import { getStripe } from "../../../lib/reg2026/payments";
 import { allowMethod } from "../../../lib/reg2026/http";
+import { deliverConfirmation } from "../../../lib/reg2026/confirmations";
 
 export const config = { api: { bodyParser: false } };
 const supported = new Set(["checkout.session.completed", "checkout.session.async_payment_succeeded", "checkout.session.async_payment_failed", "checkout.session.expired"]);
@@ -23,6 +24,7 @@ export default async function handler(req, res) {
     const order = await store.applyPayment(event.data.object, event.type);
     // Stripe may notify us before session attachment; ask it to retry.
     if (!order) return res.status(503).json({ error: "Checkout attachment is pending" });
+    if (order.status === "confirmed") await deliverConfirmation(store, order.id);
     return res.json({ received: true });
   } catch (error) {
     console.error("Registration webhook failed:", error.message);

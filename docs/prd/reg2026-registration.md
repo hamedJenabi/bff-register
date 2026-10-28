@@ -1,6 +1,6 @@
 # PRD: 2026 Class, Competition, and Lunch Registration
 
-Current scope update (3 October 2026): the registration invitation/confirmation panel, invitation API, email queues/retries and automatic supplemental-registration emails have been removed at the user’s request. The email requirements and implementation history below are superseded by this update. Registration, payment verification, completion screens, organizer authentication and manual participant-link generation remain available. Existing delivery records and legacy email actions are preserved; a future email workflow is deferred. See [current launch setup](./reg2026-launch.md).
+Current scope update (28 October 2026): the old registration email panel remains removed. A separate organizer-triggered schedule invitation and automatic confirmation email for newly confirmed choices are now implemented with dedicated SendGrid templates. The confirmation is queued with the confirmed order and attempted after free submission or verified Stripe payment. Historical delivery records remain untouched. See [current launch setup](./reg2026-launch.md).
 
 Status: Product decisions resolved for the first implementation. External email templates, the attendee-app token contract, and final class catalog content remain launch dependencies.
 
