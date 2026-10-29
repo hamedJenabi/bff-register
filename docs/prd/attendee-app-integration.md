@@ -2,15 +2,17 @@
 
 The participant app is read-only for festival registrations and class bookings. This repo remains the source of truth. The new app API projects existing data and adds access credentials/sessions, announcements, and optional Web Push subscription/delivery records. Participant registrations and bookings remain read-only.
 
-## Next session: connect and verify bff-app
+## Participant journey: connected and verified locally
 
-Requested on 27 October 2026 and explicitly deferred to the next session. The registration backend already projects the published Google Sheets catalog and each participant's confirmed registration data through `/api/app/me`. The remaining work is to verify and complete the connection in the adjacent `bff-app` project.
+Requested on 27 October 2026 and implemented locally on 29 October following the user's email-to-app journey request. The registration backend projects the published Google Sheets catalog and each participant's confirmed registration data through `/api/app/me`. See the adjacent app's [current participant journey](../../../bff-app/docs/prd/participant-journey.md) and the dedicated [app-invitation email draft](../email/participant-app-invitation.md).
 
-- [ ] Inspect the existing app client and configure `BFF_REGISTER_ORIGIN` for the intended backend environment, reusing the current participant-access/session flow.
-- [ ] Verify Full Schedule displays the published catalog: days, dates, times, rooms, teachers, descriptions, levels, class formats and bookable state, including open talks.
-- [ ] Verify My Schedule displays the signed-in participant's confirmed classes and per-class roles, and the app displays their saved competition and lunch choices.
-- [ ] Verify a Google Sheets sync refreshes schedule details in the app and a confirmed registration refreshes that participant's choices. Pending checkout must remain distinct from confirmed bookings.
-- [ ] Run an end-to-end check with two fictional participants, covering identity isolation, correct data, refresh behavior and mobile layout.
+- [x] Inspect the existing app client and verify the local `BFF_REGISTER_ORIGIN=http://localhost:3000`, reusing the current participant-access/session flow. Hosted backend/origin configuration remains a rollout step.
+- [x] Verify Full Schedule displays the published catalog: days, dates, times, rooms, teachers, descriptions, levels, class formats and bookable state, including open talks. Authenticated catalogs no longer carry the fictional preview label; Full Schedule has an explicit refresh action.
+- [x] Verify My Schedule displays the signed-in participant's confirmed classes and per-class roles, and the app displays their saved competition and lunch choices. Personal class details now include the same dates, levels, format and bookability as the catalog; intentionally blank descriptions remain blank.
+- [x] Verify a newly published schedule snapshot refreshes class details in the app and confirmed checkout refreshes the participant's choices. Pending choices remain excluded until confirmation. Publication/Google adapter behavior is covered by the backend suite; browser tests use fictional publications and no live Google calls.
+- [x] Run end-to-end checks with fictional participants, covering captured invitation emails, identity isolation, correct data, refresh behavior, persistent sessions and mobile layout.
+
+Local verification includes 18 browser journeys across mobile and desktop Chrome, 53 isolated PostgreSQL integration checks, registration unit checks, and the app's unit/type/lint/build checks. Hosted email template rendering and real-device acceptance remain rollout work. No real invitation was sent.
 
 Production class capacities remain a separate open launch task; the current 20 lead / 20 follow and 30 solo values are testing placeholders. Talks are unlimited. See [the schedule setup](./google-sheets-schedule.md).
 

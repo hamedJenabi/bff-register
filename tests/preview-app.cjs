@@ -14,6 +14,8 @@ const { createAppHandlers } = require("../lib/app/http");
 const { createContentStore } = require("../lib/app/content-store");
 const { createContentHandlers } = require("../lib/app/content-http");
 const { hashAdminPassword } = require("../lib/app/admin-security");
+const { createAppInvitationHandler } = require("../lib/app/invitations");
+const { setAdminSession } = require("../lib/admin/session");
 const crypto = require("node:crypto");
 const webpush = require("web-push");
 
@@ -99,10 +101,46 @@ const webpush = require("web-push");
       ],
       "",
     );
+    const dates = { Friday: "2026-12-11", Saturday: "2026-12-12", Sunday: "2026-12-13" };
+    const sessions = (await registration.schedule()).map((session) => ({
+      ...session,
+      date: dates[session.day],
+      levels: "All levels",
+      format: session.partnerClass ? "partner" : "solo",
+      bookable: true,
+      ...(session.id === "fri-1515-lot" ? { format: "talk", capacity: {}, description: "" } : {}),
+    }));
+    sessions.push({ ...sessions[0], id: "fixture-competitors-class", title: "Fixture competitors class",
+      room: "Fixture room", bookable: false });
+    const publish = async (catalog) => registration.publishSchedule({
+      sessions: catalog, spreadsheetId: "fictional-browser-schedule", sheetName: "APP_SCHEDULE",
+      sourceHash: crypto.createHash("sha256").update(JSON.stringify(catalog)).digest("hex"),
+    }, (await registration.schedulePublication())?.id || 0);
+    await publish(sessions);
+    const [mira] = await sql`INSERT INTO registrations_26 (date,status,role,ticket,firstname,lastname,email,country,level)
+      VALUES ('2026','confirmed','advanced','fullpass','Mira','Patel','mira@example.com','Austria','lead') RETURNING *`;
+    let journeyOrder;
+    const resetJourney = async () => {
+      await sql`DELETE FROM registration_email_retries_26 WHERE registration_id = ${mira.id}`;
+      await sql`DELETE FROM class_bookings_26 WHERE registration_id = ${mira.id}`;
+      await sql`DELETE FROM reg2026_orders WHERE registration_id = ${mira.id}`;
+      await sql`UPDATE registrations_26 SET theme_class = '', lunch = '', competitions = '', competition = 'no', strictly_role = '' WHERE id = ${mira.id}`;
+      await publish(sessions);
+      journeyOrder = await registration.submit(mira, {
+        classes: [{ sessionId: "fri-1330-kantine", role: "lead" }, { sessionId: "sat-1130-superar-1" }],
+        competitions: ["strictly"], competitionRoles: { strictly: "follow" }, lunch: ["saturday"],
+      }, "fictional-browser-checkout");
+      await registration.attachSession(journeyOrder.id, "fictional-browser-stripe-session");
+    };
+    await resetJourney();
     Object.assign(process.env, {
       APP_SIGNING_SECRET: "fictional-preview-signing-secret-for-browser-qa",
       APP_ORIGIN: process.env.PREVIEW_APP_ORIGIN || "http://localhost:3001",
       APP_LINK_EXPIRES_AT: "2099-01-01T00:00:00Z",
+      APP_INVITATIONS_ENABLED: "true",
+      APP_INVITATION_TEMPLATE_ID: "d-11111111111111111111111111111111",
+      ADMIN_SESSION_SECRET: "fictional-browser-organizer-session-secret",
+      ADMIN_USER: "fictional-organizer",
     });
     const store = createAttendeeStore(sql, registration);
     const adminPassword = "fictional-admin-browser-password";
@@ -130,9 +168,23 @@ const webpush = require("web-push");
         auth: crypto.randomBytes(16).toString("base64url"),
       },
     };
+    const emails = [];
+    const invite = createAppInvitationHandler({ participant: store.participant,
+      issueAccess: store.issueAccess, send: async (message) => emails.push(message) });
+    const organizerHeaders = {};
+    setAdminSession({ setHeader: (name, value) => { organizerHeaders[name] = value; } });
+    for (const person of [...people, mira]) {
+      const result = { statusCode: 200, setHeader() {}, status(code) { this.statusCode = code; return this; }, json(body) { this.body = body; return this; } };
+      await invite({ method: "POST", body: { id: person.id }, headers: {
+        cookie: organizerHeaders["Set-Cookie"].split(";")[0], host: "localhost", origin: "http://localhost",
+      } }, result);
+      if (result.statusCode !== 200) throw new Error(`Fictional invitation failed: ${result.body?.error}`);
+    }
+    const emailLink = (email) => emails.find((message) => message.to === email).dynamic_template_data.appAccessUrl;
     const links = {
-      daria: (await store.issueAccess(people[0].id)).url,
-      noah: (await store.issueAccess(people[1].id)).url,
+      daria: emailLink("daria@example.com"),
+      noah: emailLink("noah@example.com"),
+      mira: emailLink("mira@example.com"),
       admin: { username: "bff2026-admin", password: adminPassword },
       subscription,
     };
@@ -148,7 +200,25 @@ const webpush = require("web-push");
         return res;
       };
       if (url.pathname === "/__fixtures") return res.json(links);
+      if (url.pathname === "/__fixtures/emails") return res.json(emails);
       if (url.pathname === "/__fixtures/pushes") return res.json(pushes);
+      if (url.pathname.startsWith("/__fixtures/journey/") && req.method === "POST") {
+        try {
+          if (url.pathname === "/__fixtures/journey/reset") await resetJourney();
+          else if (url.pathname === "/__fixtures/journey/publish") {
+            await publish(sessions.map((session) => session.id === "fri-1330-kantine" ? {
+              ...session, title: "Published partner workshop", teachers: "Fixture teachers", room: "Updated fixture room",
+              description: "A published description from the schedule snapshot.", levels: "II–III",
+            } : session));
+          } else if (url.pathname === "/__fixtures/journey/confirm") {
+            await registration.applyPayment({ id: "fictional-browser-stripe-session", currency: "eur",
+              amount_total: journeyOrder.total_cents, client_reference_id: String(mira.id),
+              metadata: { reg2026OrderId: String(journeyOrder.id) }, payment_status: "paid", status: "complete",
+            }, "checkout.session.completed");
+          } else return res.status(404).json({ error: "Unknown fixture action" });
+          return res.json({ ok: true });
+        } catch (error) { return res.status(500).json({ error: error.message }); }
+      }
       if (url.pathname === "/__fixtures/revoke" && req.method === "POST") {
         await store.revoke(people[0].id);
         return res.json({ ok: true });
