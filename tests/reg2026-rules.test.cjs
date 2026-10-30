@@ -52,6 +52,14 @@ test("competition roles and invalid choices cannot bypass validation", () => {
   assert.equal(validateDraft({ ...empty(), classes: [null] }, { ticket: "fullpass" }).valid, false);
 });
 
+test("Switch is a partner-class role and survives saved choices, but competition roles stay lead/follow", () => {
+  const draft = { ...empty(), classes: [{ sessionId: "fri-1330-kantine", role: "switch" }] };
+  const result = validateDraft(draft, { ticket: "fullpass" });
+  assert.equal(result.valid, true);
+  assert.deepEqual(parseThemeClass(serializeThemeClass(result.value.classes)), draft.classes);
+  assert.equal(validateDraft({ ...draft, competitions: ["strictly"], competitionRoles: { strictly: "switch" } }, { ticket: "fullpass" }).valid, false);
+});
+
 test("freepass26 waives all add-ons and fees while preserving booking validation", () => {
   const draft = { ...empty(), competitions: ["solo_battle", "open_mixnmatch", "newcomers_mixnmatch", "strictly", "fever_showcase"],
     competitionRoles: { open_mixnmatch: "lead", newcomers_mixnmatch: "follow", strictly: "lead" }, lunch: ["saturday", "sunday"] };

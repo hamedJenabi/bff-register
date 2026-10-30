@@ -10,17 +10,20 @@ import {
   unstable_FormSubmitButton as FormSubmitButton,
 } from "reakit/Form";
 import { registrationDraft } from "../../lib/reg2026/form";
-import { schedule as mockSchedule, scheduleDays, CLASS_SELECTION_LIMIT } from "../../lib/reg2026/catalog";
-import { indexSchedule } from "../../lib/reg2026/schedule";
+import { scheduleDays, CLASS_SELECTION_LIMIT } from "../../lib/reg2026/catalog";
+import { indexSchedule, remainingPlaces, sessionsOverlap } from "../../lib/reg2026/schedule";
 import { validateDraft } from "../../lib/reg2026/validation";
+import { CLASS_ROLES, CLASS_ROLE_LABELS } from "../../lib/reg2026/capacity";
+import SwitchRoleNotice from "./SwitchRoleNotice";
 import styles from "./Registration.module.scss";
 
-export default function Schedule({ participant, form, availability, disabled, sessions = mockSchedule }) {
+export default function Schedule({ participant, form, availability, disabled, sessions = [] }) {
   const schedule = sessions;
   const scheduleById = indexSchedule(schedule);
   const draft = registrationDraft(form.values);
   const limitReached = draft.classes.length >= CLASS_SELECTION_LIMIT;
   const dialog = useDialogState({ baseId: "reg2026-class-dialog", animated: true });
+  const switchDialog = useDialogState({ baseId: "reg2026-switch-dialog" });
   const { setAnimated, stopAnimation } = dialog;
   useEffect(() => {
     const preference = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -30,6 +33,7 @@ export default function Schedule({ participant, form, availability, disabled, se
     return () => preference.removeEventListener("change", sync);
   }, [setAnimated, stopAnimation]);
   const finalFocusRef = useRef(null);
+  const switchFocusRef = useRef(null);
   const [active, setActive] = useState(null);
   const selection = (role) => [...draft.classes.filter((choice) => choice.sessionId !== active.id),
     { sessionId: active.id, ...(active.partnerClass ? { role } : {}) }];
@@ -39,8 +43,8 @@ export default function Schedule({ participant, form, availability, disabled, se
     values: { role: "", selectionError: "" },
     onValidate: ({ role }) => {
       if (!active) return;
-      if (active.partnerClass && !["lead", "follow"].includes(role)) {
-        throw { role: "Choose lead or follow for this class." };
+      if (active.partnerClass && !CLASS_ROLES.includes(role)) {
+        throw { role: "Choose lead, follow or switch for this class." };
       }
       const result = validateDraft({ ...draft, classes: selection(role) }, participant, schedule);
       if (result.errors.classes || result.errors.form) {
@@ -56,8 +60,8 @@ export default function Schedule({ participant, form, availability, disabled, se
     },
   });
   const selected = (id) => draft.classes.find((selection) => selection.sessionId === id);
-  const places = (session, pool) => availability[session.id]?.[pool]?.remaining || 0;
-  const full = (session) => session.partnerClass ? places(session, "lead") + places(session, "follow") <= 0 : places(session, "total") <= 0;
+  const places = (session, pool) => remainingPlaces(availability[session.id]?.[pool]);
+  const full = (session) => places(session, "total") <= 0;
   const open = (session, event) => {
     finalFocusRef.current = event.currentTarget;
     classForm.reset();
@@ -70,27 +74,32 @@ export default function Schedule({ participant, form, availability, disabled, se
     <p>Choose up to {CLASS_SELECTION_LIMIT} classes in total across the festival, with one per time slot. Every session is independent. Draft choices reserve no places until you submit.</p>
     <FormMessage {...form} name="classes" />
     {scheduleDays.map((day) => {
-      const sessions = schedule.filter((session) => session.day === day);
+      const sessions = schedule.filter((session) => session.day === day && session.bookable !== false);
       const times = [...new Set(sessions.map((session) => session.start))];
-      return <div className={styles.day} key={day}>
-        <h3>{day}</h3>
+      const dayHeadingId = `reg2026-day-${day.toLowerCase()}`;
+      return <div className={styles.day} key={day} role="group" aria-labelledby={dayHeadingId}>
+        <h3 id={dayHeadingId}>{day}</h3>
         {times.map((time) => {
           const slot = sessions.filter((session) => session.start === time);
           const sharedEnd = slot.every((session) => session.end === slot[0].end);
-          const occupied = slot.some((session) => selected(session.id));
           return <div className={styles.timeSlot} key={time}>
             <h4>{time}{sharedEnd ? `–${slot[0].end}` : ""}</h4>
             <div className={styles.classGrid}>
               {slot.map((session) => {
                 const choice = selected(session.id);
-                const blocked = (occupied || limitReached) && !choice;
+                const conflict = draft.classes.some((selection) => sessionsOverlap(session, scheduleById[selection.sessionId]));
+                const blocked = (conflict || limitReached) && !choice;
+                const status = choice ? `Selected${choice.role ? ` · ${choice.role}` : ""}`
+                  : limitReached ? `${CLASS_SELECTION_LIMIT}-class limit reached`
+                    : blocked ? "Another class selected in this slot" : full(session) ? "Sold out"
+                      : session.partnerClass && places(session, "follow") <= 0 ? "Sold out for followers" : null;
                 return <button key={session.id} type="button" className={styles.classCard} aria-pressed={!!choice}
                   data-blocked={blocked || undefined}
                   disabled={disabled || blocked || (full(session) && !choice)} onClick={(event) => open(session, event)}>
                   <strong>{session.title}</strong><span>{session.teachers}</span>
+                  {session.levels && <span>Levels: {Array.isArray(session.levels) ? session.levels.join(", ") : session.levels}</span>}
                   {!sharedEnd && <span>{session.start}–{session.end}</span>}
-                  <small>{choice ? `Selected${choice.role ? ` · ${choice.role}` : ""}` : limitReached ? `${CLASS_SELECTION_LIMIT}-class limit reached` : blocked ? "Another class selected in this slot" : full(session) ? "Full" : session.partnerClass
-                    ? `${places(session, "lead")} lead · ${places(session, "follow")} follow` : `${places(session, "total")} places`}</small>
+                  {status && <small>{status}</small>}
                 </button>;
               })}
             </div>
@@ -109,17 +118,20 @@ export default function Schedule({ participant, form, availability, disabled, se
       <Dialog {...dialog} className={styles.dialog} data-animated={String(dialog.animated)} unstable_finalFocusRef={finalFocusRef} aria-labelledby="class-detail-title" aria-describedby="class-detail-description">
         {active && <>
           <button type="button" className={styles.close} onClick={dialog.hide} aria-label="Close class details">×</button>
-          <p>{active.day} · {active.start}–{active.end}</p>
+          <p>{active.day}{active.date ? ` · ${active.date}` : ""} · {active.start}–{active.end}</p>
           <h2 id="class-detail-title">{active.title}</h2><p>{active.teachers}</p>
+          {active.levels && <p>Levels: {Array.isArray(active.levels) ? active.levels.join(", ") : active.levels}</p>}
           <p id="class-detail-description">{active.description}</p>
           <Form {...classForm} onSubmit={(event) => event.stopPropagation()}>
             {active.partnerClass && <>
               <FormRadioGroup {...classForm} name="role">
                 <FormLabel {...classForm} name="role" as="legend">Choose your dance role</FormLabel>
-                {["lead", "follow"].map((value) => <label key={value}>
+                {CLASS_ROLES.map((value) => <label key={value}>
                   <FormRadio {...classForm} name="role" value={value} id={`reg2026-class-role-${value}`}
-                    disabled={places(active, value) <= 0 && selected(active.id)?.role !== value} />
-                  {value === "lead" ? "Lead" : "Follow"} · {places(active, value)} places
+                    ref={value === "switch" ? switchFocusRef : undefined}
+                    disabled={places(active, value) <= 0 && selected(active.id)?.role !== value}
+                    onChange={(event) => { if (value === "switch" && event.currentTarget.checked) switchDialog.show(); }} />
+                  {CLASS_ROLE_LABELS[value]}{places(active, value) <= 0 ? " · Sold out" : ""}
                 </label>)}
               </FormRadioGroup>
               <FormMessage {...classForm} name="role" />
@@ -130,6 +142,7 @@ export default function Schedule({ participant, form, availability, disabled, se
             </FormSubmitButton>
             {selected(active.id) && <button type="button" disabled={disabled} onClick={() => { remove(active.id); dialog.hide(); }}>Remove class</button>}
           </Form>
+          <SwitchRoleNotice dialog={switchDialog} finalFocusRef={switchFocusRef} />
         </>}
       </Dialog>
     </DialogBackdrop>}

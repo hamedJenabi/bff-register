@@ -301,8 +301,8 @@ export default function Registration({ initial, access, loadError }) {
             )}
             {completed ? (
               <section aria-labelledby="complete-title">
-                <h2 id="complete-title">You have already registered</h2>
-                <p>Your classes, competitions and lunch registration is complete. Thank you!</p>
+                <h2 id="complete-title">Registration confirmed</h2>
+                <p>Thank you! Your festival choices have been saved.</p>
                 <p>
                   For any changes, contact{" "}
                   the organizers at{" "}

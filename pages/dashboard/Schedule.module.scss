@@ -5,7 +5,7 @@
 .header { margin: 24px 0 0; h1 { font-size: 34px; line-height: 1.2; } p { margin-top: 12px; font-size: 15px; line-height: 1.5; } }
 .message { min-height: 24px; margin: 16px 0; font-size: 14px; color: #225a55; }
 .layout { display: grid; grid-template-columns: minmax(240px, 340px) minmax(0, 1fr); gap: 24px; align-items: start; }
-.list, .editor { background: white; border: 1px solid #dce6e5; border-radius: 12px; padding: 24px;
+.list, .editor, .preview, .source { background: white; border: 1px solid #dce6e5; border-radius: 12px; padding: 24px;
   label { display: block; font-size: 14px; font-weight: 700; line-height: 1.4; }
   input:not([type="checkbox"]), textarea, select { display: block; width: 100%; min-height: 44px; margin-top: 8px; padding: 10px 12px; border: 1px solid #c7d6d3; border-radius: 6px; background: white; color: #172023; font: inherit; font-size: 15px; }
   textarea { resize: vertical; }
@@ -20,16 +20,44 @@
   }
 }
 .editor { h2 { font-size: 24px; } [role="alert"] { color: #a12625; font-size: 14px; margin-top: 8px; } }
+.source { margin-top: 24px; h2 { font-size: 22px; } p { margin-top: 12px; font-size: 14px; line-height: 1.5; } }
+.preview { min-width: 0;
+  h2 { font-size: 26px; line-height: 1.3; overflow-wrap: anywhere; }
+  h3 { margin-top: 28px; font-size: 17px; }
+}
+.eyebrow { margin-bottom: 10px; font-size: 12px; color: #62716f; }
+.teachers { margin-top: 10px; font-size: 16px; line-height: 1.5; }
+.details { display: grid; gap: 16px; margin-top: 24px;
+  div { display: grid; grid-template-columns: 100px minmax(0, 1fr); gap: 16px; }
+  dt { font-size: 13px; color: #62716f; } dd { margin: 0; font-size: 14px; line-height: 1.5; overflow-wrap: anywhere; }
+}
+.description { margin-top: 12px; font-size: 15px; line-height: 1.6; white-space: pre-line; overflow-wrap: anywhere; }
+.error { background: #fff2f0; border: 1px solid #e9c1bb; border-radius: 8px; color: #8d2822; padding: 16px 20px; margin-top: 20px; font-size: 14px; line-height: 1.5;
+  p + p { margin-top: 10px; }
+  ul { margin-top: 12px; padding-left: 20px; } li + li { margin-top: 6px; }
+}
+.moreDiagnostics { margin-top: 16px;
+  summary { cursor: pointer; font-weight: 700; padding: 4px 0; }
+  summary:focus-visible { outline: 3px solid #8d2822; outline-offset: 3px; border-radius: 3px; }
+}
 .field { margin-top: 20px; min-width: 0; }
+.capacityEditor { margin: 24px 0; padding: 20px; border: 1px solid #dce6e5; border-radius: 8px;
+  h3 { margin: 0; font-size: 20px; }
+  label { display: block; font-size: 14px; font-weight: 700; }
+  input { display: block; width: 100%; min-height: 44px; margin-top: 8px; padding: 10px 12px; border: 1px solid #c7d6d3; border-radius: 6px; font: inherit; }
+  [role="alert"] { color: #a12625; margin-top: 8px; font-size: 14px; }
+}
 .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 20px; }
 .checkbox { display: flex !important; gap: 12px; align-items: center; margin-top: 24px;
   input { width: 20px; height: 20px; accent-color: #2f766f; }
 }
 .hint { margin-top: 24px; font-size: 13px; line-height: 1.5; color: #62716f; }
 .actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 24px;
-  button { min-height: 44px; padding: 10px 16px; border: 1px solid #2f766f; border-radius: 6px; background: #2f766f; color: white; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; &:disabled { opacity: .5; cursor: default; } }
+  button, a { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 10px 16px; border: 1px solid #2f766f; border-radius: 6px; background: #2f766f; color: white; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; text-decoration: none; &:disabled { opacity: .5; cursor: default; } }
+  a { color: #225a55; background: white; }
   .secondary { color: #225a55; background: white; }
 }
 @media (max-width: 760px) {
-  .page { padding: 16px; } .layout { grid-template-columns: 1fr; gap: 16px; } .list { position: static; } .sessions { max-height: 240px; } .editor, .list { padding: 20px; } .grid { grid-template-columns: 1fr; }
+  .page { padding: 16px; } .layout { grid-template-columns: 1fr; gap: 16px; } .list { position: static; } .sessions { max-height: 240px; } .editor, .list, .preview, .source { padding: 20px; } .grid { grid-template-columns: 1fr; }
+  .details div { grid-template-columns: 80px minmax(0, 1fr); gap: 12px; }
 }

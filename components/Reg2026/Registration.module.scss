@@ -36,7 +36,8 @@ $accent: #ffd69c;
 .selectionCount { display: block; font-size: 15px; color: $muted; strong { display: block; color: $accent; font-size: 44px; line-height: 1.2; margin-bottom: 8px; } }
 .selectionSummary p { color: $muted; font-size: 12px; margin-bottom: 0; }
 .day { margin-top: 32px; }
-.day + .day { border-top: 2px solid #926272; padding-top: 24px; }
+.day > h3 { margin: 0 0 8px; padding: 14px 20px; border-radius: 10px; background: $accent; color: $background; font-size: clamp(30px, 3.5vw, 42px); font-weight: 800; line-height: 1.15; letter-spacing: -.02em; text-align: center; }
+.day + .day { margin-top: 48px; border-top: 2px solid #926272; padding-top: 32px; }
 .timeSlot { padding: 20px 0; h4 { margin: 0 0 16px; font-size: 16px; color: $muted; } }
 .timeSlot + .timeSlot { border-top: 1px solid #704050; }
 .classGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }

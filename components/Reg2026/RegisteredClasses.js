@@ -1,22 +1,26 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useDialogState, Dialog, DialogBackdrop, DialogDisclosure } from "reakit/Dialog";
 import {
   unstable_useFormState as useFormState, unstable_Form as Form,
   unstable_FormInput as FormInput, unstable_FormLabel as FormLabel,
   unstable_FormMessage as FormMessage, unstable_FormSubmitButton as FormSubmitButton,
 } from "reakit/Form";
-import { schedule as mockSchedule, CLASS_SELECTION_LIMIT } from "../../lib/reg2026/catalog";
-import { indexSchedule } from "../../lib/reg2026/schedule";
+import { CLASS_SELECTION_LIMIT } from "../../lib/reg2026/catalog";
+import { indexSchedule, remainingPlaces, sessionsOverlap } from "../../lib/reg2026/schedule";
 import { parseThemeClass } from "../../lib/reg2026/serialization";
 import { validateDraft } from "../../lib/reg2026/validation";
+import { CLASS_ROLES, CLASS_ROLE_LABELS } from "../../lib/reg2026/capacity";
+import SwitchRoleNotice from "./SwitchRoleNotice";
 import styles from "./RegisteredClasses.module.scss";
 
 const readableClasses = (value) => parseThemeClass(value).filter((choice) => typeof choice?.sessionId === "string");
 
 export default function RegisteredClasses({ id, firstname, lastname, themeClass, buttonClassName }) {
   const dialog = useDialogState({ baseId: `registered-classes-${id}`, animated: true });
+  const switchDialog = useDialogState({ baseId: `registered-classes-switch-${id}` });
+  const switchFocusRef = useRef(null);
   const [hasOpened, setHasOpened] = useState(false);
-  const [schedule, setSchedule] = useState(mockSchedule);
+  const [schedule, setSchedule] = useState([]);
   const scheduleById = indexSchedule(schedule);
   const [savedClasses, setSavedClasses] = useState(() => readableClasses(themeClass));
   const [version, setVersion] = useState(themeClass || "");
@@ -59,11 +63,11 @@ export default function RegisteredClasses({ id, firstname, lastname, themeClass,
   const titleId = `registered-classes-title-${id}`;
   const summaryId = `registered-classes-summary-${id}`;
   const chosen = scheduleById[editor.values.newClass];
-  const places = (session, role) => availability[session.id]?.[role]?.remaining || 0;
-  const optionBlocked = (session) => editor.values.classes.some((choice) => scheduleById[choice.sessionId]?.slotId === session.slotId)
-    || (session.partnerClass ? places(session, "lead") + places(session, "follow") : places(session, "total")) <= 0;
+  const places = (session, role) => remainingPlaces(availability[session.id]?.[role]);
+  const optionBlocked = (session) => session.bookable === false || editor.values.classes.some((choice) => sessionsOverlap(session, scheduleById[choice.sessionId]))
+    || places(session, "total") <= 0;
   const canAdd = chosen && !optionBlocked(chosen) && editor.values.classes.length < CLASS_SELECTION_LIMIT
-    && (!chosen.partnerClass || (["lead", "follow"].includes(editor.values.newRole) && places(chosen, editor.values.newRole) > 0));
+    && (!chosen.partnerClass || (CLASS_ROLES.includes(editor.values.newRole) && places(chosen, editor.values.newRole) > 0));
   const open = async () => {
     setHasOpened(true); setEditing(false); setMessage(""); setLoading(true); setEditable(false);
     try {
@@ -102,9 +106,10 @@ export default function RegisteredClasses({ id, firstname, lastname, themeClass,
               const session = scheduleById[choice.sessionId];
               return <li key={`${choice.sessionId}-${index}`}>
                 {session ? <>
-                  <p className={styles.time}>{session.day} · {session.start}–{session.end}</p>
+                  <p className={styles.time}>{session.day}{session.date ? ` · ${session.date}` : ""} · {session.start}–{session.end}</p>
                   <h3>{session.title}</h3><p>{session.teachers}</p>
-                  <span className={styles.role}>{session.partnerClass ? choice.role === "lead" ? "Lead" : choice.role === "follow" ? "Follow" : "Role not recorded" : "Solo"}</span>
+                  {session.levels && <p>Levels: {Array.isArray(session.levels) ? session.levels.join(", ") : session.levels}</p>}
+                  <span className={styles.role}>{session.partnerClass ? CLASS_ROLE_LABELS[choice.role] || "Role not recorded" : session.format === "talk" ? "Talk · open" : "Solo"}</span>
                 </> : <p>Class no longer in the schedule: {choice.sessionId}</p>}
                 {editing && <button type="button" className={styles.remove} disabled={busy}
                   aria-label={`Remove ${session?.title || choice.sessionId}, ${session?.day || ""} ${session?.start || ""}`}
@@ -118,16 +123,17 @@ export default function RegisteredClasses({ id, firstname, lastname, themeClass,
             <FormInput {...editor} name="newClass" as="select" disabled={busy || selections.length >= CLASS_SELECTION_LIMIT}
               onChange={() => editor.update("newRole", "")}>
               <option value="">Choose a class</option>
-              {schedule.map((session) => <option key={session.id} value={session.id} disabled={optionBlocked(session)}>
+              {schedule.filter((session) => session.bookable !== false).map((session) => <option key={session.id} value={session.id} disabled={optionBlocked(session)}>
                 {session.day} {session.start} · {session.title} · {session.teachers}
               </option>)}
             </FormInput>
             {chosen?.partnerClass && <>
               <FormLabel {...editor} name="newRole">Dance role</FormLabel>
-              <FormInput {...editor} name="newRole" as="select" disabled={busy}>
+              <FormInput {...editor} name="newRole" as="select" disabled={busy} ref={switchFocusRef}
+                onChange={(event) => { if (event.currentTarget.value === "switch") switchDialog.show(); }}>
                 <option value="">Choose a role</option>
-                {["lead", "follow"].map((role) => <option key={role} value={role} disabled={places(chosen, role) <= 0}>
-                  {role === "lead" ? "Lead" : "Follow"} · {places(chosen, role)} places
+                {CLASS_ROLES.map((role) => <option key={role} value={role} disabled={places(chosen, role) <= 0}>
+                  {CLASS_ROLE_LABELS[role]} · {places(chosen, role)} places
                 </option>)}
               </FormInput>
             </>}
@@ -140,6 +146,7 @@ export default function RegisteredClasses({ id, firstname, lastname, themeClass,
           </Form> : <button type="button" className={styles.action} disabled={busy || !editable} onClick={startEditing}>Edit classes</button>}
           {!editing && !loading && !editable && !message && <p className={styles.summary}>Class editing is available for confirmed Full/Parent passes after checkout is finished.</p>}
           <p className={styles.message} role="status" aria-live="polite">{loading ? "Loading current choices…" : message}</p>
+          <SwitchRoleNotice dialog={switchDialog} finalFocusRef={switchFocusRef} />
         </Dialog>
       </DialogBackdrop>}
     </>

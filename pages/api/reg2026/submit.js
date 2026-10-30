@@ -6,6 +6,7 @@ import { validateDraft } from "../../../lib/reg2026/validation";
 import { priceDraft } from "../../../lib/reg2026/pricing";
 import { RegistrationError, REGISTRATION_COMPLETE_MESSAGE } from "../../../lib/reg2026/errors";
 import { allowMethod, apiError, publicOrder } from "../../../lib/reg2026/http";
+import { deliverConfirmation } from "../../../lib/reg2026/confirmations";
 
 export default async function handler(req, res) {
   if (!allowMethod(req, res, "POST")) return;
@@ -28,6 +29,7 @@ export default async function handler(req, res) {
       getStripe(); canonicalOrigin();
     }
     const order = await store.submit(participant, req.body.draft, req.body.requestKey);
+    if (order.status === "confirmed") await deliverConfirmation(store, order.id);
     let checkoutUrl = null;
     if (order.status === "provisional") checkoutUrl = await checkoutForOrder(store, participant, order);
     return res.json({ order: publicOrder(order), checkoutUrl });

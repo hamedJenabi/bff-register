@@ -22,7 +22,7 @@ const session = (
   teachers,
   description: placeholderDescription,
   partnerClass,
-  capacity: partnerClass ? { lead: 20, follow: 20 } : { total: 30 },
+  capacity: { total: partnerClass ? 40 : 30 },
 });
 
 export const mockSchedule = [

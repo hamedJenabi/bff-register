@@ -9,10 +9,21 @@ const empty = () => ({ classes: [], competitions: [], competitionRoles: {}, lunc
 test("registration orders on isolated Postgres", { skip: !process.env.TEST_DATABASE_URL }, async (t) => {
   const sql = postgres(process.env.TEST_DATABASE_URL, { onnotice: () => {} });
   const originalSend = sgMail.send;
-  let emailSends = 0;
-  sgMail.send = async () => { emailSends += 1; throw new Error("Registration must not send emails"); };
+  const originalSendGridKey = process.env.SENDGRID_API_KEY;
+  process.env.SENDGRID_API_KEY = "SG.fictional-test-key";
+  const emailSends = [];
+  let failNextEmail = false;
+  sgMail.send = async (message) => {
+    if (failNextEmail) {
+      failNextEmail = false;
+      const error = new Error("Fictional SendGrid rejection");
+      error.response = { statusCode: 503 };
+      throw error;
+    }
+    emailSends.push(message);
+  };
   try {
-    for (const file of ["00004-CREAT-registraion-2026", "00006-create-class-capacities-2026", "00007-create-reg2026-bookings", "00008-reg2026-order-safety", "00009-create-schedule-overrides-2026", "00010-reg2026-reopen-registration"]) {
+    for (const file of ["00004-CREAT-registraion-2026", "00006-create-class-capacities-2026", "00007-create-reg2026-bookings", "00008-reg2026-order-safety", "00009-create-schedule-overrides-2026", "00010-reg2026-reopen-registration", "00013-reg2026-sheet-schedule", "00015-reg2026-switch-role"]) {
       await sql.begin((tx) => require(`../migrations/${file}`).up(tx));
     }
     const store = createRegistrationStore(sql);
@@ -21,12 +32,17 @@ test("registration orders on isolated Postgres", { skip: !process.env.TEST_DATAB
       assert.equal((await sql`SELECT * FROM schedule_overrides_26`).length, 0);
       const defaults = await store.availability();
       assert.equal(defaults.classes["fri-1330-ankersaal"].total.remaining, 30);
-      assert.equal(defaults.classes["fri-1330-kantine"].lead.remaining, 20);
+      assert.equal(defaults.classes["fri-1330-kantine"].total.remaining, 40);
+      assert.equal(defaults.classes["fri-1330-kantine"].lead.remaining, 40);
+      assert.equal(defaults.classes["fri-1330-kantine"].switch.remaining, 40);
       assert.equal(defaults.classes["fri-1330-kantine"].follow.remaining, 20);
       await sql`INSERT INTO class_capacities_26 (session_id, pool, capacity) VALUES ('fri-1330-kantine', 'lead', 12)`;
+      assert.equal((await store.availability()).classes["fri-1330-kantine"].lead.remaining, 40, "Legacy role limits no longer restrict the shared pool");
+      await sql`DELETE FROM class_capacities_26`;
+      await sql`INSERT INTO class_capacities_26 (session_id, pool, capacity) VALUES ('fri-1330-kantine', 'total', 24)`;
       const edited = await store.availability();
-      assert.equal(edited.classes["fri-1330-kantine"].lead.remaining, 12);
-      assert.equal(edited.classes["fri-1330-kantine"].follow.remaining, 20);
+      assert.equal(edited.classes["fri-1330-kantine"].lead.remaining, 24);
+      assert.equal(edited.classes["fri-1330-kantine"].follow.remaining, 12);
       await sql`DELETE FROM class_capacities_26`;
     });
     const [participant] = await sql`INSERT INTO registrations_26 (date,status,role,ticket,firstname,lastname,email,country,price)
@@ -52,7 +68,13 @@ test("registration orders on isolated Postgres", { skip: !process.env.TEST_DATAB
       assert.equal(repeated.id, order.id);
       const [counts] = await sql`SELECT COUNT(*)::INTEGER AS count FROM class_bookings_26 WHERE registration_id = ${freeParticipant.id}`;
       assert.equal(counts.count, 1);
-      assert.equal((await sql`SELECT id FROM registration_email_retries_26 WHERE order_id = ${order.id}`).length, 0);
+      const [queued] = await sql`SELECT delivery_status, attempts, payload FROM registration_email_retries_26 WHERE order_id = ${order.id}`;
+      assert.equal(queued.delivery_status, "pending");
+      assert.equal(queued.attempts, 0);
+      assert.deepEqual(queued.payload.data.classes, [{
+        title: "Groove in Motion 1", day: "Friday", start: "13:30", end: "14:45",
+        teachers: "Catherine", room: "Ankersaal", role: "",
+      }]);
       assert.equal((await store.completedOrder(freeParticipant.id)).id, order.id);
       await assert.rejects(store.submit(freeParticipant, empty(), "free-request-0001"), /different choices/);
     });
@@ -75,6 +97,7 @@ test("registration orders on isolated Postgres", { skip: !process.env.TEST_DATAB
       pending = results[0];
       assert.equal(results[1].id, pending.id);
       assert.equal(pending.total_cents, 1547);
+      assert.equal((await sql`SELECT id FROM registration_email_retries_26 WHERE order_id = ${pending.id}`).length, 0);
       const [person] = await sql`SELECT theme_class FROM registrations_26 WHERE id = ${participant.id}`;
       assert.match(person.theme_class, /ankersaal/);
       process.env.REG2026_ORIGIN = "https://register.example.com";
@@ -91,7 +114,7 @@ test("registration orders on isolated Postgres", { skip: !process.env.TEST_DATAB
     await t.test("processing payments retain reservations past the one-hour window", async () => {
       const processing = await store.applyPayment(session(), "checkout.session.completed");
       assert.equal(processing.status, "payment_pending");
-      assert.equal((await store.availability()).classes["fri-1330-kantine"].lead.remaining, 19);
+      assert.equal((await store.availability()).classes["fri-1330-kantine"].lead.remaining, 39);
       const [row] = await sql`SELECT expires_at FROM class_bookings_26 WHERE order_id = ${pending.id}`;
       assert.equal(row.expires_at, null);
     });
@@ -107,7 +130,10 @@ test("registration orders on isolated Postgres", { skip: !process.env.TEST_DATAB
       const [person] = await sql`SELECT lunch, price FROM registrations_26 WHERE id = ${participant.id}`;
       assert.equal(person.lunch, "saturday");
       assert.equal(person.price, "200");
-      assert.equal((await sql`SELECT id FROM registration_email_retries_26 WHERE order_id = ${pending.id}`).length, 0);
+      assert.equal((await sql`SELECT delivery_status FROM registration_email_retries_26 WHERE order_id = ${pending.id}`)[0].delivery_status, "pending");
+      const [message] = await sql`SELECT payload FROM registration_email_retries_26 WHERE order_id = ${pending.id}`;
+      assert.equal(message.payload.data.classes[0].role, "Lead");
+      assert.equal(message.payload.data.classes[0].room, "Kantine");
       await assert.rejects(store.submit(participant, empty(), "remove-paid-0001"), /contact the organizers/);
     });
     await t.test("expired checkout releases provisional places and permits an unfinished registration to retry", async () => {
@@ -131,6 +157,8 @@ test("registration orders on isolated Postgres", { skip: !process.env.TEST_DATAB
       const payment = { id: "cs_admin_original", amount_total: original.total_cents, currency: "eur", client_reference_id: String(person.id),
         metadata: { reg2026OrderId: String(original.id) }, status: "complete", payment_status: "paid" };
       await store.applyPayment(payment, "checkout.session.completed");
+      const [queuedEmail] = await sql`SELECT payload FROM registration_email_retries_26 WHERE order_id = ${original.id}`;
+      assert.deepEqual(queuedEmail.payload.data.competitions, [{ label: "Solo Battle", role: "" }]);
       const before = await store.organizerClasses(person.id);
       const [orderBefore] = await sql`SELECT * FROM reg2026_orders WHERE id = ${original.id}`;
       const emailsBefore = await sql`SELECT * FROM registration_email_retries_26 WHERE registration_id = ${person.id}`;
@@ -331,7 +359,7 @@ test("registration orders on isolated Postgres", { skip: !process.env.TEST_DATAB
       assert.equal(invalid.code, 422); assert.ok(invalid.body.errors.title); assert.ok(invalid.body.errors.end); assert.ok(invalid.body.errors.totalCapacity);
       const changed = { ...scheduleFormValues(base), title: "Late Blues Workshop", teachers: "Catherine & Guest",
         description: "Practice pulse, connection and musical choices.", room: "Main Studio", start: "15:45", end: "17:00",
-        partnerClass: true, leadCapacity: "2", followCapacity: "3" };
+        partnerClass: true, totalCapacity: "5" };
       const emailCount = (await sql`SELECT COUNT(*)::INT AS count FROM registration_email_retries_26`)[0].count;
       const saved = response(); await endpoint({ method: "POST", headers, body: { id: base.id, version: 0, values: changed } }, saved);
       assert.equal(saved.code, 200); assert.equal(saved.body.session.version, 1);
@@ -339,21 +367,26 @@ test("registration orders on isolated Postgres", { skip: !process.env.TEST_DATAB
       assert.equal(saved.body.session.title, changed.title); assert.equal(saved.body.session.partnerClass, true);
       assert.equal((await sql`SELECT COUNT(*)::INT AS count FROM registration_email_retries_26`)[0].count, emailCount);
       assert.equal((await sql`SELECT * FROM schedule_overrides_26`).length, 1);
-      assert.equal((await sql`SELECT * FROM class_capacities_26`).length, 2);
+      assert.equal((await sql`SELECT * FROM class_capacities_26`).length, 1);
       const reloaded = await store.schedule();
       assert.equal(reloaded.find((session) => session.id === base.id).description, changed.description);
       const person = await createPerson("ScheduleParticipant");
       const choice = { ...empty(), classes: [{ sessionId: base.id, role: "lead" }] };
       assert.equal(validateDraft({ ...choice, classes: [{ sessionId: base.id }] }, person, reloaded).valid, false);
-      await store.submit(person, choice, "schedule-choice-01");
+      const order = await store.submit(person, choice, "schedule-choice-01");
+      const [confirmation] = await sql`SELECT payload FROM registration_email_retries_26 WHERE order_id = ${order.id}`;
+      assert.deepEqual(confirmation.payload.data.classes, [{
+        title: changed.title, day: "Sunday", start: changed.start, end: changed.end,
+        teachers: changed.teachers, room: changed.room, role: "Lead",
+      }]);
       const availability = await store.availability();
-      assert.equal(availability.classes[base.id].lead.remaining, 1); assert.equal(availability.classes[base.id].follow.remaining, 3);
+      assert.equal(availability.classes[base.id].lead.remaining, 4); assert.equal(availability.classes[base.id].follow.remaining, 2);
       const organizerView = await store.organizerClasses(person.id);
       assert.equal(organizerView.schedule.find((session) => session.id === base.id).title, changed.title);
       await assert.rejects(store.editSchedule(base.id, changed, 0), /changed in another session/);
       await assert.rejects(store.editSchedule(base.id, { ...changed, partnerClass: false }, 1), /has registrations/);
       await assert.rejects(store.editSchedule(base.id, { ...changed, start: "16:00" }, 1), /has registrations/);
-      const after = await store.editSchedule(base.id, { ...changed, description: "Updated workshop description.", leadCapacity: "0" }, 1);
+      const after = await store.editSchedule(base.id, { ...changed, description: "Updated workshop description.", totalCapacity: "0" }, 1);
       assert.equal(after.version, 2); assert.equal((await store.availability()).classes[base.id].lead.remaining, 0);
       assert.deepEqual((await store.organizerClasses(person.id)).classes, choice.classes);
       const [booking] = await sql`SELECT pool, status FROM class_bookings_26 WHERE registration_id = ${person.id}`;
@@ -429,6 +462,10 @@ test("registration orders on isolated Postgres", { skip: !process.env.TEST_DATAB
         draft: { ...free, competitions: ["solo_battle"], lunch: ["saturday", "sunday"], voucher: "freepass26" } } }, voucher);
       assert.equal(voucher.code, 200); assert.equal(voucher.body.order.status, "confirmed");
       assert.equal(voucher.body.order.totalCents, 0); assert.equal(voucher.body.checkoutUrl, null); assert.equal(sessions.size, 0);
+      assert.equal(emailSends.length, 1);
+      assert.equal(emailSends[0].template_id, "d-4f77d740ec504650aa9ea1a78e785cae");
+      assert.deepEqual(emailSends[0].dynamic_template_data.competitions, [{ label: "Solo Battle", role: "" }]);
+      assert.deepEqual(emailSends[0].dynamic_template_data.lunch, ["Saturday", "Sunday"]);
       const paid = res(); await submit({ method: "POST", body: { ...access, requestKey: "http-payment-001", draft: { ...empty(), lunch: ["saturday"] }, price: 1 } }, paid);
       assert.equal(paid.code, 200); assert.equal(paid.body.order.totalCents, 1547);
       assert.equal(paid.body.checkoutUrl, "https://checkout.example.com/http");
@@ -455,6 +492,10 @@ test("registration orders on isolated Postgres", { skip: !process.env.TEST_DATAB
       const signature = verifier.webhooks.generateTestHeaderString({ payload: raw, secret: process.env.REG2026_STRIPE_WEBHOOK_SECRET });
       assert.equal((await invoke(signature)).code, 200);
       assert.equal((await invoke(signature)).code, 200);
+      assert.equal(emailSends.length, 2);
+      assert.equal(emailSends[1].to, person.email);
+      assert.deepEqual(emailSends[1].dynamic_template_data.classes, []);
+      assert.deepEqual(emailSends[1].dynamic_template_data.lunch, ["Saturday"]);
       assert.equal((await store.order(paid.body.order.id, person.id)).status, "confirmed");
       const state = res(); await load({ method: "GET", query: { ...access, order: paid.body.order.id } }, state);
       assert.deepEqual(state.body.choices.lunch, ["saturday"]);
@@ -484,9 +525,58 @@ test("registration orders on isolated Postgres", { skip: !process.env.TEST_DATAB
       } }, protectedBooking);
       assert.equal(protectedBooking.code, 410);
     });
-    await t.test("registration, webhooks and status checks neither send nor queue emails", async () => {
-      assert.equal(emailSends, 0);
-      assert.deepEqual(await sql`SELECT * FROM registration_email_retries_26 ORDER BY id`, historicalDeliveries);
+    await t.test("failed confirmation delivery leaves the order confirmed and can retry once", async () => {
+      const person = await createPerson("EmailRetry", "partyPass");
+      const order = await store.submit(person, empty(), "email-retry-0001");
+      const { deliverConfirmation } = require("../lib/reg2026/confirmations");
+      failNextEmail = true;
+      assert.equal(await deliverConfirmation(store, order.id), "failed");
+      assert.equal((await store.completedOrder(person.id)).id, order.id);
+      assert.deepEqual((await sql`SELECT delivery_status, attempts FROM registration_email_retries_26 WHERE order_id = ${order.id}`)[0],
+        { delivery_status: "failed", attempts: 1 });
+      assert.equal(await deliverConfirmation(store, order.id), "sent");
+      assert.equal(await deliverConfirmation(store, order.id), "already_sent");
+      assert.deepEqual((await sql`SELECT delivery_status, attempts FROM registration_email_retries_26 WHERE order_id = ${order.id}`)[0],
+        { delivery_status: "sent", attempts: 2 });
     });
-  } finally { sgMail.send = originalSend; await sql.end(); }
+    await t.test("uncertain transport delivery is held instead of automatically duplicated", async () => {
+      const person = await createPerson("EmailUncertain", "partyPass");
+      const order = await store.submit(person, empty(), "email-uncertain-01");
+      const { deliverConfirmation } = require("../lib/reg2026/confirmations");
+      const timeout = async () => { throw new Error("Fictional network timeout"); };
+      assert.equal(await deliverConfirmation(store, order.id, timeout), "uncertain");
+      assert.equal(await deliverConfirmation(store, order.id), "sending");
+      assert.deepEqual((await sql`SELECT delivery_status, attempts FROM registration_email_retries_26 WHERE order_id = ${order.id}`)[0],
+        { delivery_status: "sending", attempts: 1 });
+      assert.equal((await store.completedOrder(person.id)).id, order.id);
+    });
+    await t.test("local preview captures confirmation data without calling SendGrid", async () => {
+      const previousPreview = process.env.BFF_PREVIEW;
+      process.env.BFF_PREVIEW = "true";
+      try {
+        const person = await createPerson("EmailPreview", "partyPass");
+        const order = await store.submit(person, empty(), "email-preview-0001");
+        const { deliverConfirmation } = require("../lib/reg2026/confirmations");
+        const { previewConfirmations } = require("../lib/reg2026/preview-invitation-mailbox");
+        assert.equal(await deliverConfirmation(store, order.id), "sent");
+        assert.equal(emailSends.length, 3);
+        assert.deepEqual(previewConfirmations().at(-1), {
+          to: person.email, templateId: "d-4f77d740ec504650aa9ea1a78e785cae",
+          firstname: person.firstname, classes: [], competitions: [], lunch: [],
+        });
+      } finally {
+        if (previousPreview === undefined) delete process.env.BFF_PREVIEW;
+        else process.env.BFF_PREVIEW = previousPreview;
+      }
+    });
+    await t.test("confirmed orders queue once and preserve historical delivery records", async () => {
+      assert.equal(emailSends.length, 3);
+      assert.deepEqual(await sql`SELECT * FROM registration_email_retries_26 WHERE id = ${historicalDeliveries[0].id}`, historicalDeliveries);
+    });
+  } finally {
+    sgMail.send = originalSend;
+    if (originalSendGridKey === undefined) delete process.env.SENDGRID_API_KEY;
+    else process.env.SENDGRID_API_KEY = originalSendGridKey;
+    await sql.end();
+  }
 });

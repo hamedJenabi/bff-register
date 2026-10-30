@@ -1,8 +1,14 @@
 # PRD: 2026 Class, Competition, and Lunch Registration
 
-Current scope update (3 October 2026): the registration invitation/confirmation panel, invitation API, email queues/retries and automatic supplemental-registration emails have been removed at the user’s request. The email requirements and implementation history below are superseded by this update. Registration, payment verification, completion screens, organizer authentication and manual participant-link generation remain available. Existing delivery records and legacy email actions are preserved; a future email workflow is deferred. See [current launch setup](./reg2026-launch.md).
+Current scope update (28 October 2026): the old registration email panel remains removed. A separate organizer-triggered schedule invitation and automatic confirmation email for newly confirmed choices are now implemented with dedicated SendGrid templates. The confirmation is queued with the confirmed order and attempted after free submission or verified Stripe payment. Historical delivery records remain untouched. See [current launch setup](./reg2026-launch.md).
 
 Status: Product decisions resolved for the first implementation. External email templates, the attendee-app token contract, and final class catalog content remain launch dependencies.
+
+Current schedule/capacity decision (27 October 2026): Google Sheets `APP_SCHEDULE` is the editing source for validated publications. Testing placeholders are **20 lead / 20 follow for partner classes** and **30 total for solo classes**. **Talks are open with no capacity limit**; their capacity cells stay blank.
+
+Organizers can edit published class capacities from `/dashboard/schedule`: Lead/Follow for partner classes and Total for solo classes. Saves must write back to the authoritative Google Sheet and publish only the verified capacity change, preserve all existing bookings, reject stale edits and unsynced source changes, and retain unlimited talks. The service account requires approved workbook Editor access; no local-only capacity override is introduced.
+
+- [ ] **Make capacities production-ready before launch:** confirm the real per-session and role capacities with organizers against the final rooms, replace the placeholder formulas/values in Google Sheets, sync the reviewed catalog, and verify remaining availability. Successful test sync does not complete this launch task. Talks remain unlimited unless organizers explicitly change that policy.
 
 Workflow: Keep this PRD locally under `docs/prd/`, as configured for this repository. No remote issue or commit is part of this phase.
 
@@ -31,7 +37,7 @@ Start the competition section with “Do you want to compete?” and reveal the 
 9. As a participant, I want to see a class title, teacher, and description, so that I can make an informed choice.
 10. As a desktop participant, I want class details in a centered modal, so that I can refer back to the schedule easily.
 11. As a mobile participant, I want class details in a full-screen modal, so that its content and controls are usable on my phone.
-12. As a participant choosing a partner class, I want to select lead or follow, so that I reserve the appropriate kind of place.
+12. As a participant choosing a partner class, I want to select lead, follow or switch, so that I reserve a place with my chosen role.
 13. As a participant choosing a non-partner class, I want to proceed without a dance-role question, so that I do not answer an irrelevant question.
 14. As a participant, I want to confirm a class selection in its modal, so that opening details alone does not select it.
 15. As a participant, I want selected classes to be visibly marked, so that I can recognize my choices in the grid.
@@ -81,7 +87,7 @@ Start the competition section with “Do you want to compete?” and reveal the 
 - Provide schedule registration, competition registration, and lunch in that order, with one final submit action.
 - Hide schedule registration for Party Pass participants. The persisted ticket value in the current app is `partyPass`.
 - Use the supplied screenshot as the mock schedule source. Later schedule data will come from a database.
-- `mockdata/schedule2026.js` defines each session's stable ID, title, teachers, description, time, room, partner-class flag and default capacities (20 lead / 20 follow or 30 total). Database schedule and capacity tables start empty. Admin edits persist as overrides, while unchanged classes keep using the frontend mock data. The server uses the same effective catalog for validation and availability.
+- `mockdata/schedule2026.js` defines each session's stable ID, title, teachers, description, time, room, partner-class flag and default capacities (40 total for partner classes, with up to 20 followers, or 30 total for solo classes). Database schedule and capacity tables start empty. Admin edits persist as overrides, while unchanged classes keep using the frontend mock data. The server uses the same effective catalog for validation and availability.
 - Clicking a schedule cell opens a class modal, centered on desktop and full-screen on mobile.
 - The modal includes an explicit action to select the class. A participant can deselect a class.
 - Enforce at most one class per time slot and a maximum of five class sessions in total across the festival, regardless of day.
@@ -123,7 +129,7 @@ Start the competition section with “Do you want to compete?” and reveal the 
 
 - Update the participant's existing registration, without modifying purchased-pass details, identity, admission status, or original ticket price.
 - Validate and save the complete draft atomically on final submission, retaining the confirmed draft-until-submit behavior.
-- `class_capacities_26` stores capacity overrides keyed by stable session ID and pool (`lead`, `follow`, or `total`), with no mock seeds. Compute remaining places from the stored override or mock default minus active bookings. `schedule_overrides_26` stores changed class metadata and a revision for stale-edit protection. Share the effective schedule with the frontend; validate on the server against the same data. Booked classes keep their timing/type fixed, and schedule writes serialize against booking writes.
+- `class_capacities_26` stores capacity overrides keyed by stable session ID and pool (`total`; historical `lead`/`follow` overrides no longer control partner capacity), with no mock seeds. Compute remaining places from the stored override or mock default minus active bookings. `schedule_overrides_26` stores changed class metadata and a revision for stale-edit protection. Share the effective schedule with the frontend; validate on the server against the same data. Booked classes keep their timing/type fixed, and schedule writes serialize against booking writes.
 - Keep one stable identifier for each scheduled occurrence in the mock catalog, plus day, start/end time, room, description, and partner flag. The same identifier links catalog entries to capacity and booking rows.
 - Store enough versioned schedule information to reconstruct the participant's selections, including session identifiers and selected dance roles.
 - Preserve other sections and draft choices when validation or availability fails.
@@ -178,11 +184,11 @@ The requested Schedule admin page now supports persistent overrides. Mock defaul
 
 ### Interview round 3 — resolved
 
-9. Participants may choose lead or follow independently for each partner class session, regardless of the dance role selected when buying a pass.
+9. Participants may choose Lead, Follow or Switch independently for each partner class session, regardless of the dance role selected when buying a pass. Selecting Switch opens a popup: “By choosing Switch, you’re happy to dance as either a leader or a follower, helping keep the class balanced.” Partner classes use a shared placeholder capacity of 40. Follow closes at 20 followers; all roles close at 40 people. Each Switch booking consumes one total place without consuming a Follow place.
 
 10. Offer Solo Battle, Open MixMatch, Newcomers MixMatch, Strictly, and Fever Showcase. Solo Battle alone has a capacity limit of 45 entries; the other four remain open until organizers close registration. Ask for lead/follow in Open MixMatch, Newcomers MixMatch, and Strictly; the other two have no role question. Do not carry over temporary sold-out restrictions from the older form.
 
-11. Build the first catalog with clearly labeled placeholder descriptions and editable sample partner flags. Seed Postgres capacity limits of 20 lead and 20 follow for partner classes, or 30 total for non-partner classes. A catalog review is required before real participants use `/reg2026`; screenshot gaps must not be presented as verified festival facts.
+11. Build the first catalog with clearly labeled placeholder descriptions and editable sample partner flags. Use a default shared capacity of 40 for partner classes, with followers limited to half the total, or 30 total for solo classes. Capacity tables start empty and store only overrides. A catalog review is required before real participants use `/reg2026`; screenshot gaps must not be presented as verified festival facts.
 12. “Cuttin' for Solo competitors only” is outside this registration flow. Remove it from the selectable schedule; organizers will handle it manually.
 13. “Jukin (III–IV)” remains selectable by all class-eligible participants. The level label is informational and imposes no eligibility restriction.
 14. Add a new dashboard button beside “Send Email to All confirmed” to send each confirmed participant a personalized, signed `/reg2026` invitation using a dedicated SendGrid template. Pass the personalized URL as `registrationUrl`; the template ID will be supplied before sending real emails. The new send path must authenticate the organizer on the server.
@@ -194,7 +200,7 @@ The requested Schedule admin page now supports persistent overrides. Mock defaul
 20. Desktop shows the schedule as a room-by-time grid. Mobile shows a day-by-day list grouped by time slot, with a class card for each room; class details open full-screen.
 21. Browser draft storage is disabled. Unsaved choices reset on reload. Pending payment choices are recovered from the server; confirmed registrations show only completion.
 22. If SendGrid fails after payment and booking confirmation, keep the booking confirmed, show the participant success, and queue the failed confirmation email for organizer retry.
-23. Add a Classes column to the organizer dashboard with a registered class count and a button opening participant-specific details. Show saved class titles, day/time, teachers and lead/follow or solo roles in an accessible dialog, including an explicit empty state. Organizers can remove classes and add replacements from a dropdown, with roles, then save atomically without email or payment actions. Preserve five-class, time-slot, eligibility and capacity rules; prevent stale edits and edits during pending checkout. Pending checkout drafts are not confirmed registrations.
+23. Add a Classes column to the organizer dashboard with a registered class count and a button opening participant-specific details. Show saved class titles, day/time, teachers and lead/follow/switch or solo roles in an accessible dialog, including an explicit empty state. Organizers can remove classes and add replacements from a dropdown, with roles, then save atomically without email or payment actions. Preserve five-class, time-slot, eligibility and capacity rules; prevent stale edits and edits during pending checkout. Pending checkout drafts are not confirmed registrations.
 24. Add an optional Voucher input at the end of `/reg2026`. The code `freepass26` makes all selected competition entries and lunch meals free, including checkout fees. Confirm these submissions without Stripe, while preserving class/pass/role/capacity rules and one-time registration. Reject unknown codes. Previously purchased festival passes remain unchanged.
 25. Submit paid choices directly to Stripe without an intermediate checkout-review screen. Keep resume/cancel/status recovery for participants who return without paying or reopen a pending registration.
 26. Add Generate link in the last column of both organizer dashboards. Generate a copyable registration URL with `buildRegistrationPath` from the participant's stored identity, without sending an email or changing their registration. Keep signing server-side and require organizer authentication; unconfirmed or ambiguous participants cannot receive a working link. Use the existing one-time registration behavior and signed-link format.
