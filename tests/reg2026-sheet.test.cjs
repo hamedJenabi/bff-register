@@ -35,7 +35,7 @@ test("sheet rows become explicit solo, partner and talk sessions without enforci
   assert.deepEqual(solo.capacity, { total: 30 });
   assert.equal(solo.levels, "II–III");
   assert.equal(partner.partnerClass, true);
-  assert.deepEqual(partner.capacity, { lead: 20, follow: 15 });
+  assert.deepEqual(partner.capacity, { total: 40 });
   assert.equal(talk.partnerClass, false);
   assert.deepEqual(talk.capacity, {}, "Open talks have no finite capacity pools");
   assert.equal(talk.bookable, false);
@@ -55,6 +55,15 @@ test("sheet imports require complete, unambiguous headers and at least one sessi
   const original = row();
   const reordered = shuffled.map((column) => original[SHEET_COLUMNS.indexOf(column)]);
   assert.equal(parseScheduleRows([shuffled, reordered])[0].id, "sheet-friday-a");
+});
+
+test("partner classes use an editable shared total, and old role capacities normalize to the 40-place placeholder", () => {
+  const current = parse(row({ format: "partner", total_capacity: 40 }));
+  assert.deepEqual(current[0].capacity, { total: 40 });
+  assert.deepEqual(parse(row({ format: "partner", total_capacity: 25 }))[0].capacity, { total: 25 });
+  assert.deepEqual(parse(row({ format: "partner", total_capacity: 0 }))[0].capacity, { total: 0 });
+  const legacy = { ...current[0], capacity: { lead: 12, follow: 13 } };
+  assert.deepEqual(validatePublishedSessions([legacy]), current);
 });
 
 test("sheet rows reject missing booking rules, malformed values, duplicate IDs and spreadsheet errors", () => {

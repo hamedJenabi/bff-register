@@ -14,13 +14,15 @@ The formulas cover the 52 mapped occurrences and their explicitly matched descri
 
 The initial tab contains 52 occurrences from the current timetable, with 51 bookable occurrences. Cuttin' stays visible in the full catalog but is not selectable through self-service. Descriptions were matched explicitly to their corresponding source rows. Source descriptions marked “Not needed” and missing descriptions remain blank; internal notes are not published. Timetable titles and informational levels are preserved even when the description tab differs. Source cell references are stored as cell notes for review.
 
-Class formats now come from the user's supplied `CLASS DESCRIPTIONS` column J: 37 partner sessions, 13 solo sessions and 2 talks. Testing capacity formulas provide **20 lead / 20 follow for partner classes** and **30 total for solo classes**, including non-bookable occurrences. **Talks are open with no capacity limit** and keep all capacity cells blank. Formulas leave unused pools blank and follow later format changes. Dates are optional: leave all dates blank or fill all rows for one Friday–Sunday weekend.
+Class formats now come from the user's supplied `CLASS DESCRIPTIONS` column J: 37 partner sessions, 13 solo sessions and 2 talks. Partner classes now use **40 total places** as a testing placeholder, shared by **Lead, Follow and Switch**. Follow closes at 20 followers; Lead and Switch remain available until the total reaches 40. Switch counts as one person toward the total and does not consume a Follow place. Selecting Switch opens a popup explaining that the participant is happy to lead or follow to help keep the class balanced. Solo classes retain **30 total places**. **Talks are open with no capacity limit** and keep all capacity cells blank. Dates are optional: leave all dates blank or fill all rows for one Friday–Sunday weekend.
+
+Existing partner rows with reviewed `lead_capacity` and `follow_capacity` values and a blank `total_capacity` normalize to 40 total; their old role allocations no longer set booking limits. Existing published snapshots normalize the same way, preserving sync and capacity editing without rewriting the source workbook. Saving a partner capacity in the dashboard writes `total_capacity` and clears its legacy role columns. New partner rows should use `total_capacity` and leave both role columns blank.
 
 Participant schedule cards and class-dialog role choices do not display capacity or remaining-place counts. Full classes/roles remain unavailable, and server-side capacity checks still apply. Organizers can view capacity details in the dashboard.
 
 ### Open production task
 
-- [ ] **Make capacities production-ready before launch.** Confirm actual room/session capacities and lead/follow allocations with organizers; replace the testing placeholder formulas/values in `APP_SCHEDULE`; sync the reviewed catalog and verify remaining availability. These test defaults are not production-approved. Talks remain unlimited unless organizers explicitly change the policy. A successful test publication does not complete this task.
+- [ ] **Make capacities production-ready before launch.** Confirm actual total room/session capacities with organizers; replace the testing placeholder formulas/values in `APP_SCHEDULE`; sync the reviewed catalog and verify remaining availability. Followers are limited to half the total, rounded down. These test defaults are not production-approved. Talks remain unlimited unless organizers explicitly change the policy. A successful test publication does not complete this task.
 
 ## Columns
 
@@ -37,15 +39,15 @@ Keep these exact header names; columns can be reordered. Each nonblank row repre
 | `description` | Optional participant-facing text, up to 6000 characters. |
 | `levels` | Informational text, up to 200 characters. It does not restrict eligibility. |
 | `format` | `solo`, `partner` or `talk`, linked to the matching source cell in `CLASS DESCRIPTIONS` column J. Edit the source cell to update an existing occurrence. For new occurrences, add a reviewed value or explicit source formula. |
-| `lead_capacity`, `follow_capacity` | Whole numbers 0–1000 for partner classes. Leave total capacity blank. |
-| `total_capacity` | Whole number 0–1000 for solo classes. Leave lead/follow capacities blank. Talks must leave all three capacity fields blank and are unlimited. |
+| `lead_capacity`, `follow_capacity` | Legacy partner columns retained for compatibility. When both contain reviewed whole numbers 0–1000 and total capacity is blank, the partner class uses the 40-place placeholder. Leave these columns blank when specifying total capacity. |
+| `total_capacity` | Whole number 0–1000 for partner or solo classes. Partner placeholder: 40; at most half the total may register as Follow. Leave lead/follow capacities blank. Talks must leave all three capacity fields blank and are unlimited. |
 | `bookable` | TRUE or FALSE. FALSE keeps the occurrence in the full catalog but prevents new self-service selections. |
 
 The sync accepts at most 500 sessions in a tab no larger than 2000 rows and 52 columns. It reads the whole bounded tab, so stray rows or unknown columns cannot silently disappear from an import. Duplicate IDs, spreadsheet errors, malformed values, overlapping assigned rooms, and incomplete booking rules prevent publication. TBA rooms are not treated as a single physical room. Participant selections reject overlapping time intervals even if start times differ.
 
 ## Server configuration
 
-Apply migration `00013-reg2026-sheet-schedule.js` using the existing Ley workflow before deploying the code. Local development has this additive migration; it changes no participant, booking or payment records.
+Apply migrations through `00015-reg2026-switch-role.js` using the existing Ley workflow before deploying the code. Migration 15 permits Switch booking rows without changing existing participant, booking or payment records.
 
 | Variable | Meaning |
 | --- | --- |
@@ -63,11 +65,11 @@ When Sheets is configured but no reviewed schedule has been published, participa
 
 ### Dashboard capacity editing
 
-After the first publication, select a class at `/dashboard/schedule`. Partner classes expose Lead capacity and Follow capacity; solo classes expose Total capacity. All accept whole numbers from 0 to 1000. Talks stay open with no capacity editor. **Save capacity** writes only that class's three capacity cells to Google Sheets, verifies the result, and publishes the new capacity. Existing bookings are preserved even when the new limit is lower than the occupied count. Participant-facing capacity counts remain hidden.
+After the first publication, select a class at `/dashboard/schedule`. Partner and solo classes expose Total capacity, accepting whole numbers from 0 to 1000. The partner follower limit is derived as half the total, rounded down. Talks stay open with no capacity editor. **Save capacity** writes only that class's three capacity cells to Google Sheets, verifies the result, and publishes the new capacity. Existing bookings are preserved even when the new limit is lower than the occupied count. Participant-facing capacity counts remain hidden.
 
 Saving requires the current published version and a Sheet matching the last publication. If Google Sheets contains any unsynced edits, sync them first; a capacity save will not publish those edits silently. Stale dashboard saves are rejected. The source row and capacity columns are found by permanent session ID and header names, so reordered rows/columns remain supported. Manual dashboard values replace the selected row's capacity formulas, with unused pools cleared; after a later class-format change, review that row's capacity fields before syncing.
 
-Capacity saves serialize with catalog publication and booking writes. If Google rejects a write, the published snapshot remains unchanged. If Google saves successfully but readback or publication fails, the Sheet may contain an unpublished capacity edit; review and sync rather than blindly retrying. Avoid concurrent direct Sheet edits during a dashboard save. The production-capacity review task above remains open regardless of test saves.
+Capacity saves serialize with catalog publication and booking writes. Participant submissions and organizer class edits also serialize their availability check and reservation, so simultaneous requests cannot both claim the last total or follower place. Active provisional holds count toward both limits; expired holds do not. If Google rejects a write, the published snapshot remains unchanged. If Google saves successfully but readback or publication fails, the Sheet may contain an unpublished capacity edit; review and sync rather than blindly retrying. Avoid concurrent direct Sheet edits during a dashboard save. The production-capacity review task above remains open regardless of test saves.
 
 Live setup: the user approved Editor access for `vsb-register@vsb-register.iam.gserviceaccount.com` on the schedule workbook. The permission is granted and verified with a write request that changed no cells. Ordinary sync continues to use a read-only token; dashboard capacity saves use the separate write scope.
 

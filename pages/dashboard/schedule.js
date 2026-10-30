@@ -57,15 +57,13 @@ function ClassEditor({ session, onSave }) {
       {field("end", "End time", { type: "time" })}
     </div>
     <label className={styles.checkbox}>
-      <FormCheckbox {...form} name="partnerClass" disabled={form.submitting} /> Partner class (lead / follow)
+      <FormCheckbox {...form} name="partnerClass" disabled={form.submitting} /> Partner class (lead / follow / switch)
     </label>
     <FormMessage {...form} name="partnerClass" />
     <div className={styles.grid}>
-      {form.values.partnerClass ? <>
-        {field("leadCapacity", "Lead capacity", { type: "number", min: 0, max: 1000, step: 1 })}
-        {field("followCapacity", "Follow capacity", { type: "number", min: 0, max: 1000, step: 1 })}
-      </> : field("totalCapacity", "Total capacity", { type: "number", min: 0, max: 1000, step: 1 })}
+      {field("totalCapacity", "Total capacity", { type: "number", min: 0, max: 1000, step: 1 })}
     </div>
+    {form.values.partnerClass && <p className={styles.hint}>Followers can fill up to half the total capacity. Lead and Switch share the remaining places.</p>}
     <p className={styles.hint}>For classes with registrations, day, times and class type stay fixed. Capacity changes affect remaining places.</p>
     <FormMessage {...form} name="formError" />
     <div className={styles.actions}>
@@ -88,11 +86,10 @@ const publishedTime = (value) => new Intl.DateTimeFormat("en-GB", {
 }).format(new Date(value));
 
 function CapacityEditor({ session, version, onSave, disabled, onBusyChange }) {
-  const pools = session.partnerClass ? ["lead", "follow"] : ["total"];
+  const pools = ["total"];
   const form = useFormState({
     baseId: `capacity-editor-${session.id}`, resetOnUnmount: false,
-    values: { leadCapacity: String(session.capacity.lead ?? ""), followCapacity: String(session.capacity.follow ?? ""),
-      totalCapacity: String(session.capacity.total ?? ""), formError: "" },
+    values: { totalCapacity: String(session.capacity.total ?? ""), formError: "" },
     onValidate: (values) => {
       const result = validateSchedule({ ...session, ...values });
       if (!result.valid) throw result.errors;
@@ -118,11 +115,12 @@ function CapacityEditor({ session, version, onSave, disabled, onBusyChange }) {
     <div className={styles.grid}>{pools.map((pool) => {
       const field = `${pool}Capacity`;
       return <div className={styles.field} key={pool}>
-        <FormLabel {...form} name={field}>{pool === "lead" ? "Lead capacity" : pool === "follow" ? "Follow capacity" : "Total capacity"}</FormLabel>
+        <FormLabel {...form} name={field}>Total capacity</FormLabel>
         <FormInput {...form} name={field} type="number" min={0} max={1000} step={1} disabled={disabled || form.submitting} />
         <FormMessage {...form} name={field} />
       </div>;
     })}</div>
+    {session.partnerClass && <p className={styles.hint}>Followers can fill up to half the total capacity. Lead and Switch share the remaining places.</p>}
     <p className={styles.hint}>Saves to Google Sheets and publishes the new capacity. Existing bookings are kept.</p>
     <FormMessage {...form} name="formError" />
     <div className={styles.actions}>
@@ -140,10 +138,10 @@ function ClassPreview({ session, source, onSave, disabled, onBusyChange }) {
     <dl className={styles.details}>
       <div><dt>When</dt><dd>{session.day}{session.date ? ` · ${session.date}` : ""} · {session.start}–{session.end}</dd></div>
       <div><dt>Room</dt><dd>{session.room || "To be announced"}</dd></div>
-      <div><dt>Format</dt><dd>{session.partnerClass ? "Partner class · lead / follow" : session.format === "talk" ? "Talk" : "Solo class"}</dd></div>
+      <div><dt>Format</dt><dd>{session.partnerClass ? "Partner class · lead / follow / switch" : session.format === "talk" ? "Talk" : "Solo class"}</dd></div>
       {session.levels && <div><dt>Levels</dt><dd>{Array.isArray(session.levels) ? session.levels.join(", ") : session.levels}</dd></div>}
       <div><dt>Capacity</dt><dd>{session.partnerClass
-        ? `${session.capacity.lead} lead · ${session.capacity.follow} follow`
+        ? `${session.capacity.total} total · up to ${Math.floor(session.capacity.total / 2)} followers`
         : session.format === "talk" ? "Open · no capacity limit" : `${session.capacity.total} places`}</dd></div>
       {session.bookable === false && <div><dt>Registration</dt><dd>Not available for self-service booking</dd></div>}
     </dl>

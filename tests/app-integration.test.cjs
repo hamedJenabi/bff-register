@@ -76,7 +76,7 @@ test(
         "00007-create-reg2026-bookings",
         "00008-reg2026-order-safety",
         "00009-create-schedule-overrides-2026",
-        "00010-reg2026-reopen-registration", "00013-reg2026-sheet-schedule",
+        "00010-reg2026-reopen-registration", "00013-reg2026-sheet-schedule", "00015-reg2026-switch-role",
         "00011-attendee-app-access",
       ]) {
         await sql.begin((tx) => require(`../migrations/${migration}`).up(tx));
@@ -100,7 +100,7 @@ test(
       const waiting = await createPerson("Waiting", "fullpass", "waitinglist");
       await registration.editClasses(
         alice.id,
-        [{ sessionId: "fri-1330-kantine", role: "lead" }],
+        [{ sessionId: "fri-1330-kantine", role: "switch" }],
         "",
       );
       await sql`UPDATE registrations_26 SET theme_class = ${serializeThemeClass([{ sessionId: "sat-1130-superar-1" }])} WHERE id = ${bob.id}`;
@@ -136,7 +136,7 @@ test(
           assert.equal(a.body.participant.danceRole, "follow");
           assert.deepEqual(
             a.body.classes.map((entry) => [entry.sessionId, entry.role]),
-            [["fri-1330-kantine", "lead"]],
+            [["fri-1330-kantine", "switch"]],
           );
           assert.equal(a.body.participant.price, undefined);
           assert.equal(a.body.participant.theme_class, undefined);

@@ -16,7 +16,7 @@ const hash = (sessions) => createHash('sha256').update(JSON.stringify(sessions))
 const response = (data, ok = true) => ({ ok, text: async () => JSON.stringify(data) });
 const metadata = { sheets: [{ properties: { title: "Teacher's Schedule", gridProperties: { rowCount:1000, columnCount:26 } } }] };
 const publication = () => ({ id:1, spreadsheetId:id, sheetName:"Teacher's Schedule", sourceHash:hash(parseScheduleRows(values())), count:2, publishedAt:'2026-10-27T12:00:00Z' });
-const expected = (lead = 12) => parseScheduleRows(values()).map((session) => session.id === 'partner-test' ? { ...session, capacity:{ lead, follow:13 } } : session);
+const expected = (total = 25) => parseScheduleRows(values()).map((session) => session.id === 'partner-test' ? { ...session, capacity:{ total } } : session);
 const withEnv = async (updates, action) => {
   const previous = Object.fromEntries(Object.keys(updates).map((key) => [key,process.env[key]]));
   for (const [key,value] of Object.entries(updates)) value === undefined ? delete process.env[key] : process.env[key] = value;
@@ -53,14 +53,14 @@ const google = ({ editedBeforeRead=false, failWrite=false, concurrent=false, reo
 
 test('capacity saves update only the matched source row and use a separate write-scoped token',async()=>{
   const api=google({reordered:true});
-  await writeScheduleCapacityToSheet({publication:publication(),id:'partner-test',capacity:{lead:12,follow:13},sessions:expected(),fetchImpl:api.fetchImpl,credentials:credentials()});
+  await writeScheduleCapacityToSheet({publication:publication(),id:'partner-test',capacity:{total:25},sessions:expected(),fetchImpl:api.fetchImpl,credentials:credentials()});
   const writes=api.calls.filter(({url})=>url.endsWith('/values:batchUpdate'));
   assert.equal(writes.length,1);
   assert.equal(writes[0].options.headers.Authorization,'Bearer write-token');
   assert.deepEqual(JSON.parse(writes[0].options.body),{valueInputOption:'RAW',data:[
-    {range:"'Teacher''s Schedule'!L3",values:[[12]]},
-    {range:"'Teacher''s Schedule'!M3",values:[[13]]},
-    {range:"'Teacher''s Schedule'!N3",values:[['']]},
+    {range:"'Teacher''s Schedule'!L3",values:[['']]},
+    {range:"'Teacher''s Schedule'!M3",values:[['']]},
+    {range:"'Teacher''s Schedule'!N3",values:[[25]]},
   ]});
   assert.deepEqual(api.scopes,['https://www.googleapis.com/auth/spreadsheets.readonly','https://www.googleapis.com/auth/spreadsheets']);
   const readCalls=api.calls.filter(({url})=>url.includes('/values/')||url.includes('?fields='));
@@ -70,7 +70,7 @@ test('capacity saves update only the matched source row and use a separate write
 
 test('unsynced Sheet edits never get overwritten or published by a dashboard capacity save',async()=>{
   const api=google({editedBeforeRead:true});
-  await assert.rejects(writeScheduleCapacityToSheet({publication:publication(),id:'partner-test',capacity:{lead:12,follow:13},sessions:expected(),fetchImpl:api.fetchImpl,credentials:credentials()}),error=>error.status===409);
+  await assert.rejects(writeScheduleCapacityToSheet({publication:publication(),id:'partner-test',capacity:{total:25},sessions:expected(),fetchImpl:api.fetchImpl,credentials:credentials()}),error=>error.status===409);
   assert.equal(api.calls.filter(({url})=>url.endsWith('/values:batchUpdate')).length,0);
   assert.equal(api.scopes.length,1);
 });
@@ -78,7 +78,7 @@ test('unsynced Sheet edits never get overwritten or published by a dashboard cap
 test('write failures and concurrent Sheet changes preserve actionable errors without leaking provider responses',async()=>{
   for (const setup of [{failWrite:true},{concurrent:true}]) {
     const api=google(setup);
-    await assert.rejects(writeScheduleCapacityToSheet({publication:publication(),id:'partner-test',capacity:{lead:12,follow:13},sessions:expected(),fetchImpl:api.fetchImpl,credentials:credentials()}),error=>{
+    await assert.rejects(writeScheduleCapacityToSheet({publication:publication(),id:'partner-test',capacity:{total:25},sessions:expected(),fetchImpl:api.fetchImpl,credentials:credentials()}),error=>{
       assert.equal(error.status,setup.failWrite?503:409);
       assert.ok(!error.message.includes('provider-secret'));
       assert.match(error.message,/published schedule was kept/);
@@ -92,14 +92,14 @@ test('capacity save orchestration retains Google Sheets authority and rejects un
   const store={schedulePublication:async()=>published,schedule:async()=>expected(),editPublishedCapacity:async(...args)=>{
     requests.push(args); published={...published,id:2}; return published;
   }};
-  const saved=await saveScheduleCapacity(store,{id:'partner-test',capacity:{lead:12,follow:13},version:1},writer);
+  const saved=await saveScheduleCapacity(store,{id:'partner-test',capacity:{total:25},version:1},writer);
   assert.equal(saved.source.publication.id,2); assert.equal(saved.unchanged,false);
-  assert.deepEqual(requests[0].slice(0,3),['partner-test',{lead:12,follow:13},1]); assert.equal(requests[0][3],writer);
+  assert.deepEqual(requests[0].slice(0,3),['partner-test',{total:25},1]); assert.equal(requests[0][3],writer);
   process.env.REG2026_SCHEDULE_SHEET_ID='1differentWorkbook_01234567890';
-  await assert.rejects(saveScheduleCapacity(store,{id:'partner-test',capacity:{lead:12,follow:13},version:2},writer),error=>error.status===409);
+  await assert.rejects(saveScheduleCapacity(store,{id:'partner-test',capacity:{total:25},version:2},writer),error=>error.status===409);
   assert.equal(requests.length,1);
   store.schedulePublication=async()=>null;
-  await assert.rejects(saveScheduleCapacity(store,{id:'partner-test',capacity:{lead:12,follow:13},version:0},writer),error=>error.status===409);
+  await assert.rejects(saveScheduleCapacity(store,{id:'partner-test',capacity:{total:25},version:0},writer),error=>error.status===409);
 }));
 
 test('capacity HTTP saves require organizer authentication, same origin and a published source',async()=>withEnv({ADMIN_USER:'capacity-organizer',ADMIN_SESSION_SECRET:'capacity-test-secret',REG2026_SCHEDULE_SHEET_ID:id,REG2026_SCHEDULE_SHEET_NAME:"Teacher's Schedule"},async()=>{
@@ -107,13 +107,13 @@ test('capacity HTTP saves require organizer authentication, same origin and a pu
   const previousDb=require.cache[dbPath],previousEndpoint=require.cache[endpointPath]; let writes=0;
   const pub=publication();
   const store={schedulePublication:async()=>pub,schedule:async()=>expected(),editPublishedCapacity:async(sessionId,capacity,version)=>{
-    writes+=1; assert.equal(sessionId,'partner-test'); assert.deepEqual(capacity,{lead:12,follow:13}); assert.equal(version,1); return pub;
+    writes+=1; assert.equal(sessionId,'partner-test'); assert.deepEqual(capacity,{total:25}); assert.equal(version,1); return pub;
   }};
   const res=()=>({headers:{},code:200,setHeader(k,v){this.headers[k]=v;},status(v){this.code=v;return this;},json(v){this.body=v;return this;},end(){return this;}});
   require.cache[dbPath]={id:dbPath,filename:dbPath,loaded:true,exports:{registrationStore:store}}; delete require.cache[endpointPath];
   try {
     const handler=require('../pages/api/reg2026/schedule').default;
-    const body={action:'capacity',id:'partner-test',version:1,capacity:{lead:12,follow:13}};
+    const body={action:'capacity',id:'partner-test',version:1,capacity:{total:25}};
     const unauth=res();await handler({method:'POST',headers:{},body},unauth);assert.equal(unauth.code,401);
     const auth=res();setAdminSession(auth);const cookie=auth.headers['Set-Cookie'].split(';')[0];
     const denied=res();await handler({method:'POST',headers:{cookie,host:'register.example.com',origin:'https://different.example.com'},body},denied);assert.equal(denied.code,403);assert.equal(writes,0);

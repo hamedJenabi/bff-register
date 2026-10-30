@@ -47,7 +47,7 @@ const http = require('node:http');
     started = true;
     const url = `postgres://${encodeURIComponent(os.userInfo().username)}@127.0.0.1:${port}/postgres`;
     const sql = postgres(url, { onnotice: () => {} });
-    for (const file of ['00004-CREAT-registraion-2026', '00006-create-class-capacities-2026', '00007-create-reg2026-bookings', '00008-reg2026-order-safety', '00009-create-schedule-overrides-2026', '00010-reg2026-reopen-registration', '00013-reg2026-sheet-schedule', '00014-reg2026-schedule-invitations']) {
+    for (const file of ['00004-CREAT-registraion-2026', '00006-create-class-capacities-2026', '00007-create-reg2026-bookings', '00008-reg2026-order-safety', '00009-create-schedule-overrides-2026', '00010-reg2026-reopen-registration', '00013-reg2026-sheet-schedule', '00014-reg2026-schedule-invitations', '00015-reg2026-switch-role']) {
       await sql.begin((tx) => require(`../migrations/${file}`).up(tx));
     }
     await sql`CREATE TABLE tickets_26 (id SERIAL, name TEXT, label TEXT, capacity INTEGER, waiting_list INTEGER)`;

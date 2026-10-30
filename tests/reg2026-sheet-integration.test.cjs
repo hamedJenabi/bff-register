@@ -23,7 +23,7 @@ test("sheet schedules publish atomically and protect real registrations on isola
   const previousSheet = process.env.REG2026_SCHEDULE_SHEET_ID;
   delete process.env.REG2026_SCHEDULE_SHEET_ID;
   try {
-    for (const migration of ["00004-CREAT-registraion-2026", "00006-create-class-capacities-2026", "00007-create-reg2026-bookings", "00008-reg2026-order-safety", "00009-create-schedule-overrides-2026", "00010-reg2026-reopen-registration", "00013-reg2026-sheet-schedule"]) {
+    for (const migration of ["00004-CREAT-registraion-2026", "00006-create-class-capacities-2026", "00007-create-reg2026-bookings", "00008-reg2026-order-safety", "00009-create-schedule-overrides-2026", "00010-reg2026-reopen-registration", "00013-reg2026-sheet-schedule", "00015-reg2026-switch-role"]) {
       await sql.begin((tx) => require(`../migrations/${migration}`).up(tx));
     }
     const store = createRegistrationStore(sql);
@@ -56,6 +56,14 @@ test("sheet schedules publish atomically and protect real registrations on isola
       assert.equal((await store.schedule()).length, 2);
       await assert.rejects(store.editSchedule(sessions[0].id, {}, publication.id), (error) => error.status === 409);
       process.env.REG2026_SCHEDULE_SHEET_ID = sheetId;
+    });
+
+    await t.test("existing role-pool publications normalize to the shared total without requiring a reset or Sheet rewrite", async () => {
+      const legacy = sessions.map((session) => session.partnerClass ? { ...session, capacity: { lead: 20, follow: 20 } } : session);
+      await sql`UPDATE schedule_publications_26 SET sessions = ${sql.json(legacy)}, source_hash = ${source(legacy).sourceHash} WHERE id = ${publication.id}`;
+      assert.deepEqual((await store.schedule()).find((session) => session.partnerClass).capacity, { total: 40 });
+      assert.equal((await store.schedulePublication()).sourceHash, source(sessions).sourceHash);
+      assert.equal((await store.publishSchedule(source(sessions), publication.id)).id, publication.id);
     });
 
     await t.test("identical syncs reuse their revision and stale edits cannot replace a newer publication", async () => {
@@ -169,22 +177,22 @@ test("sheet schedules publish atomically and protect real registrations on isola
       const updateSheet = async (request) => {
         assert.equal(request.publication.id, publication.id);
         assert.equal(request.id, "sheet-session-b");
-        assert.deepEqual(request.capacity, { lead: 12, follow: 13 });
+        assert.deepEqual(request.capacity, { total: 25 });
         writes.push(request);
       };
       const oldVersion = publication.id;
-      publication = await store.editPublishedCapacity("sheet-session-b", { lead: "12", follow: "13" }, oldVersion, updateSheet);
+      publication = await store.editPublishedCapacity("sheet-session-b", { total: "25" }, oldVersion, updateSheet);
       assert.equal(writes.length, 1);
       assert.ok(publication.id > oldVersion);
       const after = await store.schedule();
-      assert.deepEqual(after.find((session) => session.id === "sheet-session-b").capacity, { lead: 12, follow: 13 });
+      assert.deepEqual(after.find((session) => session.id === "sheet-session-b").capacity, { total: 25 });
       const details = (sessions) => sessions.map(({ capacity, version, ...session }) => session);
       assert.deepEqual(details(after), details(before));
-      const repeated = await store.editPublishedCapacity("sheet-session-b", { lead: 12, follow: 13 }, publication.id, updateSheet);
+      const repeated = await store.editPublishedCapacity("sheet-session-b", { total: 25 }, publication.id, updateSheet);
       assert.equal(repeated.id, publication.id);
       assert.equal(writes.length, 1);
-      await assert.rejects(store.editPublishedCapacity("sheet-session-b", { lead: 15, follow: 15 }, oldVersion, updateSheet), (error) => error.status === 409);
-      for (const invalid of [{ lead: "", follow: 15 }, { lead: -1, follow: 15 }, { lead: 1001, follow: 15 }, { lead: 12, follow: 13, total: 30 }]) {
+      await assert.rejects(store.editPublishedCapacity("sheet-session-b", { total: 30 }, oldVersion, updateSheet), (error) => error.status === 409);
+      for (const invalid of [{ total: "" }, { total: -1 }, { total: 1001 }, { lead: 12, total: 30 }]) {
         await assert.rejects(store.editPublishedCapacity("sheet-session-b", invalid, publication.id, updateSheet), (error) => error.status === 422);
       }
       await assert.rejects(store.editPublishedCapacity("sheet-open-talk", {}, publication.id, updateSheet), (error) => error.status === 422);
@@ -198,14 +206,14 @@ test("sheet schedules publish atomically and protect real registrations on isola
     await t.test("failed Sheet writes or changed sources keep the published schedule and simultaneous edits reject stale saves", async () => {
       const before = await store.schedule();
       for (const status of [503, 409]) {
-        await assert.rejects(store.editPublishedCapacity("sheet-session-b", { lead: 14, follow: 14 }, publication.id,
+        await assert.rejects(store.editPublishedCapacity("sheet-session-b", { total: 28 }, publication.id,
           async () => { const error = new Error("Sheet update failed"); error.status = status; throw error; }), (error) => error.status === status);
         assert.equal((await store.schedulePublication()).id, publication.id);
         assert.deepEqual(await store.schedule(), before);
       }
       let writes = 0;
       const version = publication.id;
-      const changes = await Promise.allSettled([11, 10].map((lead) => store.editPublishedCapacity("sheet-session-b", { lead, follow: 13 }, version,
+      const changes = await Promise.allSettled([24, 23].map((total) => store.editPublishedCapacity("sheet-session-b", { total }, version,
         async () => { writes += 1; })));
       assert.equal(changes.filter((entry) => entry.status === "fulfilled").length, 1);
       assert.equal(changes.find((entry) => entry.status === "rejected").reason.status, 409);

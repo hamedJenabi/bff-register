@@ -23,7 +23,7 @@ test("registration orders on isolated Postgres", { skip: !process.env.TEST_DATAB
     emailSends.push(message);
   };
   try {
-    for (const file of ["00004-CREAT-registraion-2026", "00006-create-class-capacities-2026", "00007-create-reg2026-bookings", "00008-reg2026-order-safety", "00009-create-schedule-overrides-2026", "00010-reg2026-reopen-registration", "00013-reg2026-sheet-schedule"]) {
+    for (const file of ["00004-CREAT-registraion-2026", "00006-create-class-capacities-2026", "00007-create-reg2026-bookings", "00008-reg2026-order-safety", "00009-create-schedule-overrides-2026", "00010-reg2026-reopen-registration", "00013-reg2026-sheet-schedule", "00015-reg2026-switch-role"]) {
       await sql.begin((tx) => require(`../migrations/${file}`).up(tx));
     }
     const store = createRegistrationStore(sql);
@@ -32,12 +32,17 @@ test("registration orders on isolated Postgres", { skip: !process.env.TEST_DATAB
       assert.equal((await sql`SELECT * FROM schedule_overrides_26`).length, 0);
       const defaults = await store.availability();
       assert.equal(defaults.classes["fri-1330-ankersaal"].total.remaining, 30);
-      assert.equal(defaults.classes["fri-1330-kantine"].lead.remaining, 20);
+      assert.equal(defaults.classes["fri-1330-kantine"].total.remaining, 40);
+      assert.equal(defaults.classes["fri-1330-kantine"].lead.remaining, 40);
+      assert.equal(defaults.classes["fri-1330-kantine"].switch.remaining, 40);
       assert.equal(defaults.classes["fri-1330-kantine"].follow.remaining, 20);
       await sql`INSERT INTO class_capacities_26 (session_id, pool, capacity) VALUES ('fri-1330-kantine', 'lead', 12)`;
+      assert.equal((await store.availability()).classes["fri-1330-kantine"].lead.remaining, 40, "Legacy role limits no longer restrict the shared pool");
+      await sql`DELETE FROM class_capacities_26`;
+      await sql`INSERT INTO class_capacities_26 (session_id, pool, capacity) VALUES ('fri-1330-kantine', 'total', 24)`;
       const edited = await store.availability();
-      assert.equal(edited.classes["fri-1330-kantine"].lead.remaining, 12);
-      assert.equal(edited.classes["fri-1330-kantine"].follow.remaining, 20);
+      assert.equal(edited.classes["fri-1330-kantine"].lead.remaining, 24);
+      assert.equal(edited.classes["fri-1330-kantine"].follow.remaining, 12);
       await sql`DELETE FROM class_capacities_26`;
     });
     const [participant] = await sql`INSERT INTO registrations_26 (date,status,role,ticket,firstname,lastname,email,country,price)
@@ -109,7 +114,7 @@ test("registration orders on isolated Postgres", { skip: !process.env.TEST_DATAB
     await t.test("processing payments retain reservations past the one-hour window", async () => {
       const processing = await store.applyPayment(session(), "checkout.session.completed");
       assert.equal(processing.status, "payment_pending");
-      assert.equal((await store.availability()).classes["fri-1330-kantine"].lead.remaining, 19);
+      assert.equal((await store.availability()).classes["fri-1330-kantine"].lead.remaining, 39);
       const [row] = await sql`SELECT expires_at FROM class_bookings_26 WHERE order_id = ${pending.id}`;
       assert.equal(row.expires_at, null);
     });
@@ -354,7 +359,7 @@ test("registration orders on isolated Postgres", { skip: !process.env.TEST_DATAB
       assert.equal(invalid.code, 422); assert.ok(invalid.body.errors.title); assert.ok(invalid.body.errors.end); assert.ok(invalid.body.errors.totalCapacity);
       const changed = { ...scheduleFormValues(base), title: "Late Blues Workshop", teachers: "Catherine & Guest",
         description: "Practice pulse, connection and musical choices.", room: "Main Studio", start: "15:45", end: "17:00",
-        partnerClass: true, leadCapacity: "2", followCapacity: "3" };
+        partnerClass: true, totalCapacity: "5" };
       const emailCount = (await sql`SELECT COUNT(*)::INT AS count FROM registration_email_retries_26`)[0].count;
       const saved = response(); await endpoint({ method: "POST", headers, body: { id: base.id, version: 0, values: changed } }, saved);
       assert.equal(saved.code, 200); assert.equal(saved.body.session.version, 1);
@@ -362,7 +367,7 @@ test("registration orders on isolated Postgres", { skip: !process.env.TEST_DATAB
       assert.equal(saved.body.session.title, changed.title); assert.equal(saved.body.session.partnerClass, true);
       assert.equal((await sql`SELECT COUNT(*)::INT AS count FROM registration_email_retries_26`)[0].count, emailCount);
       assert.equal((await sql`SELECT * FROM schedule_overrides_26`).length, 1);
-      assert.equal((await sql`SELECT * FROM class_capacities_26`).length, 2);
+      assert.equal((await sql`SELECT * FROM class_capacities_26`).length, 1);
       const reloaded = await store.schedule();
       assert.equal(reloaded.find((session) => session.id === base.id).description, changed.description);
       const person = await createPerson("ScheduleParticipant");
@@ -375,13 +380,13 @@ test("registration orders on isolated Postgres", { skip: !process.env.TEST_DATAB
         teachers: changed.teachers, room: changed.room, role: "Lead",
       }]);
       const availability = await store.availability();
-      assert.equal(availability.classes[base.id].lead.remaining, 1); assert.equal(availability.classes[base.id].follow.remaining, 3);
+      assert.equal(availability.classes[base.id].lead.remaining, 4); assert.equal(availability.classes[base.id].follow.remaining, 2);
       const organizerView = await store.organizerClasses(person.id);
       assert.equal(organizerView.schedule.find((session) => session.id === base.id).title, changed.title);
       await assert.rejects(store.editSchedule(base.id, changed, 0), /changed in another session/);
       await assert.rejects(store.editSchedule(base.id, { ...changed, partnerClass: false }, 1), /has registrations/);
       await assert.rejects(store.editSchedule(base.id, { ...changed, start: "16:00" }, 1), /has registrations/);
-      const after = await store.editSchedule(base.id, { ...changed, description: "Updated workshop description.", leadCapacity: "0" }, 1);
+      const after = await store.editSchedule(base.id, { ...changed, description: "Updated workshop description.", totalCapacity: "0" }, 1);
       assert.equal(after.version, 2); assert.equal((await store.availability()).classes[base.id].lead.remaining, 0);
       assert.deepEqual((await store.organizerClasses(person.id)).classes, choice.classes);
       const [booking] = await sql`SELECT pool, status FROM class_bookings_26 WHERE registration_id = ${person.id}`;
