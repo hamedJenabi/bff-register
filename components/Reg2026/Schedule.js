@@ -14,6 +14,7 @@ import { scheduleDays, CLASS_SELECTION_LIMIT } from "../../lib/reg2026/catalog";
 import { indexSchedule, remainingPlaces, sessionsOverlap } from "../../lib/reg2026/schedule";
 import { validateDraft } from "../../lib/reg2026/validation";
 import { CLASS_ROLES, CLASS_ROLE_LABELS } from "../../lib/reg2026/capacity";
+import { conflictsWithSolo, SOLO_COMPETITION_NOTICE } from "../../lib/reg2026/competitions";
 import SwitchRoleNotice from "./SwitchRoleNotice";
 import styles from "./Registration.module.scss";
 
@@ -22,6 +23,7 @@ export default function Schedule({ participant, form, availability, disabled, se
   const scheduleById = indexSchedule(schedule);
   const draft = registrationDraft(form.values);
   const limitReached = draft.classes.length >= CLASS_SELECTION_LIMIT;
+  const soloCompetitor = draft.competitions.includes("solo_battle");
   const dialog = useDialogState({ baseId: "reg2026-class-dialog", animated: true });
   const switchDialog = useDialogState({ baseId: "reg2026-switch-dialog" });
   const { setAnimated, stopAnimation } = dialog;
@@ -72,6 +74,7 @@ export default function Schedule({ participant, form, availability, disabled, se
   return <section aria-labelledby="schedule-title">
     <h2 id="schedule-title">Your class schedule</h2>
     <p>Choose up to {CLASS_SELECTION_LIMIT} classes in total across the festival, with one per time slot. Every session is independent. Draft choices reserve no places until you submit.</p>
+    {soloCompetitor && <p className={styles.informationText} role="status">{SOLO_COMPETITION_NOTICE}</p>}
     <FormMessage {...form} name="classes" />
     {scheduleDays.map((day) => {
       const sessions = schedule.filter((session) => session.day === day && session.bookable !== false);
@@ -83,13 +86,15 @@ export default function Schedule({ participant, form, availability, disabled, se
           const slot = sessions.filter((session) => session.start === time);
           const sharedEnd = slot.every((session) => session.end === slot[0].end);
           return <div className={styles.timeSlot} key={time}>
-            <h4>{time}{sharedEnd ? `–${slot[0].end}` : ""}</h4>
+            <h4 id={`reg2026-slot-${day.toLowerCase()}-${time.replace(":", "")}`} tabIndex={-1}>{time}{sharedEnd ? `–${slot[0].end}` : ""}</h4>
             <div className={styles.classGrid}>
               {slot.map((session) => {
                 const choice = selected(session.id);
+                const soloConflict = soloCompetitor && conflictsWithSolo(session);
                 const conflict = draft.classes.some((selection) => sessionsOverlap(session, scheduleById[selection.sessionId]));
-                const blocked = (conflict || limitReached) && !choice;
-                const status = choice ? `Selected${choice.role ? ` · ${choice.role}` : ""}`
+                const blocked = (soloConflict || conflict || limitReached) && !choice;
+                const status = soloConflict ? "Reserved for Cuttin' · Solo competitors only"
+                  : choice ? `Selected${choice.role ? ` · ${choice.role}` : ""}`
                   : limitReached ? `${CLASS_SELECTION_LIMIT}-class limit reached`
                     : blocked ? "Another class selected in this slot" : full(session) ? "Sold out"
                       : session.partnerClass && places(session, "follow") <= 0 ? "Sold out for followers" : null;

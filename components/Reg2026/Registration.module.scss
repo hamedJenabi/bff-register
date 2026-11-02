@@ -28,6 +28,9 @@ $accent: #ffd69c;
 .main { max-width: 1380px; margin: auto; padding: 32px 0; }
 .intro { margin-bottom: 28px; }
 .notice { padding: 16px; border-left: 3px solid $accent; background: $panel; margin: 18px 0; }
+.page p.informationText, .dialog p.informationText { font-size: 12px; font-style: italic; }
+.page section.competitionSection { background: #4b2437; border-color: #9c6b80; }
+.page section.lunchSection { background: #343047; border-color: #85809c; }
 .actions { display: flex; flex-wrap: wrap; gap: 12px; margin: 16px 0; }
 .registrationLayout { display: grid; grid-template-columns: 180px minmax(0, 1fr); gap: 24px; align-items: start; }
 .registrationLayout > form { min-width: 0; }

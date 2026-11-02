@@ -52,6 +52,28 @@ test("competition roles and invalid choices cannot bypass validation", () => {
   assert.equal(validateDraft({ ...empty(), classes: [null] }, { ticket: "fullpass" }).valid, false);
 });
 
+test("Solo competitors reserve Saturday 16:00-17:15, including partially overlapping published classes", () => {
+  const participant = { ticket: "fullpass" };
+  const solo = { ...empty(), competitions: ["solo_battle"] };
+  for (const session of schedule.filter((session) => session.day === "Saturday" && session.start === "16:00")) {
+    const result = validateDraft({ ...solo, classes: [{ sessionId: session.id, role: "lead" }] }, participant);
+    assert.equal(result.valid, false);
+    assert.match(result.errors.classes, /Cuttin'.*Saturday, 16:00–17:15/);
+    assert.equal(result.errors.competitions, result.errors.classes);
+    assert.equal(validateDraft({ ...empty(), classes: [{ sessionId: session.id, role: "lead" }] }, participant).valid, true);
+  }
+  const base = schedule.find((session) => !session.partnerClass);
+  for (const [day, start, end, conflict] of [
+    ["Saturday", "15:30", "16:15", true], ["Saturday", "17:00", "18:00", true],
+    ["Saturday", "15:00", "16:00", false], ["Saturday", "17:15", "18:30", false],
+    ["Sunday", "16:00", "17:15", false],
+  ]) {
+    const sessions = [{ ...base, day, start, end }];
+    assert.equal(validateDraft({ ...solo, classes: [{ sessionId: base.id }] }, participant, sessions).valid, !conflict);
+  }
+  assert.equal(validateDraft(solo, { ticket: "partyPass" }).valid, true);
+});
+
 test("Switch is a partner-class role and survives saved choices, but competition roles stay lead/follow", () => {
   const draft = { ...empty(), classes: [{ sessionId: "fri-1330-kantine", role: "switch" }] };
   const result = validateDraft(draft, { ticket: "fullpass" });
