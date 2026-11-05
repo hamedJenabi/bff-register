@@ -34,6 +34,21 @@ export default function Schedule({ participant, form, availability, disabled, se
     preference.addEventListener("change", sync);
     return () => preference.removeEventListener("change", sync);
   }, [setAnimated, stopAnimation]);
+  const scheduleRef = useRef(null);
+  useEffect(() => {
+    if (!("IntersectionObserver" in window)) return;
+    const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const visibleThreshold = 0.5;
+    const observer = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        if (entry.intersectionRatio < visibleThreshold) continue;
+        observer.unobserve(entry.target);
+        if (!motion.matches) entry.target.dataset.highlight = "true";
+      }
+    }, { threshold: visibleThreshold });
+    scheduleRef.current.querySelectorAll(`.${styles.day} > h3`).forEach((heading) => observer.observe(heading));
+    return () => observer.disconnect();
+  }, []);
   const finalFocusRef = useRef(null);
   const switchFocusRef = useRef(null);
   const [active, setActive] = useState(null);
@@ -71,7 +86,7 @@ export default function Schedule({ participant, form, availability, disabled, se
     setActive(session); dialog.show();
   };
   const remove = (id) => form.update("classes", draft.classes.filter((choice) => choice.sessionId !== id));
-  return <section aria-labelledby="schedule-title">
+  return <section ref={scheduleRef} aria-labelledby="schedule-title">
     <h2 id="schedule-title">Your class schedule</h2>
     <p>Choose up to {CLASS_SELECTION_LIMIT} classes in total across the festival, with one per time slot. Every session is independent. Draft choices reserve no places until you submit.</p>
     {soloCompetitor && <p className={styles.informationText} role="status">{SOLO_COMPETITION_NOTICE}</p>}
