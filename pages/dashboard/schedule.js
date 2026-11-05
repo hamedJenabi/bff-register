@@ -1,6 +1,7 @@
 import Head from "next/head";
 import Link from "next/link";
 import { useState } from "react";
+import { useTabState, Tab, TabList, TabPanel } from "reakit/Tab";
 import {
   unstable_useFormState as useFormState, unstable_Form as Form,
   unstable_FormInput as FormInput, unstable_FormLabel as FormLabel,
@@ -10,6 +11,7 @@ import {
 import { adminPageRedirect } from "../../lib/admin/session";
 import { scheduleDays } from "../../lib/reg2026/catalog";
 import { scheduleFormValues, validateSchedule } from "../../lib/reg2026/schedule";
+import CapacityOverview from "../../components/Reg2026/CapacityOverview";
 import styles from "./Schedule.module.scss";
 
 function ClassEditor({ session, onSave }) {
@@ -27,7 +29,7 @@ function ClassEditor({ session, onSave }) {
           body: JSON.stringify({ id: session.id, version: session.version, values }) });
         const result = await response.json();
         if (!response.ok) throw { ...result.errors, formError: result.error || "Could not save class details." };
-        onSave(result.schedule);
+        onSave(result);
       } catch (error) {
         if (error.formError) throw error;
         throw { formError: error.message || "Could not save class details." };
@@ -153,15 +155,18 @@ function ClassPreview({ session, source, onSave, disabled, onBusyChange }) {
   </section>;
 }
 
-export default function ScheduleAdmin({ initial, source: initialSource, loadError }) {
+export default function ScheduleAdmin({ initial, source: initialSource, inventory: initialInventory, loadError }) {
   const [sessions, setSessions] = useState(initial || []);
   const [source, setSource] = useState(initialSource || null);
+  const [inventory, setInventory] = useState(initialInventory || {});
+  const tabs = useTabState({ baseId: "schedule-view", selectedId: "schedule-details-tab" });
   const [selected, setSelected] = useState(initial?.[0]?.id || "");
   const [query, setQuery] = useState("");
   const [day, setDay] = useState("");
   const [message, setMessage] = useState("");
   const [syncing, setSyncing] = useState(false);
   const [savingCapacity, setSavingCapacity] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [syncError, setSyncError] = useState("");
   const [diagnostics, setDiagnostics] = useState([]);
   const sheetsMode = !!(source?.configured || source?.publication);
@@ -171,8 +176,23 @@ export default function ScheduleAdmin({ initial, source: initialSource, loadErro
   const updatePublished = (result) => {
     setSessions(result.schedule || []);
     setSource(result.source || null);
+    setInventory(result.inventory || {});
     setSelected((current) => result.schedule?.some((session) => session.id === current)
       ? current : result.schedule?.[0]?.id || "");
+  };
+  const capacitySaved = (result) => {
+    updatePublished(result); setSyncError(""); setDiagnostics([]);
+    setMessage(result.unchanged ? "Capacity is already up to date." : sheetsMode ? "Capacity saved to Google Sheets and published." : "Capacity saved.");
+  };
+  const refreshCounts = async () => {
+    setRefreshing(true); setMessage("");
+    try {
+      const response = await fetch("/api/reg2026/schedule", { cache: "no-store" });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Could not refresh registrations.");
+      updatePublished(result); setSyncError(""); setDiagnostics([]); setMessage("Registration counts refreshed.");
+    } catch (error) { setSyncError(error.message || "Could not refresh registrations. Please try again."); }
+    finally { setRefreshing(false); }
   };
   const syncSchedule = async () => {
     setSyncing(true); setMessage(""); setSyncError(""); setDiagnostics([]);
@@ -206,7 +226,11 @@ export default function ScheduleAdmin({ initial, source: initialSource, loadErro
     <header className={styles.header}><h1>Schedule</h1><p>{sheetsMode
       ? "Edit class capacities here, or update the schedule in Google Sheets and sync it to publish a complete update."
       : "Edit class details for the registration form. Mock classes appear until you save changes."}</p></header>
-    {sheetsMode && <section className={styles.source} aria-labelledby="schedule-source-title" aria-busy={syncing}>
+    <TabList {...tabs} className={styles.viewTabs} aria-label="Schedule views">
+      <Tab {...tabs} id="schedule-details-tab" disabled={syncing || savingCapacity || refreshing}>Class details</Tab>
+      <Tab {...tabs} id="schedule-capacity-tab" disabled={syncing || savingCapacity || refreshing}>Capacity overview</Tab>
+    </TabList>
+    {sheetsMode && tabs.selectedId === "schedule-details-tab" && <section className={styles.source} aria-labelledby="schedule-source-title" aria-busy={syncing}>
       <h2 id="schedule-source-title">Google Sheets schedule</h2>
       {source.publication ? <p>Last published {publishedTime(source.publication.publishedAt)} Vienna time · {source.publication.count} sessions</p>
         : <p>No schedule has been published yet. Complete the sheet, then sync it here.</p>}
@@ -232,7 +256,7 @@ export default function ScheduleAdmin({ initial, source: initialSource, loadErro
     </div>}
     {(!loadError || sheetsMode) && <>
       <p role="status" aria-live="polite" className={styles.message}>{message}</p>
-      <div className={styles.layout}>
+      <TabPanel {...tabs} id="schedule-details-panel" tabId="schedule-details-tab" className={styles.tabPanel}><div className={styles.layout}>
         <section className={styles.list} aria-label="Schedule classes">
           <label>Search classes<input type="search" value={query} onChange={(event) => setQuery(event.target.value)} /></label>
           <label>Filter by day<select value={day} onChange={(event) => setDay(event.target.value)}>
@@ -251,13 +275,15 @@ export default function ScheduleAdmin({ initial, source: initialSource, loadErro
           </div>
         </section>
         {active ? sheetsMode ? <ClassPreview key={`${active.id}-${source.publication?.id}`} session={active} source={source}
-          disabled={syncing} onBusyChange={setSavingCapacity} onSave={(result) => {
-            updatePublished(result); setSyncError(""); setDiagnostics([]);
-            setMessage(result.unchanged ? "Capacity is already up to date." : "Capacity saved to Google Sheets and published.");
-          }} /> : <ClassEditor key={`${active.id}-${active.version}`} session={active}
-          onSave={(schedule) => { setSessions(schedule); setMessage("Class saved. The registration form now shows these details."); }} />
+          disabled={syncing || refreshing} onBusyChange={setSavingCapacity} onSave={capacitySaved} /> : <ClassEditor key={`${active.id}-${active.version}`} session={active}
+          onSave={(result) => { updatePublished(result); setMessage("Class saved. The registration form now shows these details."); }} />
           : sheetsMode && <section className={styles.preview}><h2>Published schedule</h2><p>Published classes will appear here after the first successful sync.</p></section>}
-      </div>
+      </div></TabPanel>
+      <TabPanel {...tabs} id="schedule-capacity-panel" tabId="schedule-capacity-tab" className={styles.tabPanel}>
+        <CapacityOverview sessions={sessions} inventory={inventory} source={source} sheetsMode={sheetsMode}
+          disabled={syncing || savingCapacity} onBusyChange={setSavingCapacity} onSave={capacitySaved}
+          onRefresh={refreshCounts} refreshing={refreshing} />
+      </TabPanel>
     </>}
   </main>;
 }
@@ -268,8 +294,8 @@ export async function getServerSideProps({ req, res }) {
   try {
     const { registrationStore: store } = await import("../../db/reg2026");
     const { getScheduleAdminState } = await import("../../lib/reg2026/google-sheets");
-    const { schedule, source } = await getScheduleAdminState(store);
-    return { props: { initial: schedule, source, loadError: null } };
+    const { schedule, source, inventory } = await getScheduleAdminState(store);
+    return { props: { initial: schedule, source, inventory, loadError: null } };
   } catch {
     return { props: { initial: null, loadError: "Schedule is temporarily unavailable. Please try again." } };
   }

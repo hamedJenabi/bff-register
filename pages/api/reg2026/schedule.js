@@ -21,6 +21,6 @@ export default async function handler(req, res) {
       throw new RegistrationError(422, "Reload the current class details before saving.");
     }
     const session = await store.editSchedule(req.body.id, req.body.values, req.body.version);
-    return res.json({ session, schedule: await store.schedule() });
+    return res.json({ session, ...(await getScheduleAdminState(store)) });
   } catch (error) { return apiError(res, error); }
 }

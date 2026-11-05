@@ -94,7 +94,6 @@ test("sheet schedules publish atomically and protect real registrations on isola
       const current = await store.schedule();
       const mutations = [
         current.filter(({ id }) => id !== "sheet-session-a"),
-        current.map((session) => session.id === "sheet-session-a" ? { ...session, start: "13:00" } : session),
         current.map((session) => session.id === "sheet-session-a" ? { ...session, day: "Saturday" } : session),
         current.map((session) => session.id === "sheet-session-a" ? { ...session, partnerClass: true, format: "partner", capacity: { lead: 20, follow: 20 } } : session),
       ];
@@ -106,11 +105,58 @@ test("sheet schedules publish atomically and protect real registrations on isola
       assert.equal((await sql`SELECT * FROM class_bookings_26 WHERE registration_id = ${registered.id}`).length, 1);
     });
 
+    await t.test("safe timetable corrections publish without changing saved choices, bookings or order history", async () => {
+      const before = await sql`SELECT * FROM class_bookings_26 ORDER BY id`;
+      const orders = await sql`SELECT * FROM reg2026_orders ORDER BY id`;
+      const people = await sql`SELECT id, theme_class FROM registrations_26 ORDER BY id`;
+      const current = await store.schedule();
+      const next = current.map((session) => session.id === "sheet-session-a" ? { ...session, start: "13:15", end: "14:30", room: "New room" } : session);
+      publication = await store.publishSchedule(source(next), publication.id);
+      assert.equal((await store.schedule()).find(({ id }) => id === "sheet-session-a").start, "13:15");
+      assert.deepEqual(await sql`SELECT * FROM class_bookings_26 ORDER BY id`, before);
+      assert.deepEqual(await sql`SELECT * FROM reg2026_orders ORDER BY id`, orders);
+      assert.deepEqual(await sql`SELECT id, theme_class FROM registrations_26 ORDER BY id`, people);
+    });
+
+    await t.test("retiming rejects overlaps in saved selections and retained order drafts", async () => {
+      const person = await createPerson("RetimedChoices");
+      const classes = [{ sessionId: "sheet-session-a" }, { sessionId: "sheet-session-b", role: "follow" }];
+      await store.submit(person, { ...empty(), classes }, "retimed-pair-01");
+      const current = await store.schedule();
+      const overlap = current.map((session) => session.id === "sheet-session-a" ? { ...session, end: "15:45" } : session);
+      await assert.rejects(store.publishSchedule(source(overlap), publication.id), (error) => error.status === 409 && /overlap/.test(error.errors["sheet-session-a"]));
+      // Even without current booking rows, a delayed payment may fulfill a draft.
+      await sql`DELETE FROM class_bookings_26 WHERE registration_id = ${person.id}`;
+      await sql`UPDATE registrations_26 SET theme_class = '' WHERE id = ${person.id}`;
+      await sql`UPDATE reg2026_orders SET status = 'expired' WHERE registration_id = ${person.id}`;
+      await assert.rejects(store.publishSchedule(source(overlap), publication.id), (error) => error.status === 409 && /order/.test(error.errors["sheet-session-a"]));
+      assert.deepEqual(await store.schedule(), current);
+    });
+
+    await t.test("completed historical roles alone do not lock format, but recoverable orders still protect it", async () => {
+      const history = { ...(await store.schedule()).find(({ id }) => id === "sheet-session-b"), id: "sheet-history", room: "History room", start: "17:30", end: "18:45" };
+      publication = await store.publishSchedule(source([...(await store.schedule()), history]), publication.id);
+      const person = await createPerson("RetiredChoices");
+      const order = await store.submit(person, { ...empty(), classes: [{ sessionId: history.id, role: "switch" }] }, "retired-choice-01");
+      const [saved] = await sql`SELECT theme_class FROM registrations_26 WHERE id = ${person.id}`;
+      await store.reopenClasses(person.id, saved.theme_class);
+      const next = (await store.schedule()).map((session) => session.id === history.id ? { ...session, format: "solo", partnerClass: false, capacity: { total: 30 } } : session);
+      publication = await store.publishSchedule(source(next), publication.id);
+      assert.equal((await store.schedule()).find(({ id }) => id === history.id).format, "solo");
+      assert.equal((await sql`SELECT draft FROM reg2026_orders WHERE id = ${order.id}`)[0].draft.classes[0].role, "switch");
+      await sql`UPDATE reg2026_orders SET status = 'expired' WHERE id = ${order.id}`;
+      const reverse = (await store.schedule()).map((session) => session.id === history.id ? history : session);
+      await assert.rejects(store.publishSchedule(source(reverse), publication.id), (error) => error.status === 409);
+    });
+
     await t.test("capacity reduction preserves confirmed places, clamps availability and rejects new registrations", async () => {
       const next = (await store.schedule()).map((session) => session.id === "sheet-session-a" ? { ...session, title: "Renamed sheet class", capacity: { total: 0 } } : session);
       publication = await store.publishSchedule(source(next), publication.id);
       assert.equal((await store.schedule())[0].title, "Renamed sheet class");
       assert.equal((await store.availability()).classes["sheet-session-a"].total.remaining, 0);
+      const inventory = (await store.classInventory())["sheet-session-a"];
+      assert.equal(inventory.registered, 1, "Reducing capacity must not hide existing registrations");
+      assert.equal(inventory.remaining, 0);
       assert.equal((await sql`SELECT * FROM class_bookings_26 WHERE registration_id = ${registered.id}`).length, 1);
       const other = await createPerson("SheetFull");
       await assert.rejects(store.submit(other, { ...empty(), classes: [{ sessionId: "sheet-session-a" }] }, "sheet-full-rejected-01"), (error) => error.status === 409);
@@ -132,10 +178,6 @@ test("sheet schedules publish atomically and protect real registrations on isola
       const before = await store.schedule();
       assert.ok(before.every((session) => session.date === ""));
       const dated = before.map((session) => ({ ...session, date: "2026-10-30" }));
-      const changedTime = dated.map((session) => session.id === "sheet-session-a" ? { ...session, start: "13:00" } : session);
-      await assert.rejects(store.publishSchedule(source(changedTime), publication.id), (error) => error.status === 409);
-      assert.deepEqual(await store.schedule(), before);
-
       publication = await store.publishSchedule(source(dated), publication.id);
       const published = await store.schedule();
       assert.ok(published.every((session) => session.date === "2026-10-30"));
@@ -169,6 +211,9 @@ test("sheet schedules publish atomically and protect real registrations on isola
       await store.editClasses(organizerParticipant.id, [{ sessionId: talk.id }], "");
       assert.equal((await sql`SELECT id FROM class_bookings_26 WHERE session_id = ${talk.id}`).length, 37);
       assert.deepEqual((await store.availability()).classes[talk.id].total, open);
+      const inventory = (await store.classInventory())[talk.id];
+      assert.equal(inventory.registered, 37);
+      assert.equal(inventory.remaining, null);
     });
 
     await t.test("dashboard capacity edits write the source before publishing and keep bookings and other class fields", async () => {

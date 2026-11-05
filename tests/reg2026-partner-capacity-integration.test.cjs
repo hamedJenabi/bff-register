@@ -78,6 +78,13 @@ test("partner roles share capacity and serialize competing bookings on isolated 
       await seed(3, "switch", "provisional", new Date(Date.now() + 60000));
       assert.equal((await places()).follow.remaining, 0);
       assert.equal((await places()).total.remaining, 17);
+      const inventory = (await store.classInventory())[sessionId];
+      assert.equal(inventory.registered, 18);
+      assert.equal(inventory.held, 5);
+      assert.equal(inventory.remaining, 17);
+      assert.equal(inventory.followRemaining, 0);
+      assert.deepEqual(inventory.roles.follow, { registered: 18, held: 2 });
+      assert.deepEqual(inventory.roles.switch, { registered: 0, held: 3 });
       const [existing] = await sql`SELECT registration_id FROM class_bookings_26 WHERE pool = 'follow' AND status = 'confirmed' LIMIT 1`;
       const own = (await store.availability(existing.registration_id)).classes[sessionId];
       assert.equal(own.follow.remaining, 1);

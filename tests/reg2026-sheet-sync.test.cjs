@@ -238,6 +238,7 @@ test("sync publishes the validated source and returns accurate new and unchanged
   const store = {
     schedulePublication: async () => publication,
     schedule: async () => snapshot.sessions,
+    classInventory: async () => ({}),
     publishSchedule: async (actual, version) => {
       assert.deepEqual(actual, snapshot);
       assert.equal(version, publication?.id || 0);
@@ -276,6 +277,7 @@ test("dashboard remains accessible before first publication and preserves the pu
   const schedule = parseScheduleRows(values());
   store.schedulePublication = async () => publication;
   store.schedule = async () => schedule;
+  store.classInventory = async () => ({});
   delete process.env.REG2026_SCHEDULE_SHEET_ID;
   const published = await getScheduleAdminState(store);
   assert.equal(published.source.configured, true);

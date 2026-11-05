@@ -89,7 +89,7 @@ test('write failures and concurrent Sheet changes preserve actionable errors wit
 
 test('capacity save orchestration retains Google Sheets authority and rejects unconfigured source switches',async()=>withEnv({REG2026_SCHEDULE_SHEET_ID:id,REG2026_SCHEDULE_SHEET_NAME:"Teacher's Schedule"},async()=>{
   let published=publication(); const requests=[]; const writer=async()=>{};
-  const store={schedulePublication:async()=>published,schedule:async()=>expected(),editPublishedCapacity:async(...args)=>{
+  const store={schedulePublication:async()=>published,schedule:async()=>expected(),classInventory:async()=>({}),editPublishedCapacity:async(...args)=>{
     requests.push(args); published={...published,id:2}; return published;
   }};
   const saved=await saveScheduleCapacity(store,{id:'partner-test',capacity:{total:25},version:1},writer);
@@ -106,7 +106,8 @@ test('capacity HTTP saves require organizer authentication, same origin and a pu
   const dbPath=require.resolve('../db/reg2026'), endpointPath=require.resolve('../pages/api/reg2026/schedule');
   const previousDb=require.cache[dbPath],previousEndpoint=require.cache[endpointPath]; let writes=0;
   const pub=publication();
-  const store={schedulePublication:async()=>pub,schedule:async()=>expected(),editPublishedCapacity:async(sessionId,capacity,version)=>{
+  const inventory={'partner-test':{registered:4,held:1,remaining:20,followRemaining:10,roles:{}}};
+  const store={schedulePublication:async()=>pub,schedule:async()=>expected(),classInventory:async()=>inventory,editPublishedCapacity:async(sessionId,capacity,version)=>{
     writes+=1; assert.equal(sessionId,'partner-test'); assert.deepEqual(capacity,{total:25}); assert.equal(version,1); return pub;
   }};
   const res=()=>({headers:{},code:200,setHeader(k,v){this.headers[k]=v;},status(v){this.code=v;return this;},json(v){this.body=v;return this;},end(){return this;}});
@@ -117,6 +118,8 @@ test('capacity HTTP saves require organizer authentication, same origin and a pu
     const unauth=res();await handler({method:'POST',headers:{},body},unauth);assert.equal(unauth.code,401);
     const auth=res();setAdminSession(auth);const cookie=auth.headers['Set-Cookie'].split(';')[0];
     const denied=res();await handler({method:'POST',headers:{cookie,host:'register.example.com',origin:'https://different.example.com'},body},denied);assert.equal(denied.code,403);assert.equal(writes,0);
+    const counts=res();await handler({method:'GET',headers:{cookie}},counts);assert.equal(counts.code,200);assert.deepEqual(counts.body.inventory,inventory);
     const success=res();await handler({method:'POST',headers:{cookie,host:'register.example.com',origin:'https://register.example.com'},body},success);assert.equal(success.code,200);assert.equal(writes,1);
+    assert.deepEqual(success.body.inventory,inventory);
   } finally {if(previousDb)require.cache[dbPath]=previousDb;else delete require.cache[dbPath];if(previousEndpoint)require.cache[endpointPath]=previousEndpoint;else delete require.cache[endpointPath];}
 }));
