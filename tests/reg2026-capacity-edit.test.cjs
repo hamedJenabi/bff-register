@@ -4,6 +4,7 @@ const { createHash, generateKeyPairSync } = require('node:crypto');
 const { SHEET_COLUMNS, parseScheduleRows } = require('../lib/reg2026/sheet-schema');
 const { writeScheduleCapacityToSheet, saveScheduleCapacity } = require('../lib/reg2026/google-sheets');
 const { setAdminSession } = require('../lib/admin/session');
+const { RegistrationError } = require('../lib/reg2026/errors');
 
 const id = '1capacityTestWorkbook_012345678901234567890';
 const keys = generateKeyPairSync('rsa', { modulusLength: 2048 });
@@ -89,7 +90,7 @@ test('write failures and concurrent Sheet changes preserve actionable errors wit
 
 test('capacity save orchestration retains Google Sheets authority and rejects unconfigured source switches',async()=>withEnv({REG2026_SCHEDULE_SHEET_ID:id,REG2026_SCHEDULE_SHEET_NAME:"Teacher's Schedule"},async()=>{
   let published=publication(); const requests=[]; const writer=async()=>{};
-  const store={schedulePublication:async()=>published,schedule:async()=>expected(),classInventory:async()=>({}),editPublishedCapacity:async(...args)=>{
+  const store={schedulePublication:async()=>published,schedule:async()=>expected(),classInventory:async()=>({}),competitionInventory:async()=>({}),editPublishedCapacity:async(...args)=>{
     requests.push(args); published={...published,id:2}; return published;
   }};
   const saved=await saveScheduleCapacity(store,{id:'partner-test',capacity:{total:25},version:1},writer);
@@ -107,7 +108,7 @@ test('capacity HTTP saves require organizer authentication, same origin and a pu
   const previousDb=require.cache[dbPath],previousEndpoint=require.cache[endpointPath]; let writes=0;
   const pub=publication();
   const inventory={'partner-test':{registered:4,held:1,remaining:20,followRemaining:10,roles:{}}};
-  const store={schedulePublication:async()=>pub,schedule:async()=>expected(),classInventory:async()=>inventory,editPublishedCapacity:async(sessionId,capacity,version)=>{
+  const store={schedulePublication:async()=>pub,schedule:async()=>expected(),classInventory:async()=>inventory,competitionInventory:async()=>({}),editPublishedCapacity:async(sessionId,capacity,version)=>{
     writes+=1; assert.equal(sessionId,'partner-test'); assert.deepEqual(capacity,{total:25}); assert.equal(version,1); return pub;
   }};
   const res=()=>({headers:{},code:200,setHeader(k,v){this.headers[k]=v;},status(v){this.code=v;return this;},json(v){this.body=v;return this;},end(){return this;}});
@@ -122,4 +123,27 @@ test('capacity HTTP saves require organizer authentication, same origin and a pu
     const success=res();await handler({method:'POST',headers:{cookie,host:'register.example.com',origin:'https://register.example.com'},body},success);assert.equal(success.code,200);assert.equal(writes,1);
     assert.deepEqual(success.body.inventory,inventory);
   } finally {if(previousDb)require.cache[dbPath]=previousDb;else delete require.cache[dbPath];if(previousEndpoint)require.cache[endpointPath]=previousEndpoint;else delete require.cache[endpointPath];}
+}));
+
+test('competition capacity HTTP saves require organizer authentication and same origin, independently of Sheet editing',async()=>withEnv({ADMIN_USER:'competition-organizer',ADMIN_SESSION_SECRET:'competition-test-secret',REG2026_SCHEDULE_SHEET_ID:id},async()=>{
+  const dbPath=require.resolve('../db/reg2026'),endpointPath=require.resolve('../pages/api/reg2026/schedule');
+  const previousDb=require.cache[dbPath],previousEndpoint=require.cache[endpointPath];let writes=0;
+  const competitionInventory={solo_battle:{total:{capacity:20,registered:4,held:1,remaining:15,version:1}}};
+  const body={action:'competition-capacity',id:'solo_battle',pool:'total',capacity:'20',version:0};
+  const store={schedulePublication:async()=>null,competitionInventory:async()=>competitionInventory,editCompetitionCapacity:async(actual)=>{
+    assert.deepEqual(actual,body);writes+=1;return{unchanged:false};
+  }};
+  const res=()=>({headers:{},code:200,setHeader(k,v){this.headers[k]=v;},status(v){this.code=v;return this;},json(v){this.body=v;return this;},end(){return this;}});
+  require.cache[dbPath]={id:dbPath,filename:dbPath,loaded:true,exports:{registrationStore:store}};delete require.cache[endpointPath];
+  try{
+    const handler=require('../pages/api/reg2026/schedule').default;
+    const denied=res();await handler({method:'POST',headers:{},body},denied);assert.equal(denied.code,401);
+    const auth=res();setAdminSession(auth);const cookie=auth.headers['Set-Cookie'].split(';')[0];
+    const crossOrigin=res();await handler({method:'POST',headers:{cookie,host:'register.example.com',origin:'https://different.example.com'},body},crossOrigin);assert.equal(crossOrigin.code,403);assert.equal(writes,0);
+    const counts=res();await handler({method:'GET',headers:{cookie}},counts);assert.equal(counts.code,200);assert.deepEqual(counts.body.competitionInventory,competitionInventory);
+    const saved=res();await handler({method:'POST',headers:{cookie,host:'register.example.com',origin:'https://register.example.com'},body},saved);
+    assert.equal(saved.code,200);assert.equal(writes,1);assert.deepEqual(saved.body.competitionInventory,competitionInventory);assert.equal(saved.body.unchanged,false);
+    store.editCompetitionCapacity=async()=>{throw new RegistrationError(409,'Refresh before saving.');};
+    const stale=res();await handler({method:'POST',headers:{cookie,host:'register.example.com',origin:'https://register.example.com'},body},stale);assert.equal(stale.code,409);
+  }finally{if(previousDb)require.cache[dbPath]=previousDb;else delete require.cache[dbPath];if(previousEndpoint)require.cache[endpointPath]=previousEndpoint;else delete require.cache[endpointPath];}
 }));

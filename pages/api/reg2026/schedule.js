@@ -13,6 +13,10 @@ export default async function handler(req, res) {
   if (!requireAdmin(req, res)) return;
   try {
     if (req.method === "GET") return res.json(await getScheduleAdminState(store));
+    if (req.body?.action === "competition-capacity") {
+      const result = await store.editCompetitionCapacity(req.body);
+      return res.json({ ...(await getScheduleAdminState(store)), ...result });
+    }
     if (req.body?.action === "sync") return res.json(await syncScheduleFromSheet(store, req.body.version));
     if (req.body?.action === "capacity") return res.json(await saveScheduleCapacity(store, req.body));
     const source = getScheduleSource(await store.schedulePublication());

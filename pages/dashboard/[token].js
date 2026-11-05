@@ -793,7 +793,6 @@ export default function Dashboard({ users, tickets, previewMode }) {
     <div className={styles.container}>
       <Head>
         <title>BLUES FEVER 2026</title>
-        <link rel="icon" href="/icon.png" />
       </Head>
       <Header
         isAdmin

@@ -17,7 +17,7 @@ test("competition limits and reservations on isolated Postgres", { skip: !proces
   const previousSheet = process.env.REG2026_SCHEDULE_SHEET_ID;
   delete process.env.REG2026_SCHEDULE_SHEET_ID;
   try {
-    for (const file of ["00004-CREAT-registraion-2026", "00006-create-class-capacities-2026", "00007-create-reg2026-bookings", "00008-reg2026-order-safety", "00009-create-schedule-overrides-2026", "00010-reg2026-reopen-registration", "00013-reg2026-sheet-schedule", "00015-reg2026-switch-role"]) {
+    for (const file of ["00004-CREAT-registraion-2026", "00006-create-class-capacities-2026", "00007-create-reg2026-bookings", "00008-reg2026-order-safety", "00009-create-schedule-overrides-2026", "00010-reg2026-reopen-registration", "00013-reg2026-sheet-schedule", "00015-reg2026-switch-role", "00016-reg2026-competition-capacities"]) {
       await sql.begin((tx) => require(`../migrations/${file}`).up(tx));
     }
     const store = createRegistrationStore(sql);
@@ -28,7 +28,7 @@ test("competition limits and reservations on isolated Postgres", { skip: !proces
         ${id === "open_mixnmatch" ? role : ""},${id === "newcomers_mixnmatch" ? role : ""},${id === "strictly" ? role : ""}
       FROM generate_series(1, ${count}) RETURNING *`;
     const person = async () => (await seed(1))[0];
-    const reset = () => sql`TRUNCATE registrations_26, class_bookings_26, reg2026_orders, registration_email_retries_26 RESTART IDENTITY CASCADE`;
+    const reset = () => sql`TRUNCATE registrations_26, class_bookings_26, reg2026_orders, registration_email_retries_26, competition_capacities_26 RESTART IDENTITY CASCADE`;
     const places = async (id, pool) => (await store.availability()).competitions[id][pool];
     const checkout = (attendee, order, status, paymentStatus) => ({
       id: `cs_competition_${order.id}`, currency: "eur", amount_total: order.total_cents,
@@ -70,9 +70,11 @@ test("competition limits and reservations on isolated Postgres", { skip: !proces
       const attendee = await person();
       const order = await store.submit(attendee, draft("solo_battle", undefined, false), "competition-paid-hold");
       assert.equal((await places("solo_battle", "total")).remaining, 0);
+      assert.deepEqual((await store.competitionInventory()).solo_battle.total, { capacity: 30, remaining: 0, registered: 29, held: 1, version: 0 });
       assert.equal((await store.availability(attendee.id)).competitions.solo_battle.total.remaining, 1);
       await sql`UPDATE reg2026_orders SET expires_at = NOW() - INTERVAL '1 minute' WHERE id = ${order.id}`;
       assert.equal((await places("solo_battle", "total")).remaining, 1);
+      assert.equal((await store.competitionInventory()).solo_battle.total.held, 0);
       await sql`UPDATE reg2026_orders SET status = 'payment_pending', expires_at = NULL WHERE id = ${order.id}`;
       assert.equal((await places("solo_battle", "total")).remaining, 0);
       await store.attachSession(order.id, `cs_competition_${order.id}`);
@@ -86,6 +88,7 @@ test("competition limits and reservations on isolated Postgres", { skip: !proces
       const secondOrder = await store.submit(attendee, { ...draft("solo_battle", undefined, false), lunch: ["saturday"] }, "competition-paid-lunch");
       assert.equal(secondOrder.status, "provisional");
       assert.equal((await places("solo_battle", "total")).remaining, 0, "Saved choices and an active add-on order consume a single place");
+      assert.deepEqual((await store.competitionInventory()).solo_battle.total, { capacity: 30, remaining: 0, registered: 30, held: 0, version: 0 });
       await reset();
     });
 
@@ -112,10 +115,61 @@ test("competition limits and reservations on isolated Postgres", { skip: !proces
       await seed(50, "fever_showcase");
       assert.equal((await places("fever_showcase", "total")).unlimited, true);
       await store.submit(await person(), draft("fever_showcase"), "competition-showcase");
+      assert.deepEqual((await store.competitionInventory()).fever_showcase.total, { capacity: null, remaining: null, unlimited: true, registered: 51, held: 0, version: 0 });
       await seed(30, "solo_battle");
       await sql`UPDATE registrations_26 SET status = 'waitinglist' WHERE competitions = 'solo_battle'`;
       assert.equal((await places("solo_battle", "total")).remaining, 30);
+      assert.equal((await store.competitionInventory()).solo_battle.total.registered, 0);
       await reset();
+    });
+
+    await t.test("organizer edits immediately enforce independent limits and preserve existing entries when reduced", async () => {
+      assert.deepEqual(await store.editCompetitionCapacity({ id: "open_mixnmatch", pool: "lead", capacity: 40, version: 0 }), { unchanged: true });
+      assert.equal((await sql`SELECT * FROM competition_capacities_26`).length, 0);
+      await store.editCompetitionCapacity({ id: "open_mixnmatch", pool: "lead", capacity: "2", version: 0 });
+      await seed(1, "open_mixnmatch", "lead");
+      await store.submit(await person(), draft("open_mixnmatch", "lead"), "competition-edited-limit");
+      await assert.rejects(store.submit(await person(), draft("open_mixnmatch", "lead"), "competition-edited-full"), (error) => error.status === 409);
+      let inventory = (await store.competitionInventory()).open_mixnmatch;
+      assert.deepEqual(inventory.lead, { capacity: 2, remaining: 0, registered: 2, held: 0, version: 1 });
+      assert.deepEqual(inventory.follow, { capacity: 40, remaining: 40, registered: 0, held: 0, version: 0 });
+      await store.editCompetitionCapacity({ id: "open_mixnmatch", pool: "lead", capacity: 1, version: 1 });
+      inventory = (await store.competitionInventory()).open_mixnmatch;
+      assert.equal(inventory.lead.registered, 2);
+      assert.equal(inventory.lead.remaining, 0);
+      await store.editCompetitionCapacity({ id: "open_mixnmatch", pool: "lead", capacity: 3, version: 2 });
+      assert.equal((await places("open_mixnmatch", "lead")).remaining, 1);
+      await store.editCompetitionCapacity({ id: "open_mixnmatch", pool: "follow", capacity: 0, version: 0 });
+      assert.equal((await places("open_mixnmatch", "follow")).remaining, 0);
+      await assert.rejects(store.submit(await person(), draft("open_mixnmatch", "follow"), "competition-zero-limit"), (error) => error.status === 409);
+      await reset();
+    });
+
+    await t.test("concurrent capacity edits reject stale versions, including after restoring the default", async () => {
+      const changes = await Promise.allSettled([20, 25].map((capacity) => store.editCompetitionCapacity({ id: "solo_battle", pool: "total", capacity, version: 0 })));
+      assert.equal(changes.filter((change) => change.status === "fulfilled").length, 1);
+      assert.equal(changes.find((change) => change.status === "rejected").reason.status, 409);
+      await store.editCompetitionCapacity({ id: "solo_battle", pool: "total", capacity: 30, version: 1 });
+      await assert.rejects(store.editCompetitionCapacity({ id: "solo_battle", pool: "total", capacity: 29, version: 0 }), (error) => error.status === 409);
+      assert.equal((await store.competitionInventory()).solo_battle.total.version, 2);
+      await reset();
+    });
+
+    await t.test("invalid edits are rejected without changing limits", async () => {
+      const valid = { id: "strictly", pool: "lead", capacity: 20, version: 0 };
+      for (const capacity of [-1, 1.5, 1001, "", "2x", null, true, {}, []]) {
+        await assert.rejects(store.editCompetitionCapacity({ ...valid, capacity }), (error) => error.status === 422);
+      }
+      for (const pool of ["switch", "total", "__proto__"]) {
+        await assert.rejects(store.editCompetitionCapacity({ ...valid, pool }), (error) => error.status === 422);
+      }
+      for (const version of [-1, "0", null, 0.5]) {
+        await assert.rejects(store.editCompetitionCapacity({ ...valid, version }), (error) => error.status === 422);
+      }
+      await assert.rejects(store.editCompetitionCapacity({ ...valid, id: "missing" }), (error) => error.status === 404);
+      await assert.rejects(store.editCompetitionCapacity({ ...valid, id: "fever_showcase", pool: "total" }), (error) => error.status === 422);
+      assert.equal((await sql`SELECT * FROM competition_capacities_26`).length, 0);
+      assert.equal((await places("strictly", "lead")).capacity, 24);
     });
 
     await t.test("Solo time conflicts are rejected for participant submissions and organizer class edits", async () => {

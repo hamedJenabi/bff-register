@@ -12,6 +12,7 @@ import { adminPageRedirect } from "../../lib/admin/session";
 import { scheduleDays } from "../../lib/reg2026/catalog";
 import { scheduleFormValues, validateSchedule } from "../../lib/reg2026/schedule";
 import CapacityOverview from "../../components/Reg2026/CapacityOverview";
+import CompetitionOverview from "../../components/Reg2026/CompetitionOverview";
 import styles from "./Schedule.module.scss";
 
 function ClassEditor({ session, onSave }) {
@@ -155,10 +156,11 @@ function ClassPreview({ session, source, onSave, disabled, onBusyChange }) {
   </section>;
 }
 
-export default function ScheduleAdmin({ initial, source: initialSource, inventory: initialInventory, loadError }) {
+export default function ScheduleAdmin({ initial, source: initialSource, inventory: initialInventory, competitionInventory: initialCompetitionInventory, loadError }) {
   const [sessions, setSessions] = useState(initial || []);
   const [source, setSource] = useState(initialSource || null);
   const [inventory, setInventory] = useState(initialInventory || {});
+  const [competitionInventory, setCompetitionInventory] = useState(initialCompetitionInventory || {});
   const tabs = useTabState({ baseId: "schedule-view", selectedId: "schedule-details-tab" });
   const [selected, setSelected] = useState(initial?.[0]?.id || "");
   const [query, setQuery] = useState("");
@@ -177,12 +179,17 @@ export default function ScheduleAdmin({ initial, source: initialSource, inventor
     setSessions(result.schedule || []);
     setSource(result.source || null);
     setInventory(result.inventory || {});
+    setCompetitionInventory(result.competitionInventory || {});
     setSelected((current) => result.schedule?.some((session) => session.id === current)
       ? current : result.schedule?.[0]?.id || "");
   };
   const capacitySaved = (result) => {
     updatePublished(result); setSyncError(""); setDiagnostics([]);
     setMessage(result.unchanged ? "Capacity is already up to date." : sheetsMode ? "Capacity saved to Google Sheets and published." : "Capacity saved.");
+  };
+  const competitionCapacitySaved = (result) => {
+    updatePublished(result); setSyncError(""); setDiagnostics([]);
+    setMessage(result.unchanged ? "Competition capacity is already up to date." : "Competition capacity saved.");
   };
   const refreshCounts = async () => {
     setRefreshing(true); setMessage("");
@@ -224,11 +231,12 @@ export default function ScheduleAdmin({ initial, source: initialSource, inventor
       <Link href="/dashboard/admin">Registrations</Link><Link href="/dashboard/schedule" aria-current="page">Schedule</Link>
     </nav>
     <header className={styles.header}><h1>Schedule</h1><p>{sheetsMode
-      ? "Edit class capacities here, or update the schedule in Google Sheets and sync it to publish a complete update."
+      ? "Manage class and competition capacities here. Update the schedule in Google Sheets and sync it to publish class details."
       : "Edit class details for the registration form. Mock classes appear until you save changes."}</p></header>
     <TabList {...tabs} className={styles.viewTabs} aria-label="Schedule views">
       <Tab {...tabs} id="schedule-details-tab" disabled={syncing || savingCapacity || refreshing}>Class details</Tab>
       <Tab {...tabs} id="schedule-capacity-tab" disabled={syncing || savingCapacity || refreshing}>Capacity overview</Tab>
+      <Tab {...tabs} id="schedule-competition-tab" disabled={syncing || savingCapacity || refreshing}>Competition overview</Tab>
     </TabList>
     {sheetsMode && tabs.selectedId === "schedule-details-tab" && <section className={styles.source} aria-labelledby="schedule-source-title" aria-busy={syncing}>
       <h2 id="schedule-source-title">Google Sheets schedule</h2>
@@ -284,6 +292,10 @@ export default function ScheduleAdmin({ initial, source: initialSource, inventor
           disabled={syncing || savingCapacity} onBusyChange={setSavingCapacity} onSave={capacitySaved}
           onRefresh={refreshCounts} refreshing={refreshing} />
       </TabPanel>
+      <TabPanel {...tabs} id="schedule-competition-panel" tabId="schedule-competition-tab" className={styles.tabPanel}>
+        <CompetitionOverview inventory={competitionInventory} disabled={syncing || savingCapacity} onBusyChange={setSavingCapacity}
+          onSave={competitionCapacitySaved} onRefresh={refreshCounts} refreshing={refreshing} />
+      </TabPanel>
     </>}
   </main>;
 }
@@ -294,8 +306,8 @@ export async function getServerSideProps({ req, res }) {
   try {
     const { registrationStore: store } = await import("../../db/reg2026");
     const { getScheduleAdminState } = await import("../../lib/reg2026/google-sheets");
-    const { schedule, source, inventory } = await getScheduleAdminState(store);
-    return { props: { initial: schedule, source, inventory, loadError: null } };
+    const { schedule, source, inventory, competitionInventory } = await getScheduleAdminState(store);
+    return { props: { initial: schedule, source, inventory, competitionInventory, loadError: null } };
   } catch {
     return { props: { initial: null, loadError: "Schedule is temporarily unavailable. Please try again." } };
   }

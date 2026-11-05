@@ -96,6 +96,10 @@
   .available { color: #225a55; font-weight: 600; } .full { color: #a12625; font-weight: 700; }
 }
 .className { display: inline-block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; vertical-align: middle; }
+.competitionTable { min-width: 740px;
+  .roleColumn { width: 28%; }
+  thead th:nth-child(2) { text-align: right; }
+}
 .notBookable .className { max-width: calc(100% - 50px); }
 .rowBadge { display: inline-block; margin-left: 6px; padding: 0 5px; border-radius: 3px; background: #edf1f0; color: #62716f; font-size: 10px; line-height: 18px; vertical-align: middle; }
 .rowCapacityForm { display: flex; align-items: center; gap: 6px; margin: 0;
