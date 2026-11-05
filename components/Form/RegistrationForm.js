@@ -122,7 +122,7 @@ export default function RegistrationForm({
 
   const isPartyPass = isAfterTargetDate("2026-09-01T00:00:00+02:00");
   const isPartypassSoldout =
-    users.filter((user) => user.ticket === "partyPass").length >= 92;
+    users.filter((user) => user.ticket === "partyPass").length >= 100;
   const isFullPass =
     values.ticket === "fullpass" || values.ticket === "parentPass";
   const canChooseFullPass = intern;
