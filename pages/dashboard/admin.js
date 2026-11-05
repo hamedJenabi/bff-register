@@ -73,16 +73,35 @@ export default function Dashboard({ users, tickets }) {
 
   //--------- Ticket Component
   const TicketsComponent = () => {
+    const getTicketConfirmedAmount = (ticketName) =>
+      users.filter(
+        (user) => user.level === ticketName && user.status === "confirmed",
+      ).length;
+
+    const getInitialCapacity = (ticket) =>
+      Number(ticket.capacity || 0) + getTicketConfirmedAmount(ticket.name);
+
     const ticketToshow = [
-      { name: "Level", capacity: "Capacity", waiting_list: "Waiting List" },
+      {
+        name: "Level",
+        firstCapacity: "First Capacity",
+        capacity: "Remaining",
+        waiting_list: "Waiting List",
+      },
       ...tickets,
     ];
     return (
       <div className={styles.tickets}>
         {ticketToshow?.map((ticket) => (
-          <div key={ticket.name} className={styles.ticketRow}>
+          <div
+            key={ticket.name}
+            className={classNames(styles.ticketRow, styles.capacityAdminRow)}
+          >
             <div className={styles.ticketItem}>
               <p>{ticket.name}</p>
+            </div>
+            <div className={styles.ticketItem}>
+              <p>{ticket.firstCapacity ?? getInitialCapacity(ticket)}</p>
             </div>
             <div className={styles.ticketItem}>
               <p>{ticket.capacity}</p>
@@ -101,7 +120,7 @@ export default function Dashboard({ users, tickets }) {
       .filter((user) =>
         nameSearch
           ? user.firstname.toUpperCase().includes(nameSearch.toUpperCase())
-          : true
+          : true,
       )
       .sort((a, b) => a.id - b.id)
       .map(
@@ -147,20 +166,14 @@ export default function Dashboard({ users, tickets }) {
               <td>Yes</td>
             </tr>
           );
-        }
+        },
       );
   };
   return (
     <div className={styles.container}>
       <Head>
-        <title>BLUES FEVER 2025</title>
+        <title>BLUES FEVER 2026</title>
         <link rel="icon" href="/icon.png" />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Amatic+SC&display=swap"
-          rel="stylesheet"
-        />
       </Head>
       <Header
         isAdmin
