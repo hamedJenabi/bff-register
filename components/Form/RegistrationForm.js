@@ -122,7 +122,7 @@ export default function RegistrationForm({
 
   const isPartyPass = isAfterTargetDate("2026-09-01T00:00:00+02:00");
   const isPartypassSoldout =
-    users.filter((user) => user.ticket === "partyPass").length >= 92;
+    users.filter((user) => user.ticket === "partyPass").length >= 100;
   const isFullPass =
     values.ticket === "fullpass" || values.ticket === "parentPass";
   const canChooseFullPass = intern;
@@ -535,9 +535,9 @@ export default function RegistrationForm({
           ))}
         <div className={styles.infoTextWrapper}>
           <p className={styles.infoText}>
-            You choose <strong>&quot;Both&quot;</strong> role if you will attend some
-            classes as LEAD and some as FOLLOW to help balance out the ratio
-            between the two roles.
+            You choose <strong>&quot;Both&quot;</strong> role if you will attend
+            some classes as LEAD and some as FOLLOW to help balance out the
+            ratio between the two roles.
           </p>
         </div>
         <FormMessage className={styles.errorMessage} {...form} name="level" />

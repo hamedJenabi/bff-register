@@ -28,6 +28,9 @@ $accent: #ffd69c;
 .main { max-width: 1380px; margin: auto; padding: 32px 0; }
 .intro { margin-bottom: 28px; }
 .notice { padding: 16px; border-left: 3px solid $accent; background: $panel; margin: 18px 0; }
+.page p.informationText, .dialog p.informationText { font-size: 12px; font-style: italic; }
+.page section.competitionSection { background: #4b2437; border-color: #9c6b80; }
+.page section.lunchSection { background: #343047; border-color: #85809c; }
 .actions { display: flex; flex-wrap: wrap; gap: 12px; margin: 16px 0; }
 .registrationLayout { display: grid; grid-template-columns: 180px minmax(0, 1fr); gap: 24px; align-items: start; }
 .registrationLayout > form { min-width: 0; }
@@ -36,8 +39,49 @@ $accent: #ffd69c;
 .selectionCount { display: block; font-size: 15px; color: $muted; strong { display: block; color: $accent; font-size: 44px; line-height: 1.2; margin-bottom: 8px; } }
 .selectionSummary p { color: $muted; font-size: 12px; margin-bottom: 0; }
 .day { margin-top: 32px; }
-.day + .day { border-top: 2px solid #926272; padding-top: 24px; }
-.timeSlot { padding: 20px 0; h4 { margin: 0 0 16px; font-size: 16px; color: $muted; } }
+.day > h3 {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 0;
+  color: $text;
+  font-size: clamp(30px, 3vw, 36px);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -.025em;
+
+  &::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background-color: rgba(#e8a7b6, .34);
+  }
+}
+
+.day > h3[data-highlight]::after {
+  animation: dayRuleTint 1s ease-in-out 1;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation-duration: 0s;
+  }
+}
+
+@keyframes dayRuleTint {
+  50% { background-color: rgba(#e8a7b6, .48); }
+}
+
+.timeSlot {
+  padding: 16px 0 20px;
+
+  h4 {
+    margin: 0 0 12px;
+    color: $text;
+    font-size: 18px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: normal;
+  }
+}
 .timeSlot + .timeSlot { border-top: 1px solid #704050; }
 .classGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .classGrid button.classCard { width: 100%; min-height: 144px; display: flex; flex-direction: column; gap: 10px; padding: 16px; text-align: left; background: #4b1b2a; font-size: 14px; overflow-wrap: anywhere; transition: background-color 150ms ease, border-color 150ms ease, transform 150ms ease; small { color: $muted; line-height: 1.4; margin-top: auto; } }

@@ -235,7 +235,6 @@ export default function Home({ tickets, users }) {
           content="https://www.bluesfever.eu/wp-content/uploads/2026/07/738523801_1632815165514895_8438899108768937555_n.png"
         />
 
-        <link rel="icon" href="/icon.png" />
       </Head>
       <main className={styles.main}>
         <RegistrationForm

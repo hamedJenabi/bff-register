@@ -38,6 +38,7 @@ const passLabel = {
 
 export default function Registration({ initial, access, loadError }) {
   const router = useRouter();
+  const { user, sig } = access;
   const [data, setData] = useState(initial);
   const [requestKey, setRequestKey] = useState("");
   const [hydrated, setHydrated] = useState(false);
@@ -182,6 +183,46 @@ export default function Registration({ initial, access, loadError }) {
     // Poll only while the participant is waiting for a verified payment status.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pending, data?.order?.id]);
+  useEffect(() => {
+    if (!hydrated || completed || pending) return;
+    const controller = new AbortController();
+    let active = true;
+    let refreshing = false;
+    const refreshAvailability = async () => {
+      if (document.visibilityState === "hidden" || refreshing) return;
+      refreshing = true;
+      try {
+        const query = new URLSearchParams({ user, sig });
+        const response = await fetch(`/api/reg2026?${query}`, {
+          cache: "no-store",
+          signal: controller.signal,
+        });
+        if (!response.ok) return;
+        const result = await response.json();
+        if (active) setData((current) => current ? {
+          ...current,
+          availability: result.availability,
+          open: result.open,
+        } : current);
+      } catch {
+        // Retain the last known availability during temporary network failures.
+        // Submission still checks capacity under the booking lock.
+      } finally {
+        refreshing = false;
+      }
+    };
+    refreshAvailability();
+    const timer = setInterval(refreshAvailability, 10000);
+    window.addEventListener("focus", refreshAvailability);
+    document.addEventListener("visibilitychange", refreshAvailability);
+    return () => {
+      active = false;
+      controller.abort();
+      clearInterval(timer);
+      window.removeEventListener("focus", refreshAvailability);
+      document.removeEventListener("visibilitychange", refreshAvailability);
+    };
+  }, [hydrated, completed, pending, user, sig]);
   const checkoutAction = async (cancel) => {
     setBusy(true);
     try {
@@ -301,8 +342,8 @@ export default function Registration({ initial, access, loadError }) {
             )}
             {completed ? (
               <section aria-labelledby="complete-title">
-                <h2 id="complete-title">You have already registered</h2>
-                <p>Your classes, competitions and lunch registration is complete. Thank you!</p>
+                <h2 id="complete-title">Registration confirmed</h2>
+                <p>Thank you! Your festival choices have been saved.</p>
                 <p>
                   For any changes, contact{" "}
                   the organizers at{" "}
@@ -370,7 +411,8 @@ export default function Registration({ initial, access, loadError }) {
                   <CompetitionSection
                     form={editForm}
                     saved={data.choices}
-                    remaining={data.availability.soloBattleRemaining}
+                    availability={data.availability.competitions}
+                    sessions={data.schedule}
                     disabled={busy || pending || !data.open}
                   />
                   <LunchSection
