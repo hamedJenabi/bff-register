@@ -70,6 +70,6 @@ export default function CompetitionOverview({ inventory, disabled, onBusyChange,
         </table>
       </div>
     </section>)}
-    <p className={styles.overviewHint}>Capacity changes apply immediately to registration. Existing entries are kept, even when a reduced capacity leaves a competition full. For Fever Showcase, only one team member needs to register.</p>
+    <p className={styles.overviewHint}>Capacity changes apply immediately to registration. Existing entries are kept, even when a reduced capacity leaves a competition full.</p>
   </section>;
 }

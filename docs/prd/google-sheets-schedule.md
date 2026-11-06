@@ -10,7 +10,7 @@ The app reads only `APP_SCHEDULE`. Existing occurrences now use live formulas: e
 
 Keep timetable entries in the form `Title (Teachers) (Levels)`; levels may also be unparenthesized or omitted. Time slots use `HH:mm - HH:mm`. Blank descriptions and descriptions marked “Not needed” produce empty app descriptions. Dates, permanent session IDs, capacity cells and bookability remain managed in `APP_SCHEDULE`; capacities can also be changed in the Schedule dashboard. Direct edits to a derived cell replace its live formula.
 
-The formulas cover the 52 mapped occurrences and their explicitly matched description rows. To change rooms within one time slot, use Cut → Paste to move the original class cell to the destination room column. For a swap, use an empty cell as a temporary stop and finish both moves before syncing. The room formula reads the header above the moved cell, and the occurrence keeps its permanent session ID. Copying or typing over a mapped cell replaces the class text for the original ID. Moves to a different time slot or day require reviewing the mappings. New occurrences need a new permanent ID and reviewed formulas, capacities and bookability before publication.
+    The formulas cover the 52 mapped occurrences and their explicitly matched description rows. To change rooms within one time slot, use Cut → Paste to move the original class cell to the destination room column. For a swap, use an empty cell as a temporary stop and finish both moves before syncing. The room formula reads the header above the moved cell, and the occurrence keeps its permanent session ID. Copying or typing over a mapped cell replaces the class text for the original ID. Moves to a different time slot or day require reviewing the mappings. New occurrences need a new permanent ID and reviewed formulas, capacities and bookability before publication.
 
 The initial tab contains 52 occurrences from the current timetable, with 51 bookable occurrences. Cuttin' stays visible in the full catalog but is not selectable through self-service. Descriptions were matched explicitly to their corresponding source rows. Source descriptions marked “Not needed” and missing descriptions remain blank; internal notes are not published. Timetable titles and informational levels are preserved even when the description tab differs. Source cell references are stored as cell notes for review.
 
@@ -28,20 +28,20 @@ Participant schedule cards and class-dialog role choices do not display capacity
 
 Keep these exact header names; columns can be reordered. Each nonblank row represents one occurrence.
 
-| Column | Meaning |
-| --- | --- |
-| `session_id` | Permanent unique ID, lowercase letters/digits/hyphens/underscores, maximum 120 characters. Never reuse or rename an ID after publication. Initial IDs may describe their original time/room, but stay unchanged when metadata changes. |
-| `day` | Friday, Saturday or Sunday. |
-| `date` | Optional ISO `YYYY-MM-DD`; all dates must describe one weekend and match their weekday. |
-| `start`, `end` | Text `HH:mm`, with end after start. |
-| `room` | Room name, or TBA while unassigned. |
-| `title`, `teachers` | Required participant-facing text, up to 200 characters. |
-| `description` | Optional participant-facing text, up to 6000 characters. |
-| `levels` | Informational text, up to 200 characters. It does not restrict eligibility. |
-| `format` | `solo`, `partner` or `talk`, linked to the matching source cell in `CLASS DESCRIPTIONS` column J. Edit the source cell to update an existing occurrence. For new occurrences, add a reviewed value or explicit source formula. |
+| Column                             | Meaning                                                                                                                                                                                                                                    |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `session_id`                       | Permanent unique ID, lowercase letters/digits/hyphens/underscores, maximum 120 characters. Never reuse or rename an ID after publication. Initial IDs may describe their original time/room, but stay unchanged when metadata changes.     |
+| `day`                              | Friday, Saturday or Sunday.                                                                                                                                                                                                                |
+| `date`                             | Optional ISO `YYYY-MM-DD`; all dates must describe one weekend and match their weekday.                                                                                                                                                    |
+| `start`, `end`                     | Text `HH:mm`, with end after start.                                                                                                                                                                                                        |
+| `room`                             | Room name, or TBA while unassigned.                                                                                                                                                                                                        |
+| `title`, `teachers`                | Required participant-facing text, up to 200 characters.                                                                                                                                                                                    |
+| `description`                      | Optional participant-facing text, up to 6000 characters.                                                                                                                                                                                   |
+| `levels`                           | Informational text, up to 200 characters. It does not restrict eligibility.                                                                                                                                                                |
+| `format`                           | `solo`, `partner` or `talk`, linked to the matching source cell in `CLASS DESCRIPTIONS` column J. Edit the source cell to update an existing occurrence. For new occurrences, add a reviewed value or explicit source formula.             |
 | `lead_capacity`, `follow_capacity` | Legacy partner columns retained for compatibility. When both contain reviewed whole numbers 0–1000 and total capacity is blank, the partner class uses the 40-place placeholder. Leave these columns blank when specifying total capacity. |
-| `total_capacity` | Whole number 0–1000 for partner or solo classes. Partner placeholder: 40; at most half the total may register as Follow. Leave lead/follow capacities blank. Talks must leave all three capacity fields blank and are unlimited. |
-| `bookable` | TRUE or FALSE. FALSE keeps the occurrence in the full catalog but prevents new self-service selections. |
+| `total_capacity`                   | Whole number 0–1000 for partner or solo classes. Partner placeholder: 40; at most half the total may register as Follow. Leave lead/follow capacities blank. Talks must leave all three capacity fields blank and are unlimited.           |
+| `bookable`                         | TRUE or FALSE. FALSE keeps the occurrence in the full catalog but prevents new self-service selections.                                                                                                                                    |
 
 The sync accepts at most 500 sessions in a tab no larger than 2000 rows and 52 columns. It reads the whole bounded tab, so stray rows or unknown columns cannot silently disappear from an import. Duplicate IDs, spreadsheet errors, malformed values, overlapping assigned rooms, and incomplete booking rules prevent publication. TBA rooms are not treated as a single physical room. Participant selections reject overlapping time intervals even if start times differ.
 
@@ -49,13 +49,13 @@ The sync accepts at most 500 sessions in a tab no larger than 2000 rows and 52 c
 
 Apply migrations through `00015-reg2026-switch-role.js` using the existing Ley workflow before deploying the code. Migration 15 permits Switch booking rows without changing existing participant, booking or payment records.
 
-| Variable | Meaning |
-| --- | --- |
-| `REG2026_SCHEDULE_SHEET_ID` | Workbook ID above; this enables Sheets authority before the first publication. |
-| `REG2026_SCHEDULE_SHEET_NAME` | Defaults to `APP_SCHEDULE`. |
-| `REG2026_SCHEDULE_SHEET_GID` | Optional numeric tab ID for the dashboard's direct edit link. The current APP_SCHEDULE tab is `1052702601`. |
-| `REG2026_GOOGLE_CLIENT_EMAIL` | Service-account email. Viewer access permits sync; Editor access is required for dashboard capacity saves. |
-| `REG2026_GOOGLE_PRIVATE_KEY` | Server-only service-account PEM private key. Literal `\n` escapes are supported. |
+| Variable                      | Meaning                                                                                                     |
+| ----------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `REG2026_SCHEDULE_SHEET_ID`   | Workbook ID above; this enables Sheets authority before the first publication.                              |
+| `REG2026_SCHEDULE_SHEET_NAME` | Defaults to `APP_SCHEDULE`.                                                                                 |
+| `REG2026_SCHEDULE_SHEET_GID`  | Optional numeric tab ID for the dashboard's direct edit link. The current APP_SCHEDULE tab is `1052702601`. |
+| `REG2026_GOOGLE_CLIENT_EMAIL` | Service-account email. Viewer access permits sync; Editor access is required for dashboard capacity saves.  |
+| `REG2026_GOOGLE_PRIVATE_KEY`  | Server-only service-account PEM private key. Literal `\n` escapes are supported.                            |
 
 The existing `REACT_APP_GOOGLE_CLIENT_EMAIL` and `REACT_APP_GOOGLE_SERVICE_PRIVATE_KEY` configuration is supported as a migration fallback. These values are read only on the server; do not use `NEXT_PUBLIC_` variables or commit secrets. Normal sync requests use `spreadsheets.readonly`; dashboard capacity writes request a separate `spreadsheets` token. Tokens are cached separately by scope. Reads and writes have bounded requests and timeouts. The dedicated source workbook does not need public sharing.
 
