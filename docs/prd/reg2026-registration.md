@@ -209,6 +209,14 @@ The requested Schedule admin page now supports persistent overrides. Mock defaul
 27. Keep database schedule/capacity tables empty initially, render frontend mock classes and persist admin edits as overrides. Add `/dashboard/schedule` for titles, descriptions, teachers, rooms, times, class type and capacities. Preserve class identifiers and existing bookings; booked class timing/type is fixed. Use the effective catalog everywhere and reject stale or unauthorized edits.
 28. Add **Remove all classes and reopen registration** to the participant Edit page reached from the Actions column in both dashboards. Release all class places and retire the prior completion lock, retaining paid competition/lunch choices and historical payments. Reopening is organizer-only, rejects stale changes and pending checkout, and lets the same link show the form again. Previous submissions and payment notifications must not restore removed classes.
 
+### Follow-up schedule invitations (open)
+
+After the first bulk schedule invitation to all eligible confirmed participants, the organizer wants to use the dashboard's bulk schedule email action to remind only those who still need to register for classes. The follow-up should use the schedule invitation and each recipient's personal registration link. Check registration status at send time and skip people who have already registered for classes.
+
+The current bulk action skips completed registrations and anyone whose first invitation was already accepted by SendGrid. A reminder needs to reach previously invited participants whose registration is still incomplete.
+
+Discuss before implementation whether to include Party Pass holders with unfinished competition or lunch choices, and how to handle pending checkout or a completed submission with no classes selected.
+
 ### Launch inputs and deferred details
 
 - Review and replace placeholder titles, descriptions, partner flags, missing room labels, and actual dates before sending invitations. The first catalog is mock data, not verified festival content.

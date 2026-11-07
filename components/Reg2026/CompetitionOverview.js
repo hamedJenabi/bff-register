@@ -29,23 +29,25 @@ function CompetitionRow({ competition, pool, entry, disabled, onBusyChange, onSa
     finally { setSaving(false); onBusyChange(false); }
   };
   return <>
-    <tr>
-      <th scope="row">{roleLabels[pool]}</th>
-      <td className={styles.number}>{entry?.unlimited ? "Unlimited" : entry?.capacity ?? "—"}</td>
-      <td className={styles.number}>{entry?.registered ?? "—"}</td>
-      <td className={styles.number}>{entry?.held ?? "—"}</td>
-      <td className={`${styles.number} ${entry?.remaining === 0 ? styles.full : styles.available}`}
+    <tr role="row">
+      <th role="rowheader" scope="row">{roleLabels[pool]}</th>
+      <td role="cell" className={styles.number}><span className={styles.mobileLabel} aria-hidden="true">Capacity</span>{entry?.unlimited ? "Unlimited" : entry?.capacity ?? "—"}</td>
+      <td role="cell" className={styles.number}><span className={styles.mobileLabel} aria-hidden="true">Registered</span>{entry?.registered ?? "—"}</td>
+      <td role="cell" className={styles.number}><span className={styles.mobileLabel} aria-hidden="true">On hold</span>{entry?.held ?? "—"}</td>
+      <td role="cell" className={`${styles.number} ${entry?.remaining === 0 ? styles.full : styles.available}`}
         title={over ? `${entry.registered + entry.held - entry.capacity} over capacity. Existing entries are kept.` : undefined}>
+        <span className={styles.mobileLabel} aria-hidden="true">Remaining</span>
         {entry?.unlimited ? "Open" : entry?.remaining ?? "—"}{over ? "*" : ""}
       </td>
-      <td>{!competition.capacity ? <span className={styles.unlimitedNote}>No limit</span> : <form onSubmit={submit} className={styles.rowCapacityForm} aria-busy={saving}>
+      <td role="cell" className={styles.capacityEdit}>{!competition.capacity ? <span className={styles.unlimitedNote}>No limit</span> : <form onSubmit={submit} className={styles.rowCapacityForm} aria-busy={saving}>
+        <span className={styles.mobileLabel} aria-hidden="true">Edit capacity</span>
         <label className={styles.srOnly} htmlFor={`competition-capacity-${competition.id}-${pool}`}>Capacity for {label}</label>
         <input id={`competition-capacity-${competition.id}-${pool}`} name="capacity" type="number" min={0} max={1000} step={1} required
           value={value} disabled={disabled || saving || !entry} onChange={(event) => { setValue(event.target.value); setError(""); }} />
         <button type="submit" disabled={disabled || saving || !entry || !changed} aria-label={`Save capacity for ${label}`}>{saving ? "Saving…" : "Save"}</button>
       </form>}</td>
     </tr>
-    {error && <tr className={styles.rowError}><td colSpan={6}><p role="alert">{label}: {error}</p></td></tr>}
+    {error && <tr role="row" className={styles.rowError}><td role="cell" colSpan={6}><p role="alert">{label}: {error}</p></td></tr>}
   </>;
 }
 
@@ -62,10 +64,10 @@ export default function CompetitionOverview({ inventory, disabled, onBusyChange,
     {competitions.map((competition) => <section key={competition.id} className={styles.capacitySlot} aria-labelledby={`competition-heading-${competition.id}`}>
       <header><h3 id={`competition-heading-${competition.id}`}>{competition.label}</h3><span>{competition.roleRequired ? "Capacity per role" : competition.capacity ? "Total capacity" : "No capacity limit"}</span></header>
       <div className={styles.capacityTableScroll} tabIndex={0} role="region" aria-label={`${competition.label} capacities`}>
-        <table className={`${styles.capacityTable} ${styles.competitionTable}`}>
+        <table role="table" className={`${styles.capacityTable} ${styles.competitionTable}`}>
           <colgroup><col className={styles.roleColumn} /><col /><col /><col /><col /><col className={styles.editColumn} /></colgroup>
-          <thead><tr><th scope="col">Role</th><th scope="col">Capacity</th><th scope="col">Registered</th><th scope="col">On hold</th><th scope="col">Remaining</th><th scope="col">Edit capacity</th></tr></thead>
-          <tbody>{Object.keys(competition.capacity || { total: null }).map((pool) => <CompetitionRow key={pool} competition={competition} pool={pool}
+          <thead role="rowgroup"><tr role="row"><th scope="col">Role</th><th scope="col">Capacity</th><th scope="col">Registered</th><th scope="col">On hold</th><th scope="col">Remaining</th><th scope="col">Edit capacity</th></tr></thead>
+          <tbody role="rowgroup">{Object.keys(competition.capacity || { total: null }).map((pool) => <CompetitionRow key={pool} competition={competition} pool={pool}
             entry={inventory[competition.id]?.[pool]} disabled={disabled || refreshing} onBusyChange={onBusyChange} onSave={onSave} />)}</tbody>
         </table>
       </div>

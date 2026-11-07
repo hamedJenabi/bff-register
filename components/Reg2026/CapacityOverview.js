@@ -31,26 +31,29 @@ function CapacityRow({ session, inventory, sheetsMode, version, disabled, onBusy
   const roles = inventory?.roles;
   const roleSummary = session.partnerClass && roles ? ["lead", "follow", "switch"].map((role) => `${role}: ${roles[role]?.registered || 0}`).join(" · ") : undefined;
   return <>
-    <tr className={session.bookable === false ? styles.notBookable : undefined}>
-      <th scope="row" title={`${label} · ${session.teachers}`}><span className={styles.className}>{session.title}</span>
+    <tr role="row" className={session.bookable === false ? styles.notBookable : undefined}>
+      <th role="rowheader" scope="row" title={`${label} · ${session.teachers}`}><span className={styles.className}>{session.title}</span>
         {session.bookable === false && <span className={styles.rowBadge}>{open ? "Talk" : "Closed"}</span>}</th>
-      <td title={session.room}>{session.room || "TBA"}</td>
-      <td className={styles.number}>{open ? "Unlimited" : total}</td>
-      <td className={styles.number} title={roleSummary}>{inventory?.registered ?? "—"}</td>
-      <td className={styles.number}>{inventory?.held ?? "—"}</td>
-      <td className={`${styles.number} ${!open && inventory?.remaining === 0 ? styles.full : styles.available}`}
+      <td role="cell" className={styles.classRoom} title={session.room}>{session.room || "TBA"}</td>
+      <td role="cell" className={styles.number}><span className={styles.mobileLabel} aria-hidden="true">Capacity</span>{open ? "Unlimited" : total}</td>
+      <td role="cell" className={styles.number} title={roleSummary}><span className={styles.mobileLabel} aria-hidden="true">Registered</span>{inventory?.registered ?? "—"}</td>
+      <td role="cell" className={styles.number}><span className={styles.mobileLabel} aria-hidden="true">On hold</span>{inventory?.held ?? "—"}</td>
+      <td role="cell" className={`${styles.number} ${!open && inventory?.remaining === 0 ? styles.full : styles.available}`}
         title={over ? `${inventory.registered + inventory.held - total} over capacity. Existing bookings are kept.` : undefined}>
+        <span className={styles.mobileLabel} aria-hidden="true">Remaining</span>
         {open ? "Open" : inventory?.remaining ?? "—"}{over ? "*" : ""}</td>
-      <td className={`${styles.number} ${session.partnerClass && inventory?.followRemaining === 0 ? styles.full : ""}`}>
+      <td role="cell" className={`${styles.number} ${session.partnerClass && inventory?.followRemaining === 0 ? styles.full : ""}`}>
+        <span className={styles.mobileLabel} aria-hidden="true">Follow left</span>
         {session.partnerClass ? inventory?.followRemaining ?? "—" : "—"}</td>
-      <td>{open ? <span className={styles.unlimitedNote}>No limit</span> : <form onSubmit={submit} className={styles.rowCapacityForm} aria-busy={saving}>
+      <td role="cell" className={styles.capacityEdit}>{open ? <span className={styles.unlimitedNote}>No limit</span> : <form onSubmit={submit} className={styles.rowCapacityForm} aria-busy={saving}>
+        <span className={styles.mobileLabel} aria-hidden="true">Edit capacity</span>
         <label className={styles.srOnly} htmlFor={`overview-capacity-${session.id}`}>Capacity for {label}</label>
         <input id={`overview-capacity-${session.id}`} name="capacity" type="number" min={0} max={1000} step={1} required
           value={value} disabled={disabled || saving} onChange={(event) => { setValue(event.target.value); setError(""); }} />
         <button type="submit" disabled={disabled || saving || !changed} aria-label={`Save capacity for ${label}`}>{saving ? "Saving…" : "Save"}</button>
       </form>}</td>
     </tr>
-    {error && <tr className={styles.rowError}><td colSpan={8}><p role="alert">{session.title}: {error}</p></td></tr>}
+    {error && <tr role="row" className={styles.rowError}><td role="cell" colSpan={8}><p role="alert">{session.title}: {error}</p></td></tr>}
   </>;
 }
 
@@ -81,10 +84,10 @@ export default function CapacityOverview({ sessions, inventory, source, sheetsMo
     {groups.map((group, index) => <section key={`${group.day}-${group.time}`} className={styles.capacitySlot} aria-labelledby={`capacity-slot-${index}`}>
       <header><h3 id={`capacity-slot-${index}`}>{group.day} <span>{group.time}</span></h3><span>{group.sessions.length} {group.sessions.length === 1 ? "class" : "classes"}</span></header>
       <div className={styles.capacityTableScroll} tabIndex={0} role="region" aria-label={`${group.day} ${group.time} capacities`}>
-        <table className={styles.capacityTable}>
+        <table role="table" className={styles.capacityTable}>
           <colgroup><col className={styles.classColumn} /><col className={styles.roomColumn} /><col /><col /><col /><col /><col /><col className={styles.editColumn} /></colgroup>
-          <thead><tr><th scope="col">Class</th><th scope="col">Room</th><th scope="col">Capacity</th><th scope="col">Registered</th><th scope="col">On hold</th><th scope="col">Remaining</th><th scope="col">Follow left</th><th scope="col">Edit capacity</th></tr></thead>
-          <tbody>{group.sessions.map((session) => <CapacityRow key={session.id} session={session} inventory={inventory[session.id]} sheetsMode={sheetsMode}
+          <thead role="rowgroup"><tr role="row"><th scope="col">Class</th><th scope="col">Room</th><th scope="col">Capacity</th><th scope="col">Registered</th><th scope="col">On hold</th><th scope="col">Remaining</th><th scope="col">Follow left</th><th scope="col">Edit capacity</th></tr></thead>
+          <tbody role="rowgroup">{group.sessions.map((session) => <CapacityRow key={session.id} session={session} inventory={inventory[session.id]} sheetsMode={sheetsMode}
             version={source?.publication?.id} disabled={cannotEdit || refreshing} onBusyChange={onBusyChange} onSave={onSave} />)}</tbody>
         </table>
       </div>
