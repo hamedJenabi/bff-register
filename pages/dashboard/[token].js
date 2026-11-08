@@ -734,7 +734,9 @@ export default function Dashboard({ users, tickets, previewMode }) {
               <td>{role}</td>
               <td>{level}</td>
               <td>
-                <RegisteredClasses id={id} firstname={firstname} lastname={lastname} themeClass={theme_class} buttonClassName={styles.button} />
+                {ticket !== "partyPass" && (
+                  <RegisteredClasses id={id} firstname={firstname} lastname={lastname} themeClass={theme_class} buttonClassName={styles.button} />
+                )}
               </td>
               <td>{competition}</td>
               <td>
