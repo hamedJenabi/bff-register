@@ -13,9 +13,9 @@ function CapacityRow({ session, inventory, sheetsMode, version, disabled, onBusy
   const changed = value !== String(total ?? "");
   const label = `${session.title}, ${session.day} ${session.start}`;
   const over = !open && inventory && inventory.registered + inventory.held > total;
-  const remaining = inventory?.remaining;
-  const highlight = !open && Number.isFinite(remaining)
-    ? remaining <= 5 ? styles.capacityCritical : remaining < 15 ? styles.capacityLow : remaining < 20 ? styles.capacityNotice : ""
+  const registered = inventory?.registered;
+  const highlight = !open && Number.isFinite(registered)
+    ? registered <= 5 ? styles.capacityCritical : registered < 15 ? styles.capacityLow : registered < 20 ? styles.capacityNotice : ""
     : "";
   const rowClassName = [session.bookable === false ? styles.notBookable : "", highlight].filter(Boolean).join(" ");
   const submit = async (event) => {
@@ -85,10 +85,10 @@ export default function CapacityOverview({ sessions, inventory, classRegistrantC
       <span>{filtered.length} {filtered.length === 1 ? "class" : "classes"}</span>
     </div>
     <p className={styles.overviewHint}>Capacity is the total before bookings. Remaining places account for registrations and active checkout holds. Followers can fill up to 50% of a partner class.</p>
-    <div className={styles.capacityLegend} aria-label="Remaining places highlighting">
-      <span className={styles.capacityNotice}>15–19 remaining</span>
-      <span className={styles.capacityLow}>6–14 remaining</span>
-      <span className={styles.capacityCritical}>5 or fewer remaining</span>
+    <div className={styles.capacityLegend} aria-label="Registered users highlighting">
+      <span className={styles.capacityNotice}>15–19 registered</span>
+      <span className={styles.capacityLow}>6–14 registered</span>
+      <span className={styles.capacityCritical}>5 or fewer registered</span>
     </div>
     {cannotEdit && sheetsMode && <p className={styles.overviewHint}>Capacity editing needs a published schedule and configured Google Sheets access.</p>}
     {!groups.length && <p className={styles.emptyOverview}>{sessions.length ? "No classes match your filters." : "Sync the schedule to see classes and capacities here."}</p>}
