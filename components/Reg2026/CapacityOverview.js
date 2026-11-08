@@ -15,7 +15,7 @@ function CapacityRow({ session, inventory, sheetsMode, version, disabled, onBusy
   const over = !open && inventory && inventory.registered + inventory.held > total;
   const registered = inventory?.registered;
   const highlight = !open && Number.isFinite(registered)
-    ? registered <= 5 ? styles.capacityCritical : registered < 15 ? styles.capacityLow : registered < 20 ? styles.capacityNotice : ""
+    ? registered <= 5 ? styles.capacityNotice : registered < 15 ? styles.capacityLow : styles.capacityCritical
     : "";
   const rowClassName = [session.bookable === false ? styles.notBookable : "", highlight].filter(Boolean).join(" ");
   const submit = async (event) => {
@@ -86,9 +86,9 @@ export default function CapacityOverview({ sessions, inventory, classRegistrantC
     </div>
     <p className={styles.overviewHint}>Capacity is the total before bookings. Remaining places account for registrations and active checkout holds. Followers can fill up to 50% of a partner class.</p>
     <div className={styles.capacityLegend} aria-label="Registered users highlighting">
-      <span className={styles.capacityNotice}>15–19 registered</span>
+      <span className={styles.capacityNotice}>0–5 registered</span>
       <span className={styles.capacityLow}>6–14 registered</span>
-      <span className={styles.capacityCritical}>5 or fewer registered</span>
+      <span className={styles.capacityCritical}>15+ registered</span>
     </div>
     {cannotEdit && sheetsMode && <p className={styles.overviewHint}>Capacity editing needs a published schedule and configured Google Sheets access.</p>}
     {!groups.length && <p className={styles.emptyOverview}>{sessions.length ? "No classes match your filters." : "Sync the schedule to see classes and capacities here."}</p>}
