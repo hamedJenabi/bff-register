@@ -17,7 +17,7 @@ test("competition limits and reservations on isolated Postgres", { skip: !proces
   const previousSheet = process.env.REG2026_SCHEDULE_SHEET_ID;
   delete process.env.REG2026_SCHEDULE_SHEET_ID;
   try {
-    for (const file of ["00004-CREAT-registraion-2026", "00006-create-class-capacities-2026", "00007-create-reg2026-bookings", "00008-reg2026-order-safety", "00009-create-schedule-overrides-2026", "00010-reg2026-reopen-registration", "00013-reg2026-sheet-schedule", "00015-reg2026-switch-role", "00016-reg2026-competition-capacities"]) {
+    for (const file of ["00004-CREAT-registraion-2026", "00006-create-class-capacities-2026", "00007-create-reg2026-bookings", "00008-reg2026-order-safety", "00009-create-schedule-overrides-2026", "00010-reg2026-reopen-registration", "00013-reg2026-sheet-schedule", "00015-reg2026-switch-role", "00016-reg2026-competition-capacities", "00017-reg2026-showcase-capacity"]) {
       await sql.begin((tx) => require(`../migrations/${file}`).up(tx));
     }
     const store = createRegistrationStore(sql);
@@ -111,11 +111,27 @@ test("competition limits and reservations on isolated Postgres", { skip: !proces
       }
     });
 
-    await t.test("Showcase stays open and unconfirmed festival registrations do not consume competition places", async () => {
-      await seed(50, "fever_showcase");
-      assert.equal((await places("fever_showcase", "total")).unlimited, true);
-      await store.submit(await person(), draft("fever_showcase"), "competition-showcase");
-      assert.deepEqual((await store.competitionInventory()).fever_showcase.total, { capacity: null, remaining: null, unlimited: true, registered: 51, held: 0, version: 0 });
+    await t.test("Showcase checkout holds reserve the final place and release on cancellation", async () => {
+      await seed(24, "fever_showcase");
+      const attendee = await person();
+      const order = await store.submit(attendee, draft("fever_showcase", undefined, false), "competition-showcase-hold");
+      assert.deepEqual((await store.competitionInventory()).fever_showcase.total, { capacity: 25, remaining: 0, registered: 24, held: 1, version: 0 });
+      await assert.rejects(store.submit(await person(), draft("fever_showcase"), "competition-showcase-full"), (error) => error.status === 409);
+      await store.attachSession(order.id, `cs_competition_${order.id}`);
+      await store.applyPayment(checkout(attendee, order, "expired", "unpaid"), "checkout.session.expired");
+      assert.equal((await places("fever_showcase", "total")).remaining, 1);
+      await reset();
+    });
+
+    await t.test("organizers can edit Showcase's total capacity", async () => {
+      await store.editCompetitionCapacity({ id: "fever_showcase", pool: "total", capacity: 2, version: 0 });
+      await seed(2, "fever_showcase");
+      assert.deepEqual((await store.competitionInventory()).fever_showcase.total, { capacity: 2, remaining: 0, registered: 2, held: 0, version: 1 });
+      await assert.rejects(store.submit(await person(), draft("fever_showcase"), "competition-showcase-edited"), (error) => error.status === 409);
+      await reset();
+    });
+
+    await t.test("unconfirmed festival registrations do not consume competition places", async () => {
       await seed(30, "solo_battle");
       await sql`UPDATE registrations_26 SET status = 'waitinglist' WHERE competitions = 'solo_battle'`;
       assert.equal((await places("solo_battle", "total")).remaining, 30);
@@ -167,7 +183,7 @@ test("competition limits and reservations on isolated Postgres", { skip: !proces
         await assert.rejects(store.editCompetitionCapacity({ ...valid, version }), (error) => error.status === 422);
       }
       await assert.rejects(store.editCompetitionCapacity({ ...valid, id: "missing" }), (error) => error.status === 404);
-      await assert.rejects(store.editCompetitionCapacity({ ...valid, id: "fever_showcase", pool: "total" }), (error) => error.status === 422);
+      await assert.rejects(store.editCompetitionCapacity({ ...valid, id: "fever_showcase", pool: "lead" }), (error) => error.status === 422);
       assert.equal((await sql`SELECT * FROM competition_capacities_26`).length, 0);
       assert.equal((await places("strictly", "lead")).capacity, 24);
     });

@@ -23,7 +23,7 @@ test("sheet schedules publish atomically and protect real registrations on isola
   const previousSheet = process.env.REG2026_SCHEDULE_SHEET_ID;
   delete process.env.REG2026_SCHEDULE_SHEET_ID;
   try {
-    for (const migration of ["00004-CREAT-registraion-2026", "00006-create-class-capacities-2026", "00007-create-reg2026-bookings", "00008-reg2026-order-safety", "00009-create-schedule-overrides-2026", "00010-reg2026-reopen-registration", "00013-reg2026-sheet-schedule", "00015-reg2026-switch-role", "00016-reg2026-competition-capacities"]) {
+    for (const migration of ["00004-CREAT-registraion-2026", "00006-create-class-capacities-2026", "00007-create-reg2026-bookings", "00008-reg2026-order-safety", "00009-create-schedule-overrides-2026", "00010-reg2026-reopen-registration", "00013-reg2026-sheet-schedule", "00015-reg2026-switch-role", "00016-reg2026-competition-capacities", "00017-reg2026-showcase-capacity"]) {
       await sql.begin((tx) => require(`../migrations/${migration}`).up(tx));
     }
     const store = createRegistrationStore(sql);

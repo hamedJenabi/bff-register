@@ -89,6 +89,12 @@ export default function Schedule({ participant, form, availability, disabled, se
   return <section ref={scheduleRef} aria-labelledby="schedule-title">
     <h2 id="schedule-title">Your class schedule</h2>
     <p>Choose up to {CLASS_SELECTION_LIMIT} classes in total across the festival, with one per time slot. Every session is independent. Draft choices reserve no places until you submit.</p>
+    <p className={styles.levelGuide}>
+      Before choosing your classes, read the{" "}
+      <a href="https://www.bluesfever.eu/passes-levels/#desc" target="_blank" rel="noopener noreferrer">
+        level descriptions <span aria-hidden="true">↗</span>
+      </a>.
+    </p>
     {soloCompetitor && <p className={styles.informationText} role="status">{SOLO_COMPETITION_NOTICE}</p>}
     <FormMessage {...form} name="classes" />
     {scheduleDays.map((day) => {
