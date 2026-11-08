@@ -156,11 +156,13 @@ function ClassPreview({ session, source, onSave, disabled, onBusyChange }) {
   </section>;
 }
 
-export default function ScheduleAdmin({ initial, source: initialSource, inventory: initialInventory, competitionInventory: initialCompetitionInventory, loadError }) {
+export default function ScheduleAdmin({ initial, source: initialSource, inventory: initialInventory, competitionInventory: initialCompetitionInventory, classRegistrantCount: initialClassRegistrantCount, competitionRegistrantCount: initialCompetitionRegistrantCount, loadError }) {
   const [sessions, setSessions] = useState(initial || []);
   const [source, setSource] = useState(initialSource || null);
   const [inventory, setInventory] = useState(initialInventory || {});
   const [competitionInventory, setCompetitionInventory] = useState(initialCompetitionInventory || {});
+  const [classRegistrantCount, setClassRegistrantCount] = useState(initialClassRegistrantCount ?? 0);
+  const [competitionRegistrantCount, setCompetitionRegistrantCount] = useState(initialCompetitionRegistrantCount ?? 0);
   const tabs = useTabState({ baseId: "schedule-view", selectedId: "schedule-details-tab" });
   const [selected, setSelected] = useState(initial?.[0]?.id || "");
   const [query, setQuery] = useState("");
@@ -180,6 +182,8 @@ export default function ScheduleAdmin({ initial, source: initialSource, inventor
     setSource(result.source || null);
     setInventory(result.inventory || {});
     setCompetitionInventory(result.competitionInventory || {});
+    setClassRegistrantCount(result.classRegistrantCount ?? 0);
+    setCompetitionRegistrantCount(result.competitionRegistrantCount ?? 0);
     setSelected((current) => result.schedule?.some((session) => session.id === current)
       ? current : result.schedule?.[0]?.id || "");
   };
@@ -288,12 +292,12 @@ export default function ScheduleAdmin({ initial, source: initialSource, inventor
           : sheetsMode && <section className={styles.preview}><h2>Published schedule</h2><p>Published classes will appear here after the first successful sync.</p></section>}
       </div></TabPanel>
       <TabPanel {...tabs} id="schedule-capacity-panel" tabId="schedule-capacity-tab" className={styles.tabPanel}>
-        <CapacityOverview sessions={sessions} inventory={inventory} source={source} sheetsMode={sheetsMode}
+        <CapacityOverview sessions={sessions} inventory={inventory} classRegistrantCount={classRegistrantCount} source={source} sheetsMode={sheetsMode}
           disabled={syncing || savingCapacity} onBusyChange={setSavingCapacity} onSave={capacitySaved}
           onRefresh={refreshCounts} refreshing={refreshing} />
       </TabPanel>
       <TabPanel {...tabs} id="schedule-competition-panel" tabId="schedule-competition-tab" className={styles.tabPanel}>
-        <CompetitionOverview inventory={competitionInventory} disabled={syncing || savingCapacity} onBusyChange={setSavingCapacity}
+        <CompetitionOverview inventory={competitionInventory} competitionRegistrantCount={competitionRegistrantCount} disabled={syncing || savingCapacity} onBusyChange={setSavingCapacity}
           onSave={competitionCapacitySaved} onRefresh={refreshCounts} refreshing={refreshing} />
       </TabPanel>
     </>}
@@ -306,8 +310,8 @@ export async function getServerSideProps({ req, res }) {
   try {
     const { registrationStore: store } = await import("../../db/reg2026");
     const { getScheduleAdminState } = await import("../../lib/reg2026/google-sheets");
-    const { schedule, source, inventory, competitionInventory } = await getScheduleAdminState(store);
-    return { props: { initial: schedule, source, inventory, competitionInventory, loadError: null } };
+    const { schedule, source, inventory, competitionInventory, classRegistrantCount, competitionRegistrantCount } = await getScheduleAdminState(store);
+    return { props: { initial: schedule, source, inventory, competitionInventory, classRegistrantCount, competitionRegistrantCount, loadError: null } };
   } catch {
     return { props: { initial: null, loadError: "Schedule is temporarily unavailable. Please try again." } };
   }

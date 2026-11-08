@@ -51,13 +51,11 @@ function CompetitionRow({ competition, pool, entry, disabled, onBusyChange, onSa
   </>;
 }
 
-export default function CompetitionOverview({ inventory, disabled, onBusyChange, onSave, onRefresh, refreshing }) {
-  const totals = Object.values(inventory).flatMap(Object.values).reduce((sum, entry) => ({
-    registered: sum.registered + entry.registered, held: sum.held + entry.held,
-  }), { registered: 0, held: 0 });
+export default function CompetitionOverview({ inventory, competitionRegistrantCount, disabled, onBusyChange, onSave, onRefresh, refreshing }) {
+  const heldPlaces = Object.values(inventory).flatMap(Object.values).reduce((sum, entry) => sum + entry.held, 0);
   return <section className={styles.capacityOverview} aria-label="Competition capacity overview">
     <div className={styles.overviewHeading}>
-      <div><h2>Competition overview</h2><p>{competitions.length} competitions <span>·</span> {totals.registered} registered {totals.registered === 1 ? "entry" : "entries"} <span>·</span> {totals.held} {totals.held === 1 ? "place" : "places"} on hold</p></div>
+      <div><h2>Competition overview</h2><p>{competitions.length} competitions <span>·</span> {competitionRegistrantCount} {competitionRegistrantCount === 1 ? "user" : "users"} registered for competitions <span>·</span> {heldPlaces} {heldPlaces === 1 ? "place" : "places"} on hold</p></div>
       <button type="button" className={styles.refreshButton} disabled={disabled || refreshing} onClick={onRefresh}>{refreshing ? "Refreshing…" : "Refresh counts"}</button>
     </div>
     <p className={styles.overviewHint}>Remaining places account for registered entries and active checkout holds. Lead and Follow have independent limits.</p>

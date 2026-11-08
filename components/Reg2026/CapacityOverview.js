@@ -13,6 +13,11 @@ function CapacityRow({ session, inventory, sheetsMode, version, disabled, onBusy
   const changed = value !== String(total ?? "");
   const label = `${session.title}, ${session.day} ${session.start}`;
   const over = !open && inventory && inventory.registered + inventory.held > total;
+  const remaining = inventory?.remaining;
+  const highlight = !open && Number.isFinite(remaining)
+    ? remaining <= 5 ? styles.capacityCritical : remaining < 15 ? styles.capacityLow : remaining < 20 ? styles.capacityNotice : ""
+    : "";
+  const rowClassName = [session.bookable === false ? styles.notBookable : "", highlight].filter(Boolean).join(" ");
   const submit = async (event) => {
     event.preventDefault();
     if (!changed || saving || disabled) return;
@@ -31,7 +36,7 @@ function CapacityRow({ session, inventory, sheetsMode, version, disabled, onBusy
   const roles = inventory?.roles;
   const roleSummary = session.partnerClass && roles ? ["lead", "follow", "switch"].map((role) => `${role}: ${roles[role]?.registered || 0}`).join(" · ") : undefined;
   return <>
-    <tr role="row" className={session.bookable === false ? styles.notBookable : undefined}>
+    <tr role="row" className={rowClassName || undefined}>
       <th role="rowheader" scope="row" title={`${label} · ${session.teachers}`}><span className={styles.className}>{session.title}</span>
         {session.bookable === false && <span className={styles.rowBadge}>{open ? "Talk" : "Closed"}</span>}</th>
       <td role="cell" className={styles.classRoom} title={session.room}>{session.room || "TBA"}</td>
@@ -57,18 +62,19 @@ function CapacityRow({ session, inventory, sheetsMode, version, disabled, onBusy
   </>;
 }
 
-export default function CapacityOverview({ sessions, inventory, source, sheetsMode, disabled, onBusyChange, onSave, onRefresh, refreshing }) {
+export default function CapacityOverview({ sessions, inventory, classRegistrantCount, source, sheetsMode, disabled, onBusyChange, onSave, onRefresh, refreshing }) {
   const [query, setQuery] = useState("");
   const [day, setDay] = useState("");
   const filtered = sessions.filter((session) => (!day || session.day === day) &&
     [session.title, session.teachers, session.room].some((value) => value?.toLowerCase().includes(query.trim().toLowerCase())));
   const groups = scheduleDays.flatMap((day) => [...new Set(filtered.filter((session) => session.day === day).map((session) => `${session.start}–${session.end}`))].sort()
-    .map((time) => ({ day, time, sessions: filtered.filter((session) => session.day === day && `${session.start}–${session.end}` === time) })));
-  const totals = sessions.reduce((sum, session) => ({ registered: sum.registered + (inventory[session.id]?.registered || 0), held: sum.held + (inventory[session.id]?.held || 0) }), { registered: 0, held: 0 });
+    .map((time) => ({ day, time, sessions: filtered.filter((session) => session.day === day && `${session.start}–${session.end}` === time)
+      .sort((a, b) => (inventory[b.id]?.registered ?? -1) - (inventory[a.id]?.registered ?? -1)) })));
+  const heldPlaces = sessions.reduce((sum, session) => sum + (inventory[session.id]?.held || 0), 0);
   const cannotEdit = disabled || (sheetsMode && (!source.publication || !source.credentialsConfigured));
   return <section className={styles.capacityOverview} aria-label="Class capacity overview">
     <div className={styles.overviewHeading}>
-      <div><h2>Capacity overview</h2><p>{sessions.length} classes <span>·</span> {totals.registered} class registrations <span>·</span> {totals.held} places on hold</p></div>
+      <div><h2>Capacity overview</h2><p>{sessions.length} classes <span>·</span> {classRegistrantCount} {classRegistrantCount === 1 ? "user" : "users"} registered for classes <span>·</span> {heldPlaces} places on hold</p></div>
       <button type="button" className={styles.refreshButton} disabled={disabled || refreshing} onClick={onRefresh}>{refreshing ? "Refreshing…" : "Refresh counts"}</button>
     </div>
     <div className={styles.overviewToolbar}>
@@ -79,6 +85,11 @@ export default function CapacityOverview({ sessions, inventory, source, sheetsMo
       <span>{filtered.length} {filtered.length === 1 ? "class" : "classes"}</span>
     </div>
     <p className={styles.overviewHint}>Capacity is the total before bookings. Remaining places account for registrations and active checkout holds. Followers can fill up to 50% of a partner class.</p>
+    <div className={styles.capacityLegend} aria-label="Remaining places highlighting">
+      <span className={styles.capacityNotice}>15–19 remaining</span>
+      <span className={styles.capacityLow}>6–14 remaining</span>
+      <span className={styles.capacityCritical}>5 or fewer remaining</span>
+    </div>
     {cannotEdit && sheetsMode && <p className={styles.overviewHint}>Capacity editing needs a published schedule and configured Google Sheets access.</p>}
     {!groups.length && <p className={styles.emptyOverview}>{sessions.length ? "No classes match your filters." : "Sync the schedule to see classes and capacities here."}</p>}
     {groups.map((group, index) => <section key={`${group.day}-${group.time}`} className={styles.capacitySlot} aria-labelledby={`capacity-slot-${index}`}>

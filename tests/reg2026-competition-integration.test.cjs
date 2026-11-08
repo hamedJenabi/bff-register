@@ -36,6 +36,19 @@ test("competition limits and reservations on isolated Postgres", { skip: !proces
       status, payment_status: paymentStatus,
     });
 
+    await t.test("competition registrants count each confirmed user once across valid saved competitions", async () => {
+      assert.equal(await store.competitionRegistrantCount(), 0);
+      const [multiple] = await seed(1, "solo_battle,open_mixnmatch,solo_battle");
+      await sql`UPDATE registrations_26 SET open_mixnmatch_role = 'lead' WHERE id = ${multiple.id}`;
+      await seed(1, "strictly", "follow");
+      await seed(1);
+      await seed(1, "unknown-competition");
+      const [unconfirmed] = await seed(1, "fever_showcase");
+      await sql`UPDATE registrations_26 SET status = 'waitinglist' WHERE id = ${unconfirmed.id}`;
+      assert.equal(await store.competitionRegistrantCount(), 2);
+      await reset();
+    });
+
     for (const competition of competitions.filter((entry) => entry.capacity)) {
       for (const [pool, capacity] of Object.entries(competition.capacity)) {
         await t.test(`${competition.label} ${pool}: accepts place ${capacity}, rejects the next and serializes the final place`, async () => {
@@ -71,12 +84,15 @@ test("competition limits and reservations on isolated Postgres", { skip: !proces
       const order = await store.submit(attendee, draft("solo_battle", undefined, false), "competition-paid-hold");
       assert.equal((await places("solo_battle", "total")).remaining, 0);
       assert.deepEqual((await store.competitionInventory()).solo_battle.total, { capacity: 30, remaining: 0, registered: 29, held: 1, version: 0 });
+      assert.equal(await store.competitionRegistrantCount(), 29, "Active checkout holds are not registered users");
       assert.equal((await store.availability(attendee.id)).competitions.solo_battle.total.remaining, 1);
       await sql`UPDATE reg2026_orders SET expires_at = NOW() - INTERVAL '1 minute' WHERE id = ${order.id}`;
       assert.equal((await places("solo_battle", "total")).remaining, 1);
       assert.equal((await store.competitionInventory()).solo_battle.total.held, 0);
+      assert.equal(await store.competitionRegistrantCount(), 29);
       await sql`UPDATE reg2026_orders SET status = 'payment_pending', expires_at = NULL WHERE id = ${order.id}`;
       assert.equal((await places("solo_battle", "total")).remaining, 0);
+      assert.equal(await store.competitionRegistrantCount(), 29, "Pending payment is not a confirmed competition registration");
       await store.attachSession(order.id, `cs_competition_${order.id}`);
       await store.applyPayment(checkout(attendee, order, "complete", "unpaid"), "checkout.session.async_payment_failed");
       assert.equal((await places("solo_battle", "total")).remaining, 1);
@@ -89,6 +105,7 @@ test("competition limits and reservations on isolated Postgres", { skip: !proces
       assert.equal(secondOrder.status, "provisional");
       assert.equal((await places("solo_battle", "total")).remaining, 0, "Saved choices and an active add-on order consume a single place");
       assert.deepEqual((await store.competitionInventory()).solo_battle.total, { capacity: 30, remaining: 0, registered: 30, held: 0, version: 0 });
+      assert.equal(await store.competitionRegistrantCount(), 30, "Saved entries and a later add-on order count the user once");
       await reset();
     });
 

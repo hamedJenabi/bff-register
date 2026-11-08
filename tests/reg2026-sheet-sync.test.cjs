@@ -239,7 +239,9 @@ test("sync publishes the validated source and returns accurate new and unchanged
     schedulePublication: async () => publication,
     schedule: async () => snapshot.sessions,
     classInventory: async () => ({}),
+    classRegistrantCount: async () => 2,
     competitionInventory: async () => ({}),
+    competitionRegistrantCount: async () => 1,
     publishSchedule: async (actual, version) => {
       assert.deepEqual(actual, snapshot);
       assert.equal(version, publication?.id || 0);
@@ -255,6 +257,8 @@ test("sync publishes the validated source and returns accurate new and unchanged
   assert.equal(first.unchanged, false);
   assert.equal(first.source.publication.id, 1);
   assert.deepEqual(first.schedule, snapshot.sessions);
+  assert.equal(first.classRegistrantCount, 2);
+  assert.equal(first.competitionRegistrantCount, 1);
   const repeated = await syncScheduleFromSheet(store, 1, readSheet);
   assert.equal(repeated.unchanged, true);
   assert.equal(repeated.source.publication.id, 1);
@@ -268,18 +272,22 @@ test("dashboard remains accessible before first publication and preserves the pu
   const store = {
     schedulePublication: async () => null,
     competitionInventory: async () => ({}),
+    competitionRegistrantCount: async () => 2,
     schedule: async () => { scheduleReads += 1; throw new Error("Do not load unpublished mocks"); },
   };
   const unpublished = await getScheduleAdminState(store);
   assert.deepEqual(unpublished.schedule, []);
   assert.equal(unpublished.source.configured, true);
   assert.equal(unpublished.source.publication, null);
+  assert.equal(unpublished.classRegistrantCount, 0);
+  assert.equal(unpublished.competitionRegistrantCount, 2);
   assert.equal(scheduleReads, 0);
   const publication = { id: 9, spreadsheetId, sheetName: "Published Schedule", count: 2, publishedAt: "2026-10-27T12:00:00Z" };
   const schedule = parseScheduleRows(values());
   store.schedulePublication = async () => publication;
   store.schedule = async () => schedule;
   store.classInventory = async () => ({});
+  store.classRegistrantCount = async (sessions) => { assert.deepEqual(sessions, schedule); return 3; };
   delete process.env.REG2026_SCHEDULE_SHEET_ID;
   const published = await getScheduleAdminState(store);
   assert.equal(published.source.configured, true);
@@ -287,6 +295,7 @@ test("dashboard remains accessible before first publication and preserves the pu
   assert.equal(published.source.sheetName, "Published Schedule");
   assert.equal(published.source.publication.id, 9);
   assert.deepEqual(published.schedule, schedule);
+  assert.equal(published.classRegistrantCount, 3);
   assert.ok(!Object.keys(published.source).some((key) => /privateKey|accessToken|clientEmail/.test(key)));
 }));
 
@@ -309,6 +318,7 @@ test("schedule HTTP endpoint requires organizer authentication and same-origin w
   const store = {
     schedulePublication: async () => { reads += 1; return null; },
     competitionInventory: async () => ({}),
+    competitionRegistrantCount: async () => 0,
     schedule: async () => { throw new Error("Unpublished schedule should not be read"); },
   };
   require.cache[dbPath] = { id: dbPath, filename: dbPath, loaded: true, exports: { registrationStore: store } };

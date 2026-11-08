@@ -32,6 +32,35 @@ test("sheet schedules publish atomically and protect real registrations on isola
       VALUES ('2026','confirmed','advanced','fullpass',${name},'Dancer',${name.toLowerCase() + "@example.com"},'Austria') RETURNING *`)[0];
     let publication;
 
+    await t.test("class registrants are distinct confirmed users across the current schedule, excluding holds", async () => {
+      const people = await Promise.all(["CountMultiple", "CountSecond", "CountHeld", "CountExpired", "CountOutside", "CountNoClasses"].map(createPerson));
+      const bookings = [
+        [people[0].id, sessions[0].id, "total", "confirmed", null],
+        [people[0].id, sessions[0].id, "total", "confirmed", null],
+        [people[0].id, sessions[1].id, "lead", "confirmed", null],
+        [people[0].id, sessions[1].id, "follow", "confirmed", null],
+        [people[1].id, sessions[1].id, "switch", "confirmed", null],
+        [people[2].id, sessions[0].id, "total", "provisional", new Date(Date.now() + 60000)],
+        [people[2].id, sessions[1].id, "follow", "provisional", null],
+        [people[3].id, sessions[0].id, "total", "provisional", new Date(Date.now() - 60000)],
+        [people[4].id, "outside-current-schedule", "total", "confirmed", null],
+      ];
+      try {
+        assert.equal(await store.classRegistrantCount(sessions), 0);
+        for (const [id, sessionId, pool, status, expiresAt] of bookings) {
+          await sql`INSERT INTO class_bookings_26 (registration_id,session_id,pool,status,expires_at)
+            VALUES (${id},${sessionId},${pool},${status},${expiresAt})`;
+        }
+        assert.equal(await store.classRegistrantCount(sessions), 2);
+        assert.equal(await store.classRegistrantCount([sessions[0]]), 1);
+        assert.equal(await store.classRegistrantCount([]), 0);
+      } finally {
+        const ids = people.map((person) => person.id);
+        await sql`DELETE FROM class_bookings_26 WHERE registration_id IN ${sql(ids)}`;
+        await sql`DELETE FROM registrations_26 WHERE id IN ${sql(ids)}`;
+      }
+    });
+
     await t.test("configured Sheets mode cannot serve mock classes before a successful publication", async () => {
       assert.ok((await store.schedule()).length > 2, "Unconfigured legacy fixtures remain usable");
       process.env.REG2026_SCHEDULE_SHEET_ID = sheetId;
@@ -86,6 +115,7 @@ test("sheet schedules publish atomically and protect real registrations on isola
       const order = await store.submit(registered, { ...empty(), classes: [{ sessionId: "sheet-session-a" }] }, "sheet-registration-01");
       assert.equal(order.status, "confirmed");
       assert.equal((await store.availability()).classes["sheet-session-a"].total.remaining, 29);
+      assert.equal(await store.classRegistrantCount(), 1);
       const other = await createPerson("SheetOldMock");
       await assert.rejects(store.submit(other, { ...empty(), classes: [{ sessionId: "fri-1330-ankersaal" }] }, "sheet-mock-rejected-01"), (error) => error.status === 422);
     });

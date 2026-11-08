@@ -96,6 +96,19 @@
   .available { color: #225a55; font-weight: 600; } .full { color: #a12625; font-weight: 700; }
 }
 .className { display: inline-block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; vertical-align: middle; }
+.capacityNotice { --capacity-background: #99f6e4; --capacity-text: #073e3b; --capacity-border: #5eead4; }
+.capacityLow { --capacity-background: #2dd4bf; --capacity-text: #073e3b; --capacity-border: #14b8a6; }
+.capacityCritical { --capacity-background: #0f766e; --capacity-text: #fff; --capacity-border: #0d5c56; }
+.capacityTable tbody tr {
+  &.capacityNotice, &.capacityLow, &.capacityCritical {
+    background: var(--capacity-background); color: var(--capacity-text);
+    > th, > td { border-bottom-color: var(--capacity-border); }
+    .classRoom, .mobileLabel, .available, .full, .unlimitedNote { color: inherit; }
+  }
+}
+.capacityLegend { display: flex; flex-wrap: wrap; gap: 6px; margin: -6px 0 18px;
+  span { padding: 3px 8px; border-radius: 4px; background: var(--capacity-background); color: var(--capacity-text); font-size: 11px; line-height: 18px; font-weight: 600; }
+}
 .mobileLabel { display: none; }
 .competitionTable { min-width: 740px;
   .roleColumn { width: 28%; }
