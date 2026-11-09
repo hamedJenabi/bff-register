@@ -1,115 +1,18 @@
-import { requireAdmin } from "../../lib/admin/session";
-import {
-  titleCase,
-  groupLevelsToShow,
-  levelsToShow,
-  finalLevelsToShow,
-} from "../../utils/functions";
+import sgMail from "@sendgrid/mail";
+import { attendeeStore } from "../../db/app";
+import { getTicketByName, sql } from "../../db/db";
+import { createFinalEmailHandler, createFinalEmailStore } from "../../lib/app/final-email";
 
-import { getTicketByName } from "../../db/db";
-const sgMail = require("@sendgrid/mail");
-sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+const preview = process.env.BFF_PREVIEW === "true" && process.env.NODE_ENV !== "production";
+const mailer = new sgMail.MailService();
+if (!preview && process.env.SENDGRID_API_KEY) mailer.setApiKey(process.env.SENDGRID_API_KEY);
+mailer.setTimeout(15000);
 
-const sendEmail = async (msg) => {
-  sgMail
-    .send(msg)
-    .then(() => {
-      console.log("Email sent");
-    })
-    .catch((error) => {
-      console.error(error);
-    });
-};
-
-export default async function mailall(req, response) {
-  if (req.method !== "POST") { response.setHeader("Allow", "POST"); return response.status(405).end(); }
-  if (!requireAdmin(req, response)) return;
-  const user = req.body;
-
-  const requestData = {
-    status: req.body.status,
-    prevStatus: req.body.prevStatus,
-    email: req.body.email,
-    firstname: req.body.firstname,
-    lastname: req.body.lastname,
-    country: req.body.country,
-    role: req.body.role ?? "",
-    ticket: req.body.ticket ?? "",
-    level: req.body.level,
-    theme_class: req.body.theme_class,
-    competition: req.body.competition,
-    open_mixnmatch_role: req.body.open_mixnmatch_role,
-    newcomers_mixnmatch_role: req.body.newcomers_mixnmatch_role,
-    strictly_role: req.body.strictly_role,
-    competitions: req.body.competitions,
-    lunch: req.body.lunch,
-    terms: req.body.terms,
-  };
-
-  const getLevelLabelForEmail = (level) => {
-    if (level === "") {
-      return "";
-    }
-    if (level !== "") {
-      const title = finalLevelsToShow?.find(
-        (item) => item.value === level
-      )?.label;
-      const groupTitle = finalLevelsToShow?.find(
-        (item) => item.value === level
-      )?.label;
-      return titleCase(title) ? titleCase(title) : titleCase(groupTitle);
-    }
-  };
-  const getTicketLabel = (ticket) => {
-    if (ticket === "partyPass") {
-      return "Party Pass";
-    }
-    if (ticket === "fullpass") {
-      return "Full Pass";
-    }
-    if (ticket === "parentPass") {
-      return "Parent Pass";
-    }
-  };
-  const ticket = getTicketLabel(requestData.ticket);
-  const ticketLabel = await getTicketByName(requestData.level);
-  let label = ticketLabel?.label;
-  if (!label) {
-    label = "";
-  }
-  const msg = {
-    from: "registration@bluesfever.eu",
-    to: `${user.email}`,
-    template_id: "d-faecb94e7a544674883c69bc2421b9ec",
-    dynamic_template_data: {
-      firstname: `${user.firstname}`,
-      lastname: `${user.lastname}`,
-      country: `${user.country}`,
-      // role: `${user.role}`,
-      level: label ?? "",
-      ticket: `${ticket}`,
-      lunch: requestData.lunch ? `${requestData.lunch}` : "No",
-      themeClass: `${user.theme_class ? titleCase(user.theme_class) : "No"}`,
-      competition:
-        user.competition === "yes" || user.competition === "later"
-          ? true
-          : false,
-      competitionAnswer:
-        user.competition === "later" ? "I will decide later" : "No",
-      open_mixnmatch_role: `${user.open_mixnmatch_role}`,
-      newcomers_mixnmatch_role: `${user.newcomers_mixnmatch_role}`,
-      strictly_role: `${user.strictly_role}`,
-      competitions: user.competitions
-        ? `${user.competitions
-            .split(",")
-            .map((competition) => titleCase(competition))}`
-        : "",
-    },
-  };
-  await sendEmail(msg);
-  if (user) {
-    response.status(200).json();
-  } else {
-    response.status(401).json();
-  }
-}
+export default createFinalEmailHandler({
+  store: createFinalEmailStore(sql),
+  issueAccess: attendeeStore.issueAccess,
+  getClassSchedule: attendeeStore.classSchedule,
+  getLevelLabel: async (level) => level ? (await getTicketByName(level))[0]?.label || "" : "",
+  send: preview ? async () => {} : (message) => mailer.send(message),
+  preview,
+});

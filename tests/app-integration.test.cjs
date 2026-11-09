@@ -5,6 +5,7 @@ const { createRegistrationStore } = require("../lib/reg2026/store");
 const { createAttendeeStore } = require("../lib/app/store");
 const { createAppHandlers } = require("../lib/app/http");
 const { createAppInvitationHandler } = require("../lib/app/invitations");
+const { createFinalEmailHandler, createFinalEmailStore } = require("../lib/app/final-email");
 const { serializeThemeClass } = require("../lib/reg2026/serialization");
 const {
   credentialToken,
@@ -55,6 +56,7 @@ test(
       "APP_FESTIVAL_START_DATE",
       "ADMIN_SESSION_SECRET",
       "ADMIN_USER",
+      "FINAL_EMAIL_ENABLED",
     ];
     const previous = Object.fromEntries(
       keys.map((key) => [key, process.env[key]]),
@@ -68,6 +70,7 @@ test(
       APP_FESTIVAL_START_DATE: "2026-12-11",
       ADMIN_SESSION_SECRET: "test-organizer-secret",
       ADMIN_USER: "test-organizer",
+      FINAL_EMAIL_ENABLED: "false",
     });
     try {
       for (const migration of [
@@ -78,6 +81,7 @@ test(
         "00009-create-schedule-overrides-2026",
         "00010-reg2026-reopen-registration", "00013-reg2026-sheet-schedule", "00015-reg2026-switch-role", "00016-reg2026-competition-capacities", "00017-reg2026-showcase-capacity",
         "00011-attendee-app-access",
+        "00018-reg2026-final-emails",
       ]) {
         await sql.begin((tx) => require(`../migrations/${migration}`).up(tx));
       }
@@ -452,6 +456,99 @@ test(
           );
           assert.equal(crossOrigin.code, 403);
           assert.equal(messages.length, 2);
+        },
+      );
+
+      await t.test(
+        "final email targets confirmed registrations and safely resumes interrupted sends",
+        async () => {
+          const legacyClasses = serializeThemeClass([{ sessionId: "unknown-old-session" }, { sessionId: "sat-1130-superar-1" }]);
+          await sql`UPDATE registrations_26 SET email = ${alice.email}, theme_class = ${legacyClasses} WHERE id = ${bob.id}`;
+          const messages = [];
+          const dependencies = {
+            store: createFinalEmailStore(sql),
+            issueAccess: store.issueAccess,
+            getClassSchedule: store.classSchedule,
+            getLevelLabel: async () => "Test level",
+            send: async (message) => messages.push(message),
+          };
+          const mail = createFinalEmailHandler({ ...dependencies, preview: true });
+          const request = async ({ method = "POST", headers = organizerHeaders, body, handler = mail } = {}) => {
+            const result = response();
+            await handler({ method, headers, body }, result);
+            return result;
+          };
+          const sendTo = (id, handler = mail) => request({ body: { id, email: "forged@example.com" }, handler });
+
+          assert.equal((await request({ method: "GET", headers: {} })).code, 401);
+          assert.equal((await request({ body: { id: alice.id }, headers: { ...organizerHeaders, origin: "https://other.example.com" } })).code, 403);
+          assert.equal((await request({ method: "GET", handler: createFinalEmailHandler(dependencies) })).code, 503);
+          const audience = await request({ method: "GET" });
+          assert.deepEqual(audience.body.recipients.map(({ firstname }) => firstname), ["Alice", "Bob", "Party", "Pending"]);
+          assert.equal((await sendTo(waiting.id)).code, 409);
+          assert.equal(messages.length, 0);
+
+          for (const person of [alice, bob]) {
+            assert.equal((await sendTo(person.id)).body.status, "sent");
+            const message = messages.at(-1);
+            const link = new URL(message.dynamic_template_data.appAccessUrl);
+            assert.equal(message.to, alice.email);
+            assert.equal(message.template_id, "d-faecb94e7a544674883c69bc2421b9ec");
+            assert.equal(message.dynamic_template_data.firstname, person.firstname);
+            assert.equal(message.dynamic_template_data.competitions, "Solo Battle");
+            assert.deepEqual(message.tracking_settings.click_tracking, { enable: false, enable_text: false });
+            assert.equal(link.origin, process.env.APP_ORIGIN);
+            assert.equal(link.pathname, "/claim");
+            assert.equal(link.search, "");
+            const session = await store.claim(linkToken(link));
+            assert.equal((await store.snapshot(session.sessionToken)).participant.id, person.id);
+          }
+          const confirmedClasses = messages[0].dynamic_template_data.classes;
+          assert.equal(confirmedClasses.length, 1);
+          assert.deepEqual(confirmedClasses[0], {
+            title: "Updated Blues Class",
+            day: "Friday",
+            start: "13:30",
+            end: "14:45",
+            teachers: (await registration.schedule()).find(({ id }) => id === "fri-1330-kantine").teachers,
+            room: "New Room",
+            role: "Switch",
+          });
+          const legacyEmailClasses = messages[1].dynamic_template_data.classes;
+          assert.equal(legacyEmailClasses.length, 2);
+          assert.equal(legacyEmailClasses[0].day, "Saturday");
+          assert.equal(legacyEmailClasses[0].role, "");
+          assert.equal(legacyEmailClasses[1].title, "Class details unavailable");
+          assert.equal(legacyEmailClasses[1].day, null);
+          assert.notEqual(messages[0].dynamic_template_data.appAccessUrl, messages[1].dynamic_template_data.appAccessUrl);
+          assert.equal((await sendTo(alice.id)).body.status, "already_sent");
+          assert.equal(messages.length, 2);
+
+          const rejected = createFinalEmailHandler({ ...dependencies, preview: true, send: async () => {
+            throw Object.assign(new Error("rejected"), { code: 400, response: {} });
+          } });
+          assert.equal((await sendTo(party.id, rejected)).code, 502);
+          const retried = await Promise.all([sendTo(party.id), sendTo(party.id)]);
+          assert.equal(retried.filter((result) => result.body.status === "sent").length, 1);
+          assert.ok(retried.every((result) => ["sent", "already_sent", "sending"].includes(result.body.status)));
+          assert.equal(messages.length, 3);
+          assert.equal(messages.at(-1).dynamic_template_data.ticket, "Party Pass");
+          assert.deepEqual(messages.at(-1).dynamic_template_data.classes, []);
+
+          const interrupted = await createPerson("Interrupted");
+          const unknown = createFinalEmailHandler({ ...dependencies, preview: true, send: async () => {
+            throw new Error("connection lost");
+          } });
+          assert.equal((await sendTo(interrupted.id, unknown)).body.status, "uncertain");
+          assert.equal((await sendTo(interrupted.id)).body.status, "uncertain");
+          const stale = await createPerson("Stale");
+          await sql`INSERT INTO registration_final_emails_26 (registration_id, status, updated_at)
+            VALUES (${stale.id}, 'sending', NOW() - INTERVAL '11 minutes')`;
+          assert.equal((await sendTo(stale.id)).body.status, "uncertain");
+          const canceled = await createPerson("Canceled after preview");
+          await sql`UPDATE registrations_26 SET status = 'canceled' WHERE id = ${canceled.id}`;
+          assert.equal((await sendTo(canceled.id)).code, 409);
+          assert.equal(messages.length, 3);
         },
       );
 

@@ -47,7 +47,7 @@ const http = require('node:http');
     started = true;
     const url = `postgres://${encodeURIComponent(os.userInfo().username)}@127.0.0.1:${port}/postgres`;
     const sql = postgres(url, { onnotice: () => {} });
-    for (const file of ['00004-CREAT-registraion-2026', '00006-create-class-capacities-2026', '00007-create-reg2026-bookings', '00008-reg2026-order-safety', '00009-create-schedule-overrides-2026', '00010-reg2026-reopen-registration', '00013-reg2026-sheet-schedule', '00014-reg2026-schedule-invitations', '00015-reg2026-switch-role', '00016-reg2026-competition-capacities', '00017-reg2026-showcase-capacity']) {
+    for (const file of ['00004-CREAT-registraion-2026', '00006-create-class-capacities-2026', '00007-create-reg2026-bookings', '00008-reg2026-order-safety', '00009-create-schedule-overrides-2026', '00010-reg2026-reopen-registration', '00011-attendee-app-access', '00013-reg2026-sheet-schedule', '00014-reg2026-schedule-invitations', '00015-reg2026-switch-role', '00016-reg2026-competition-capacities', '00017-reg2026-showcase-capacity', '00018-reg2026-final-emails']) {
       await sql.begin((tx) => require(`../migrations/${file}`).up(tx));
     }
     await sql`CREATE TABLE tickets_26 (id SERIAL, name TEXT, label TEXT, capacity INTEGER, waiting_list INTEGER)`;
@@ -76,6 +76,7 @@ const http = require('node:http');
       REG2026_ENABLED: 'true', REG2026_SCHEDULE_SHEET_ID: '', REG2026_SIGNING_SECRET: 'preview-only-signing-secret', REG2026_ORIGIN: 'http://localhost:31026',
       REG2026_CLOSES_AT: '2099-01-01T00:00:00Z', ADMIN_SESSION_SECRET: 'preview-only-admin-secret',
       ADMIN_USER: 'preview', HASHED_PASS: 'preview', STRIPE_SECRET_KEY: 'sk_test_preview_only', SENDGRID_API_KEY: '',
+      APP_SIGNING_SECRET: 'preview-only-attendee-app-signing-secret', APP_ORIGIN: 'http://localhost:3001', APP_LINK_EXPIRES_AT: '2099-01-01T00:00:00Z',
       PREVIEW_CHECKOUT_ORIGIN: checkoutOrigin };
     process.env.REG2026_SIGNING_SECRET = env.REG2026_SIGNING_SECRET;
     const { buildRegistrationPath } = require('../lib/reg2026/security');

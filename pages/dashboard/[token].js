@@ -27,6 +27,8 @@ export default function Dashboard({ users, tickets, previewMode }) {
   const [scheduleInvitationProgress, setScheduleInvitationProgress] = useState(null);
   const [sendingScheduleInvitationId, setSendingScheduleInvitationId] = useState(null);
   const [scheduleInvitationResults, setScheduleInvitationResults] = useState({});
+  const [sendingFinalEmails, setSendingFinalEmails] = useState(false);
+  const [finalEmailProgress, setFinalEmailProgress] = useState(null);
   const isMobile = useMedia({ maxWidth: "768px" });
   const today = new Date().toISOString().split("T")[0];
   const totalAmount = users.reduce((acc, user) => {
@@ -142,35 +144,67 @@ export default function Dashboard({ users, tickets, previewMode }) {
     alert("done");
   };
 
-  const handleSendEmail = async () => {
-    const confirmedUsers = users.filter((user) => user.status === "confirmed");
+  const handleFinalEmails = async (selectedIds) => {
+    setSendingFinalEmails(true);
+    setFinalEmailProgress(null);
+    try {
+      const audience = await fetch("/api/mailall", { cache: "no-store" });
+      const { recipients, error } = await audience.json();
+      if (!audience.ok) throw new Error(error);
+      const selected = selectedIds ? new Set(selectedIds.map(Number)) : null;
+      const participants = selected ? recipients.filter(({ id }) => selected.has(id)) : recipients;
+      if (!participants.length) {
+        setFinalEmailProgress({ message: "There are no confirmed registrations in this audience." });
+        return;
+      }
+      const target = participants.length === 1
+        ? `${participants[0].firstname} ${participants[0].lastname} (${participants[0].email})`
+        : `${participants.length} ${selected ? "selected " : ""}confirmed registrations`;
+      if (!confirm(`${previewMode ? "Simulate sending" : "Send"} the final email to ${target}? Previously accepted emails will be skipped.`)) return;
 
-    if (
-      confirm("are you sure you want to send emails to all confirmed users?")
-    ) {
-      console.log("ok");
-
-      confirmedUsers.map((user) => {
-        fetch("/api/mailall", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Cache-Control": "no-cache, no-store",
-          },
-          body: JSON.stringify(user),
-        })
-          .then((response) => {
-            if (response.status === 200) {
-              //               router.reload(window.location.pathname);
+      const counts = { sent: 0, already_sent: 0, skipped: 0, failed: 0, uncertain: 0, sending: 0 };
+      const issues = [];
+      let next = 0;
+      let stopped = "";
+      const report = () => setFinalEmailProgress({ ...counts, issues: [...issues], total: participants.length, stopped });
+      report();
+      const worker = async () => {
+        while (next < participants.length && !stopped) {
+          const participant = participants[next++];
+          const label = `${participant.firstname} ${participant.lastname} (#${participant.id})`;
+          try {
+            const response = await fetch("/api/mailall", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ id: participant.id }),
+            });
+            const result = await response.json();
+            if ([401, 403, 503].includes(response.status)) {
+              stopped = result.error || "Sending stopped. Check the configuration and organizer session.";
+              issues.push(`${label}. ${stopped}`);
+            } else if (!response.ok) {
+              const status = { 409: "skipped", 422: "failed", 502: "failed" }[response.status] || "uncertain";
+              counts[status]++;
+              issues.push(`${label}. ${result.error || "Delivery status is unavailable."}`);
+            } else if (Object.hasOwn(counts, result.status)) {
+              counts[result.status]++;
+              if (result.status === "uncertain") issues.push(`${label}. Review SendGrid activity before retrying.`);
+            } else {
+              counts.uncertain++;
+              issues.push(`${label}. Delivery status is unavailable.`);
             }
-            if (response.status === 401) {
-              alert("Please write a valid status");
-            }
-          })
-          .catch((error) => console.log(error));
-      });
-    } else {
-      console.log("no");
+          } catch {
+            counts.uncertain++;
+            issues.push(`${label}. Connection lost while checking delivery. Resume to see the recorded status.`);
+          }
+          report();
+        }
+      };
+      await Promise.all(Array.from({ length: Math.min(3, participants.length) }, worker));
+    } catch (error) {
+      setFinalEmailProgress({ message: error.message || "The final email audience could not be loaded.", stopped: true });
+    } finally {
+      setSendingFinalEmails(false);
     }
   };
   const handleSendScheduleInvitations = async () => {
@@ -265,38 +299,6 @@ export default function Dashboard({ users, tickets, previewMode }) {
       setSendingScheduleInvitationId(null);
     }
   };
-  const handleSendOneMail = async () => {
-    const idsToSend = form.values.users;
-    let array = [];
-    idsToSend.map((id) => {
-      array.push(users.find((userinfo) => userinfo.id === id));
-    });
-    if (confirm("are you sure you want to send emails to this user?")) {
-      console.log("ok");
-      array.map((item) => {
-        fetch("/api/mailall", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Cache-Control": "no-cache, no-store",
-          },
-          body: JSON.stringify(item),
-        })
-          .then((response) => {
-            if (response.status === 200) {
-              router.reload(window.location.pathname);
-            }
-            if (response.status === 401) {
-              alert("Please write a valid status");
-            }
-          })
-          .catch((error) => console.log(error));
-      });
-    } else {
-      console.log("no");
-    }
-  };
-
   const BalanceComponent = () => {
     const getTicketAmount = (level, role) => {
       const registerAmount = users.filter(
@@ -1016,8 +1018,8 @@ export default function Dashboard({ users, tickets, previewMode }) {
             </div>
           )}
 
-          <button className={styles.statusButton} onClick={handleSendOneMail}>
-            Send Final email to specific users:
+          <button className={styles.statusButton} disabled={sendingFinalEmails || !form.values.users.length} onClick={() => handleFinalEmails(form.values.users)}>
+            Send final email to selected confirmed participants
           </button>
           {!capacityShow &&
             activeSideBar !== "balance" &&
@@ -1043,13 +1045,27 @@ export default function Dashboard({ users, tickets, previewMode }) {
             </div>
           )}
           <div className={styles.bulkEmailActions}>
-            <button className={styles.statusButton} onClick={handleSendEmail}>
-              Send Email to All confirmed
+            <button className={styles.statusButton} disabled={sendingFinalEmails} onClick={() => handleFinalEmails()}>
+              {sendingFinalEmails ? "Preparing or sending final emails…" : "Send Email to All confirmed"}
             </button>
             <button className={styles.statusButton} onClick={handleSendScheduleInvitations} disabled={sendingScheduleInvitations || sendingScheduleInvitationId !== null}>
               {sendingScheduleInvitations ? "Sending schedule invitations…" : "Send schedule invitations to confirmed Full Pass holders"}
             </button>
           </div>
+          {finalEmailProgress && (
+            <p className={styles.invitationProgress} role={finalEmailProgress.stopped ? "alert" : "status"}>
+              {finalEmailProgress.message ||
+                `Final emails for ${finalEmailProgress.total} confirmed registrations. ` +
+                `${finalEmailProgress.sent} ${previewMode ? "simulated" : "accepted by SendGrid"}, ${finalEmailProgress.already_sent} already sent, ` +
+                `${finalEmailProgress.skipped} skipped, ${finalEmailProgress.failed} failed, ` +
+                `${finalEmailProgress.sending} being sent in another request, ${finalEmailProgress.uncertain} require review.`}
+            </p>
+          )}
+          {finalEmailProgress?.issues?.length > 0 && (
+            <ul className={styles.invitationIssues}>
+              {finalEmailProgress.issues.map((issue) => <li key={issue}>{issue}</li>)}
+            </ul>
+          )}
           {scheduleInvitationProgress && (
             <p className={styles.invitationProgress} role={scheduleInvitationProgress.stopped ? "alert" : "status"}>
               {scheduleInvitationProgress.message ||
