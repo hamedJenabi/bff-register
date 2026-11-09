@@ -23,7 +23,7 @@ test("partner roles share capacity and serialize competing bookings on isolated 
     const person = async () => {
       const name = `Capacity${++number}`;
       return (await sql`INSERT INTO registrations_26 (date,status,role,ticket,firstname,lastname,email,country)
-        VALUES ('2026','confirmed','advanced','fullpass',${name},'Dancer',${name + "@example.com"},'Austria') RETURNING *`)[0];
+        VALUES ('2026','confirmed','advanced','parentPass',${name},'Dancer',${name + "@example.com"},'Austria') RETURNING *`)[0];
     };
     const seed = async (count, role, status = "confirmed", expiresAt = null) => {
       for (let i = 0; i < count; i += 1) {

@@ -29,7 +29,7 @@ test("sheet schedules publish atomically and protect real registrations on isola
     const store = createRegistrationStore(sql);
     const sessions = parseScheduleRows(sessionRows());
     const createPerson = async (name) => (await sql`INSERT INTO registrations_26 (date,status,role,ticket,firstname,lastname,email,country)
-      VALUES ('2026','confirmed','advanced','fullpass',${name},'Dancer',${name.toLowerCase() + "@example.com"},'Austria') RETURNING *`)[0];
+      VALUES ('2026','confirmed','advanced','parentPass',${name},'Dancer',${name.toLowerCase() + "@example.com"},'Austria') RETURNING *`)[0];
     let publication;
 
     await t.test("class registrants are distinct confirmed users across the current schedule, excluding holds", async () => {

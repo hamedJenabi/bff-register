@@ -24,7 +24,7 @@ test("competition limits and reservations on isolated Postgres", { skip: !proces
     let number = 0;
     const seed = (count, id = "", role = "") => sql`INSERT INTO registrations_26
       (date,status,role,ticket,firstname,lastname,email,country,competitions,open_mixnmatch_role,newcomers_mixnmatch_role,strictly_role)
-      SELECT '2026','confirmed','advanced','fullpass',${`Competition${++number}`},'Dancer','fixture@example.com','Austria',${id},
+      SELECT '2026','confirmed','advanced','parentPass',${`Competition${++number}`},'Dancer','fixture@example.com','Austria',${id},
         ${id === "open_mixnmatch" ? role : ""},${id === "newcomers_mixnmatch" ? role : ""},${id === "strictly" ? role : ""}
       FROM generate_series(1, ${count}) RETURNING *`;
     const person = async () => (await seed(1))[0];

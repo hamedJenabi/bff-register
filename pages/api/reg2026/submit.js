@@ -2,7 +2,7 @@ import { registrationStore as store } from "../../../db/reg2026";
 import { assertRegistrationOpen, resolveParticipant } from "../../../lib/reg2026/access";
 import { checkoutForOrder, reconcileOrder, getStripe, canonicalOrigin } from "../../../lib/reg2026/payments";
 import { choicesFromParticipant, hasRegisteredClasses } from "../../../lib/reg2026/serialization";
-import { validateDraft } from "../../../lib/reg2026/validation";
+import { requiredClassesError, validateDraft } from "../../../lib/reg2026/validation";
 import { priceDraft } from "../../../lib/reg2026/pricing";
 import { RegistrationError, REGISTRATION_COMPLETE_MESSAGE } from "../../../lib/reg2026/errors";
 import { allowMethod, apiError, publicOrder } from "../../../lib/reg2026/http";
@@ -25,7 +25,8 @@ export default async function handler(req, res) {
     if (active) await reconcileOrder(store, active);
     // Check payment configuration before allocating new provisional places.
     const validated = validateDraft(req.body.draft, participant, await store.schedule());
-    if (!completed && validated.valid && priceDraft(validated.value, choicesFromParticipant(participant)).totalCents > 0) {
+    if (!completed && validated.valid && !requiredClassesError(participant.ticket, validated.value.classes.length) &&
+        priceDraft(validated.value, choicesFromParticipant(participant)).totalCents > 0) {
       getStripe(); canonicalOrigin();
     }
     const order = await store.submit(participant, req.body.draft, req.body.requestKey);

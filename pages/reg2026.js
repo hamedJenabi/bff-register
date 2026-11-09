@@ -22,7 +22,7 @@ import {
 } from "../components/Reg2026/AddOnSections";
 import { CLASS_SELECTION_LIMIT, FREE_PASS_VOUCHER } from "../lib/reg2026/catalog";
 import { priceDraft } from "../lib/reg2026/pricing";
-import { validateDraft } from "../lib/reg2026/validation";
+import { requiredClassesError, validateDraft } from "../lib/reg2026/validation";
 import styles from "../components/Reg2026/Registration.module.scss";
 
 const euros = (cents) =>
@@ -125,6 +125,7 @@ export default function Registration({ initial, access, loadError }) {
     },
   });
   const draft = registrationDraft(form.values);
+  const missingClasses = requiredClassesError(data?.participant.ticket, draft.classes.length);
   const busy = networkBusy || form.submitting || redirecting;
   const { update } = form;
   const restoreForm = (choices, compete) => {
@@ -395,7 +396,7 @@ export default function Registration({ initial, access, loadError }) {
                       <strong>{draft.classes.length}</strong>{" "}
                       {draft.classes.length === 1 ? "class" : "classes"} selected
                     </span>
-                    <p>Maximum {CLASS_SELECTION_LIMIT} across all days</p>
+                    <p>{data.participant.ticket === "fullpass" ? "Required:" : "Maximum"} {CLASS_SELECTION_LIMIT} across all days</p>
                   </aside>
                 )}
                 <Form {...form} aria-busy={busy}>
@@ -463,10 +464,12 @@ export default function Registration({ initial, access, loadError }) {
                       {draft.voucher === FREE_PASS_VOUCHER && <p role="status" aria-live="polite">Voucher applied. All selected options are free.</p>}
                     </div>
                     <FormMessage {...form} name="formError" />
+                    {missingClasses && <p id="reg2026-required-classes">{missingClasses}</p>}
                     <FormSubmitButton
                       {...form}
                       className={styles.primary}
-                      disabled={busy || pending || !data.open || !hydrated}
+                      aria-describedby={missingClasses ? "reg2026-required-classes" : undefined}
+                      disabled={busy || pending || !data.open || !hydrated || !!missingClasses}
                     >
                       {redirecting
                         ? "Opening secure checkout…"

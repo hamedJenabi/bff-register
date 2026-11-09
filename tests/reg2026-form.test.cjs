@@ -3,7 +3,7 @@ const assert = require("node:assert/strict");
 const { registrationFormValues, registrationDraft, registrationFormErrors, validateRegistrationForm } = require("../lib/reg2026/form");
 const { priceDraft } = require("../lib/reg2026/pricing");
 const empty = () => ({ classes: [], competitions: [], competitionRoles: {}, lunch: [] });
-const participant = { ticket: "fullpass" };
+const participant = { ticket: "parentPass" };
 
 test("Reakit values restore a draft and keep UI-only fields out of the request", () => {
   const draft = { ...empty(), classes: [{ sessionId: "fri-1330-kantine", role: "lead" }],
@@ -47,14 +47,18 @@ test("empty and partial local drafts initialize all fields and preserve competit
 });
 
 
-test("Reakit validation applies the festival-wide five-class cap", () => {
+test("Full Pass submission needs five classes while Parent Pass still permits fewer", () => {
   const { schedule } = require("../lib/reg2026/catalog");
   const slots = new Set();
   const classes = schedule.filter((session) => !slots.has(session.slotId) && slots.add(session.slotId))
     .slice(0, 6).map((session) => ({ sessionId: session.id, ...(session.partnerClass ? { role: "lead" } : {}) }));
   const values = registrationFormValues({ ...empty(), classes });
-  assert.match(validateRegistrationForm(values, participant, empty()).classes, /5 classes in total/);
+  const fullPass = { ticket: "fullpass" };
+  assert.match(validateRegistrationForm(values, fullPass, empty()).classes, /5 classes in total/);
   values.classes = classes.slice(0, 5);
+  assert.deepEqual(validateRegistrationForm(values, fullPass, empty()), {});
+  values.classes.pop();
+  assert.equal(validateRegistrationForm(values, fullPass, empty()).classes, "Choose your 5 classes before submitting.");
   assert.deepEqual(validateRegistrationForm(values, participant, empty()), {});
 });
 

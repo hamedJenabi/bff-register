@@ -46,9 +46,9 @@ test("registration orders on isolated Postgres", { skip: !process.env.TEST_DATAB
       await sql`DELETE FROM class_capacities_26`;
     });
     const [participant] = await sql`INSERT INTO registrations_26 (date,status,role,ticket,firstname,lastname,email,country,price)
-      VALUES ('2026','confirmed','advanced','fullpass','Test','Participant','test+one@example.com','Austria','200') RETURNING *`;
+      VALUES ('2026','confirmed','advanced','parentPass','Test','Participant','test+one@example.com','Austria','200') RETURNING *`;
     const free = { ...empty(), classes: [{ sessionId: "fri-1330-ankersaal" }] };
-    const createPerson = async (name, ticket = "fullpass") => (await sql`INSERT INTO registrations_26
+    const createPerson = async (name, ticket = "parentPass") => (await sql`INSERT INTO registrations_26
       (date,status,role,ticket,firstname,lastname,email,country)
       VALUES ('2026','confirmed','advanced',${ticket},${name},'Participant',${name + "@example.com"},'Austria') RETURNING *`)[0];
     const freeParticipant = await createPerson("Free");
@@ -315,7 +315,7 @@ test("registration orders on isolated Postgres", { skip: !process.env.TEST_DATAB
       assert.deepEqual(await sql`SELECT * FROM registration_email_retries_26 WHERE registration_id = ${participant.id}`, emailsBefore);
 
       // Classes saved by an organizer have no supplemental order record.
-      const savedPerson = await createPerson("SavedClasses");
+      const savedPerson = await createPerson("SavedClasses", "fullpass");
       await store.editClasses(savedPerson.id, free.classes, "");
       assert.equal(await store.completedOrder(savedPerson.id), undefined);
       const savedLink = response();
@@ -438,30 +438,39 @@ test("registration orders on isolated Postgres", { skip: !process.env.TEST_DATAB
       const [fullPass] = await sql`INSERT INTO registrations_26 (date,status,role,ticket,firstname,lastname,email,country)
         VALUES ('2026','confirmed','advanced','fullpass','Limit','Participant','limit@example.com','Austria') RETURNING *`;
       const fullUser = fullPass.email + "+" + fullPass.firstname;
+      const fullAccess = { user: fullUser, sig: signIdentity(fullUser) };
       const slots = new Set();
+      const { conflictsWithSolo } = require("../lib/reg2026/competitions");
       const tooMany = require("../lib/reg2026/catalog").schedule
-        .filter((session) => !slots.has(session.slotId) && slots.add(session.slotId)).slice(0, 6)
+        .filter((session) => !conflictsWithSolo(session) && !slots.has(session.slotId) && slots.add(session.slotId)).slice(0, 6)
         .map((session) => ({ sessionId: session.id, ...(session.partnerClass ? { role: "lead" } : {}) }));
       const overLimit = res();
-      await submit({ method: "POST", body: { user: fullUser, sig: signIdentity(fullUser),
+      await submit({ method: "POST", body: { ...fullAccess,
         requestKey: "http-class-limit-01", draft: { ...empty(), classes: tooMany } } }, overLimit);
       assert.equal(overLimit.code, 422);
       assert.match(overLimit.body.errors.classes, /5 classes in total/);
+      for (const count of [0, 4]) {
+        const underLimit = res();
+        await submit({ method: "POST", body: { ...fullAccess, requestKey: `http-class-minimum-${count}`,
+          draft: { ...empty(), classes: tooMany.slice(0, count), lunch: ["saturday"] } } }, underLimit);
+        assert.equal(underLimit.code, 422);
+        assert.equal(underLimit.body.errors.classes, "Choose your 5 classes before submitting.");
+      }
       assert.equal(await store.activeOrder(fullPass.id), undefined);
+      assert.equal((await sql`SELECT id FROM class_bookings_26 WHERE registration_id = ${fullPass.id}`).length, 0);
       const closed = res(); process.env.REG2026_ENABLED = "false";
       await submit({ method: "POST", body: { ...access, requestKey: "http-closed-0001", draft: empty() } }, closed);
       assert.equal(closed.code, 403); process.env.REG2026_ENABLED = "true";
-      const voucherPerson = await createPerson("VoucherHTTP");
-      const voucherUser = voucherPerson.email + "+" + voucherPerson.firstname;
-      const voucherAccess = { user: voucherUser, sig: signIdentity(voucherUser) };
-      const invalidVoucher = res(); await submit({ method: "POST", body: { ...voucherAccess, requestKey: "http-bad-voucher-01",
-        draft: { ...empty(), voucher: "invalid", lunch: ["saturday"] }, price: 0 } }, invalidVoucher);
+      const fiveClasses = tooMany.slice(0, 5);
+      const invalidVoucher = res(); await submit({ method: "POST", body: { ...fullAccess, requestKey: "http-bad-voucher-01",
+        draft: { ...empty(), classes: fiveClasses, voucher: "invalid", lunch: ["saturday"] }, price: 0 } }, invalidVoucher);
       assert.equal(invalidVoucher.code, 422); assert.match(invalidVoucher.body.errors.voucher, /not recognized/);
-      assert.equal(await store.completedOrder(voucherPerson.id), undefined);
-      const voucher = res(); await submit({ method: "POST", body: { ...voucherAccess, requestKey: "http-free-voucher-01",
-        draft: { ...free, competitions: ["solo_battle"], lunch: ["saturday", "sunday"], voucher: "freepass26" } } }, voucher);
+      assert.equal(await store.completedOrder(fullPass.id), undefined);
+      const voucher = res(); await submit({ method: "POST", body: { ...fullAccess, requestKey: "http-free-voucher-01",
+        draft: { ...empty(), classes: fiveClasses, competitions: ["solo_battle"], lunch: ["saturday", "sunday"], voucher: "freepass26" } } }, voucher);
       assert.equal(voucher.code, 200); assert.equal(voucher.body.order.status, "confirmed");
       assert.equal(voucher.body.order.totalCents, 0); assert.equal(voucher.body.checkoutUrl, null); assert.equal(sessions.size, 0);
+      assert.equal((await sql`SELECT id FROM class_bookings_26 WHERE registration_id = ${fullPass.id} AND status = 'confirmed'`).length, 5);
       assert.equal(emailSends.length, 1);
       assert.equal(emailSends[0].template_id, "d-4f77d740ec504650aa9ea1a78e785cae");
       assert.deepEqual(emailSends[0].dynamic_template_data.competitions, [{ label: "Solo Battle", role: "" }]);
