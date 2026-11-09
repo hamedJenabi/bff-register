@@ -127,7 +127,13 @@ const webpush = require("web-push");
       await sql`UPDATE registrations_26 SET theme_class = '', lunch = '', competitions = '', competition = 'no', strictly_role = '' WHERE id = ${mira.id}`;
       await publish(sessions);
       journeyOrder = await registration.submit(mira, {
-        classes: [{ sessionId: "fri-1330-kantine", role: "lead" }, { sessionId: "sat-1130-superar-1" }],
+        classes: [
+          { sessionId: "fri-1330-kantine", role: "lead" },
+          { sessionId: "sat-1130-superar-1" },
+          { sessionId: "sat-1415-superar-1" },
+          { sessionId: "sun-1130-superar-2" },
+          { sessionId: "sun-1415-hilger" },
+        ],
         competitions: ["strictly"], competitionRoles: { strictly: "follow" }, lunch: ["saturday"],
       }, "fictional-browser-checkout");
       await registration.attachSession(journeyOrder.id, "fictional-browser-stripe-session");
