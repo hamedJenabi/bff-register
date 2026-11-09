@@ -13,7 +13,7 @@ import { conflictsWithSolo, SOLO_COMPETITION_NOTICE } from "../../lib/reg2026/co
 import { remainingPlaces } from "../../lib/reg2026/schedule";
 import styles from "./Registration.module.scss";
 
-export function CompetitionSection({ form, saved, availability, sessions = [], disabled }) {
+export function CompetitionSection({ form, saved, availability, sessions = [], disabled, editing }) {
   const soloDialog = useDialogState({ baseId: "reg2026-solo-conflict-dialog" });
   const [soloDialogMounted, setSoloDialogMounted] = useState(false);
   const soloFocusRef = useRef(null);
@@ -39,6 +39,7 @@ export function CompetitionSection({ form, saved, availability, sessions = [], d
     <section className={styles.competitionSection} aria-labelledby="competition-title">
       <h2 id="competition-title">Competition registration</h2>
       <p className={styles.informationText}>Competition entries are separate from competition classes. Each entry costs €10.</p>
+      {editing && <p>You can add competitions. Confirmed entries and their dance roles stay as booked.</p>}
       <FormRadioGroup {...form} name="compete" disabled={disabled}>
         <FormLabel {...form} name="compete" as="legend">Do you want to compete?</FormLabel>
         {["yes", "no"].map((value) => (

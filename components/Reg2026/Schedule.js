@@ -18,7 +18,7 @@ import { conflictsWithSolo, SOLO_COMPETITION_NOTICE } from "../../lib/reg2026/co
 import SwitchRoleNotice from "./SwitchRoleNotice";
 import styles from "./Registration.module.scss";
 
-export default function Schedule({ participant, form, availability, disabled, sessions = [] }) {
+export default function Schedule({ participant, form, availability, disabled, sessions = [], savedClasses = [] }) {
   const schedule = sessions;
   const scheduleById = indexSchedule(schedule);
   const draft = registrationDraft(form.values);
@@ -67,7 +67,8 @@ export default function Schedule({ participant, form, availability, disabled, se
       if (result.errors.classes || result.errors.form) {
         throw { selectionError: result.errors.classes || result.errors.form };
       }
-      if (places(active, active.partnerClass ? role : "total") <= 0) {
+      const keptClass = savedClasses.some((choice) => choice.sessionId === active.id && choice.role === (active.partnerClass ? role : undefined));
+      if (!keptClass && places(active, active.partnerClass ? role : "total") <= 0) {
         throw { selectionError: "This place is full. Choose another class or role." };
       }
     },
