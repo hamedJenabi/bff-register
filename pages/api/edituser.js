@@ -1,4 +1,5 @@
 import { requireAdmin } from "../../lib/admin/session";
+import { registrationInvitationMessage } from "../../lib/reg2026/invitations";
 import {
   titleCase,
   discounts,
@@ -110,7 +111,7 @@ export default async function edituser(req, response) {
   const ticket = getTicketLabel(requestData.ticket);
   //******** Send Email *********/
   const sendEmail = async (msg) => {
-    sgMail
+    return sgMail
       .send(msg)
       .then(() => {
         console.log("Email sent");
@@ -252,11 +253,16 @@ export default async function edituser(req, response) {
       }
     }
     if (req.body.status === "confirmed") {
+      const scheduleInvitation = !requestData.isGroupApi && !isEditing
+        ? registrationInvitationMessage(requestData, "d-9a1d3b06c6fb43f69a1ee68b940ebe35")
+        : null;
       const msg = {
+        ...scheduleInvitation,
         from: "registration@bluesfever.eu",
         to: `${requestData.email}`,
         template_id: "d-9a1d3b06c6fb43f69a1ee68b940ebe35",
         dynamic_template_data: {
+          ...scheduleInvitation?.dynamic_template_data,
           firstname: `${requestData.firstname}`,
           lastname: `${requestData.lastname}`,
           country: `${requestData.country}`,
