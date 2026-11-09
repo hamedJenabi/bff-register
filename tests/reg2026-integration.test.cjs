@@ -4,6 +4,7 @@ const postgres = require("postgres");
 const { createRegistrationStore } = require("../lib/reg2026/store");
 const { checkoutForOrder } = require("../lib/reg2026/payments");
 const sgMail = require("@sendgrid/mail");
+const { fiveClasses } = require("./reg2026-fixtures.cjs");
 const empty = () => ({ classes: [], competitions: [], competitionRoles: {}, lunch: [] });
 
 test("registration orders on isolated Postgres", { skip: !process.env.TEST_DATABASE_URL }, async (t) => {
@@ -47,7 +48,7 @@ test("registration orders on isolated Postgres", { skip: !process.env.TEST_DATAB
     });
     const [participant] = await sql`INSERT INTO registrations_26 (date,status,role,ticket,firstname,lastname,email,country,price)
       VALUES ('2026','confirmed','advanced','parentPass','Test','Participant','test+one@example.com','Austria','200') RETURNING *`;
-    const free = { ...empty(), classes: [{ sessionId: "fri-1330-ankersaal" }] };
+    const free = { ...empty(), classes: fiveClasses({ sessionId: "fri-1330-ankersaal" }) };
     const createPerson = async (name, ticket = "parentPass") => (await sql`INSERT INTO registrations_26
       (date,status,role,ticket,firstname,lastname,email,country)
       VALUES ('2026','confirmed','advanced',${ticket},${name},'Participant',${name + "@example.com"},'Austria') RETURNING *`)[0];
@@ -67,22 +68,22 @@ test("registration orders on isolated Postgres", { skip: !process.env.TEST_DATAB
       const repeated = await store.submit(freeParticipant, free, "free-request-0001");
       assert.equal(repeated.id, order.id);
       const [counts] = await sql`SELECT COUNT(*)::INTEGER AS count FROM class_bookings_26 WHERE registration_id = ${freeParticipant.id}`;
-      assert.equal(counts.count, 1);
+      assert.equal(counts.count, 5);
       const [queued] = await sql`SELECT delivery_status, attempts, payload FROM registration_email_retries_26 WHERE order_id = ${order.id}`;
       assert.equal(queued.delivery_status, "pending");
       assert.equal(queued.attempts, 0);
-      assert.deepEqual(queued.payload.data.classes, [{
+      assert.deepEqual(queued.payload.data.classes[0], {
         title: "Groove in Motion 1", day: "Friday", start: "13:30", end: "14:45",
         teachers: "Catherine", room: "Ankersaal", role: "",
-      }]);
+      });
       assert.equal((await store.completedOrder(freeParticipant.id)).id, order.id);
       await assert.rejects(store.submit(freeParticipant, empty(), "free-request-0001"), /different choices/);
     });
     await t.test("completed registration rejects edits and preserves its booking", async () => {
       await assert.rejects(store.submit(freeParticipant, { ...empty(), classes: [{ sessionId: "fri-1515-lot" }] }, "changed-request-01"), /contact the organizers/);
       await assert.rejects(store.submit(freeParticipant, free, "new-key-request-01"), /contact the organizers/);
-      const [booking] = await sql`SELECT session_id FROM class_bookings_26 WHERE registration_id = ${freeParticipant.id}`;
-      assert.equal(booking.session_id, "fri-1330-ankersaal");
+      const bookings = await sql`SELECT session_id FROM class_bookings_26 WHERE registration_id = ${freeParticipant.id}`;
+      assert.deepEqual(bookings.map((booking) => booking.session_id).sort(), free.classes.map(({ sessionId }) => sessionId).sort());
     });
     await t.test("empty registrations complete once even with concurrent different submission keys", async () => {
       const person = await createPerson("Empty", "partyPass");
@@ -92,7 +93,7 @@ test("registration orders on isolated Postgres", { skip: !process.env.TEST_DATAB
       assert.equal((await store.completedOrder(person.id)).status, "confirmed");
     });
     await t.test("paid draft reserves provisionally and checkout uses a stable idempotency key", async () => {
-      const draft = { ...empty(), classes: [{ sessionId: "fri-1330-kantine", role: "lead" }], lunch: ["saturday"] };
+      const draft = { ...empty(), classes: fiveClasses({ sessionId: "fri-1330-kantine", role: "lead" }), lunch: ["saturday"] };
       const results = await Promise.all([store.submit(participant, draft, "paid-request-0001"), store.submit(participant, draft, "paid-request-0001")]);
       pending = results[0];
       assert.equal(results[1].id, pending.id);
@@ -124,8 +125,7 @@ test("registration orders on isolated Postgres", { skip: !process.env.TEST_DATAB
       await store.applyPayment(paid, "checkout.session.async_payment_succeeded");
       await store.applyPayment(paid, "checkout.session.async_payment_succeeded");
       await store.applyPayment({ ...session(), status: "expired" }, "checkout.session.expired");
-      const [booking] = await sql`SELECT session_id, status FROM class_bookings_26 WHERE registration_id = ${participant.id}`;
-      assert.equal(booking.session_id, "fri-1330-kantine");
+      const [booking] = await sql`SELECT status FROM class_bookings_26 WHERE registration_id = ${participant.id} AND session_id = 'fri-1330-kantine'`;
       assert.equal(booking.status, "confirmed");
       const [person] = await sql`SELECT lunch, price FROM registrations_26 WHERE id = ${participant.id}`;
       assert.equal(person.lunch, "saturday");
@@ -148,7 +148,7 @@ test("registration orders on isolated Postgres", { skip: !process.env.TEST_DATAB
       const retry = await store.submit(person, draft, "expiry-request-02");
       assert.equal(retry.status, "provisional");
       const bookings = await sql`SELECT session_id FROM class_bookings_26 WHERE registration_id = ${participant.id}`;
-      assert.deepEqual(bookings.map((booking) => booking.session_id), ["fri-1330-kantine"]);
+      assert.deepEqual(bookings.map((booking) => booking.session_id).sort(), pending.draft.classes.map(({ sessionId }) => sessionId).sort());
     });
     await t.test("organizers replace classes atomically without changing orders, add-ons or email deliveries", async () => {
       const person = await createPerson("OrganizerEdit");
@@ -246,7 +246,7 @@ test("registration orders on isolated Postgres", { skip: !process.env.TEST_DATAB
       await store.applyPayment(payment, "checkout.session.completed");
       assert.deepEqual((await store.organizerClasses(person.id)).classes, []);
       await assert.rejects(store.submit(person, draft, "reopen-original-01"), /Reload the form/);
-      const replacement = { ...draft, classes: [{ sessionId: "fri-1515-lot" }] };
+      const replacement = { ...draft, classes: fiveClasses({ sessionId: "fri-1515-lot" }) };
       const next = await store.submit(participantAfter, replacement, "reopen-replacement-01");
       assert.equal(next.status, "confirmed"); assert.equal(next.total_cents, 0);
       assert.equal((await store.completedOrder(person.id)).id, next.id);
@@ -258,7 +258,7 @@ test("registration orders on isolated Postgres", { skip: !process.env.TEST_DATAB
     });
     await t.test("voucher registrations confirm choices and capacity once without a checkout", async () => {
       const person = await createPerson("Voucher");
-      const draft = { ...empty(), classes: [{ sessionId: "sun-1415-ankersaal" }], competitions: ["solo_battle"], lunch: ["saturday", "sunday"], voucher: "freepass26" };
+      const draft = { ...empty(), classes: fiveClasses({ sessionId: "sun-1415-ankersaal" }), competitions: ["solo_battle"], lunch: ["saturday", "sunday"], voucher: "freepass26" };
       const confirmed = await store.submit(person, draft, "voucher-request-01");
       assert.equal(confirmed.status, "confirmed"); assert.equal(confirmed.total_cents, 0); assert.equal(confirmed.fee_cents, 0);
       assert.equal(confirmed.stripe_session_id, null); assert.equal(confirmed.draft.voucher, "freepass26");
@@ -371,14 +371,14 @@ test("registration orders on isolated Postgres", { skip: !process.env.TEST_DATAB
       const reloaded = await store.schedule();
       assert.equal(reloaded.find((session) => session.id === base.id).description, changed.description);
       const person = await createPerson("ScheduleParticipant");
-      const choice = { ...empty(), classes: [{ sessionId: base.id, role: "lead" }] };
+      const choice = { ...empty(), classes: fiveClasses({ sessionId: base.id, role: "lead" }) };
       assert.equal(validateDraft({ ...choice, classes: [{ sessionId: base.id }] }, person, reloaded).valid, false);
       const order = await store.submit(person, choice, "schedule-choice-01");
       const [confirmation] = await sql`SELECT payload FROM registration_email_retries_26 WHERE order_id = ${order.id}`;
-      assert.deepEqual(confirmation.payload.data.classes, [{
+      assert.deepEqual(confirmation.payload.data.classes.find((entry) => entry.title === changed.title), {
         title: changed.title, day: "Sunday", start: changed.start, end: changed.end,
         teachers: changed.teachers, room: changed.room, role: "Lead",
-      }]);
+      });
       const availability = await store.availability();
       assert.equal(availability.classes[base.id].lead.remaining, 4); assert.equal(availability.classes[base.id].follow.remaining, 2);
       const organizerView = await store.organizerClasses(person.id);
@@ -389,7 +389,7 @@ test("registration orders on isolated Postgres", { skip: !process.env.TEST_DATAB
       const after = await store.editSchedule(base.id, { ...changed, description: "Updated workshop description.", totalCapacity: "0" }, 1);
       assert.equal(after.version, 2); assert.equal((await store.availability()).classes[base.id].lead.remaining, 0);
       assert.deepEqual((await store.organizerClasses(person.id)).classes, choice.classes);
-      const [booking] = await sql`SELECT pool, status FROM class_bookings_26 WHERE registration_id = ${person.id}`;
+      const [booking] = await sql`SELECT pool, status FROM class_bookings_26 WHERE registration_id = ${person.id} AND session_id = ${base.id}`;
       assert.deepEqual(booking, { pool: "lead", status: "confirmed" });
     });
     await t.test("HTTP endpoints enforce signed access, complete drafts and server-owned checkout", async () => {
@@ -582,7 +582,7 @@ test("registration orders on isolated Postgres", { skip: !process.env.TEST_DATAB
       assert.equal(emailSends.length, 3);
       assert.deepEqual(await sql`SELECT * FROM registration_email_retries_26 WHERE id = ${historicalDeliveries[0].id}`, historicalDeliveries);
     });
-    await t.test("confirmed Full and Party Pass holders can edit only eligible choices through November 20 in Vienna", async () => {
+    await t.test("confirmed Full, Parent, and Party Pass holders can edit eligible choices through November 20 in Vienna", async () => {
       const now = Date.now;
       const previousEnabled = process.env.REG2026_ENABLED;
       const previousClose = process.env.REG2026_CLOSES_AT;
@@ -672,12 +672,24 @@ test("registration orders on isolated Postgres", { skip: !process.env.TEST_DATAB
           client_reference_id: String(party.id), metadata: { reg2026OrderId: String(newOrder.id) }, status: "complete", payment_status: "paid" };
 
         const parent = await createPerson("EditParent", "parentPass");
-        await store.submit(parent, empty(), "before-parent-edit-01");
-        assert.equal((await state(parent)).edit, null);
+        const partialParent = { ...empty(), classes: classes.slice(0, 4) };
+        await assert.rejects(store.submit(parent, partialParent, "parent-first-too-short"), (error) =>
+          error.status === 422 && error.errors.classes === "Choose your 5 classes before submitting.");
+        await store.editClasses(parent.id, partialParent.classes, "");
+        const parentState = await state(parent);
+        assert.equal(parentState.open, true);
+        assert.equal(parentState.edit.closesAt, initialState.edit.closesAt);
+        const parentEdit = { ...empty(), classes: replacement, competitions: ["fever_showcase"], voucher: "freepass26" };
+        assert.equal((await save(parent, "edit-parent-choices-01", parentState.edit.version, parentEdit)).code, 200);
+        const editedParent = await state(parent);
+        assert.deepEqual(editedParent.choices.classes, replacement);
+        assert.deepEqual(editedParent.choices.competitions, parentEdit.competitions);
         const fullVersion = (await state(full)).edit.version;
         Date.now = () => Date.parse("2026-11-21T00:00:00+01:00");
         assert.equal((await state(full)).edit, null);
         assert.equal((await save(full, "edit-full-after-close", fullVersion, fullDraft)).code, 409);
+        assert.equal((await state(parent)).edit, null);
+        assert.equal((await save(parent, "edit-parent-after-close", editedParent.edit.version, parentEdit)).code, 409);
         await store.applyPayment(payment, "checkout.session.completed");
         await store.applyPayment(payment, "checkout.session.completed");
         const final = await state(party);

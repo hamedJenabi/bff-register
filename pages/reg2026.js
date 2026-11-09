@@ -441,7 +441,7 @@ export default function Registration({ initial, access, loadError }) {
                       <strong>{draft.classes.length}</strong>{" "}
                       {draft.classes.length === 1 ? "class" : "classes"} selected
                     </span>
-                    <p>{data.participant.ticket === "fullpass" ? "Required:" : "Maximum"} {CLASS_SELECTION_LIMIT} across all days</p>
+                    <p>Required: {CLASS_SELECTION_LIMIT} across all days</p>
                   </aside>
                 )}
                 <Form {...form} aria-busy={busy}>

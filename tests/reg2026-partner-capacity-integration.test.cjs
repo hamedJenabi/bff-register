@@ -3,9 +3,10 @@ const assert = require("node:assert/strict");
 const postgres = require("postgres");
 const { createRegistrationStore } = require("../lib/reg2026/store");
 const { choicesFromParticipant, serializeThemeClass } = require("../lib/reg2026/serialization");
+const { fiveClasses } = require("./reg2026-fixtures.cjs");
 
 const sessionId = "fri-1330-kantine";
-const draft = (role) => ({ classes: [{ sessionId, role }], competitions: [], competitionRoles: {}, lunch: [] });
+const draft = (role) => ({ classes: fiveClasses({ sessionId, role }), competitions: [], competitionRoles: {}, lunch: [] });
 
 test("partner roles share capacity and serialize competing bookings on isolated Postgres", { skip: !process.env.TEST_DATABASE_URL }, async (t) => {
   const admin = postgres(process.env.TEST_DATABASE_URL, { onnotice: () => {} });
@@ -50,7 +51,7 @@ test("partner roles share capacity and serialize competing bookings on isolated 
       assert.deepEqual(choicesFromParticipant(saved).classes, draft("switch").classes);
       const [confirmation] = await sql`SELECT payload FROM registration_email_retries_26 WHERE order_id = ${order.id}`;
       assert.equal(confirmation.payload.data.classes[0].role, "Switch");
-      const [booking] = await sql`SELECT pool FROM class_bookings_26 WHERE registration_id = ${extra.id}`;
+      const [booking] = await sql`SELECT pool FROM class_bookings_26 WHERE registration_id = ${extra.id} AND session_id = ${sessionId}`;
       assert.equal(booking.pool, "switch");
       await store.editClasses(extra.id, draft("lead").classes, saved.theme_class);
       assert.equal((await places()).total.remaining, 19, "Changing role keeps the participant's existing place");
@@ -99,7 +100,7 @@ test("partner roles share capacity and serialize competing bookings on isolated 
       assert.equal(results.filter((result) => result.status === "fulfilled").length, 1);
       assert.equal(results.find((result) => result.status === "rejected").reason.status, 409);
       assert.equal((await places()).total.remaining, 0);
-      assert.equal((await sql`SELECT id FROM class_bookings_26`).length, 40);
+      assert.equal((await sql`SELECT id FROM class_bookings_26 WHERE session_id = ${sessionId}`).length, 40);
       await reset();
     });
 

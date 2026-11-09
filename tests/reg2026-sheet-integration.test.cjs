@@ -9,11 +9,16 @@ const { serializeThemeClass } = require("../lib/reg2026/serialization");
 const sheetId = "1testScheduleWorkbook_01234567890123456789";
 const empty = () => ({ classes: [], competitions: [], competitionRoles: {}, lunch: [] });
 const source = (sessions) => ({ sessions, spreadsheetId: sheetId, sheetName: "APP_SCHEDULE", sourceHash: createHash("sha256").update(JSON.stringify(sessions)).digest("hex") });
+const extraSlots = [["19:00", "20:00"], ["20:00", "21:00"], ["21:00", "22:00"], ["22:00", "23:00"]];
+const extraClasses = extraSlots.map((_, i) => ({ sessionId: `sheet-extra-${i + 1}` }));
 const sessionRows = () => [
   SHEET_COLUMNS,
   ["sheet-session-a", "Friday", "", "13:30", "14:45", "Ankersaal", "Sheet solo class", "Teacher One", "A reviewed description.", "II–III", "solo", "", "", 30, true],
   ["sheet-session-b", "Friday", "", "15:15", "16:30", "Kantine", "Sheet partner class", "Teachers Two", "A partner description.", "All levels", "partner", 20, 20, "", true],
+  ...extraSlots.map(([start, end], i) => [extraClasses[i].sessionId, "Friday", "", start, end, "Studio", `Extra class ${i + 1}`,
+    "Teacher One", "A reviewed description.", "All levels", "solo", "", "", 30, true]),
 ];
+const fiveSheetClasses = (...classes) => [...classes, ...extraClasses.slice(0, 5 - classes.length)];
 
 test("sheet schedules publish atomically and protect real registrations on isolated Postgres", { skip: !process.env.TEST_DATABASE_URL }, async (t) => {
   const admin = postgres(process.env.TEST_DATABASE_URL, { onnotice: () => {} });
@@ -74,7 +79,7 @@ test("sheet schedules publish atomically and protect real registrations on isola
       publication = await store.publishSchedule(source(sessions), 0);
       const metadata = await store.schedulePublication();
       assert.equal(metadata.id, publication.id);
-      assert.equal(metadata.count, 2);
+      assert.equal(metadata.count, sessions.length);
       assert.equal(metadata.spreadsheetId, sheetId);
       assert.equal(metadata.sheetName, "APP_SCHEDULE");
       assert.ok(Number.isFinite(Date.parse(metadata.publishedAt)));
@@ -82,7 +87,7 @@ test("sheet schedules publish atomically and protect real registrations on isola
       assert.equal((await store.schedule())[0].title, "Sheet solo class");
       assert.deepEqual((await store.schedule())[0].capacity, { total: 30 });
       delete process.env.REG2026_SCHEDULE_SHEET_ID;
-      assert.equal((await store.schedule()).length, 2);
+      assert.equal((await store.schedule()).length, sessions.length);
       await assert.rejects(store.editSchedule(sessions[0].id, {}, publication.id), (error) => error.status === 409);
       process.env.REG2026_SCHEDULE_SHEET_ID = sheetId;
     });
@@ -112,12 +117,12 @@ test("sheet schedules publish atomically and protect real registrations on isola
       const before = await store.availability();
       assert.deepEqual(Object.keys(before.classes), sessions.map(({ id }) => id));
       assert.equal(before.classes["sheet-session-a"].total.remaining, 30);
-      const order = await store.submit(registered, { ...empty(), classes: [{ sessionId: "sheet-session-a" }] }, "sheet-registration-01");
+      const order = await store.submit(registered, { ...empty(), classes: fiveSheetClasses({ sessionId: "sheet-session-a" }) }, "sheet-registration-01");
       assert.equal(order.status, "confirmed");
       assert.equal((await store.availability()).classes["sheet-session-a"].total.remaining, 29);
       assert.equal(await store.classRegistrantCount(), 1);
       const other = await createPerson("SheetOldMock");
-      await assert.rejects(store.submit(other, { ...empty(), classes: [{ sessionId: "fri-1330-ankersaal" }] }, "sheet-mock-rejected-01"), (error) => error.status === 422);
+      await assert.rejects(store.submit(other, { ...empty(), classes: fiveSheetClasses({ sessionId: "fri-1330-ankersaal" }) }, "sheet-mock-rejected-01"), (error) => error.status === 422);
     });
 
     await t.test("booked session deletion and structural changes are rejected without changing the last good snapshot", async () => {
@@ -132,7 +137,7 @@ test("sheet schedules publish atomically and protect real registrations on isola
         assert.equal((await store.schedulePublication()).id, publication.id);
         assert.deepEqual(await store.schedule(), current);
       }
-      assert.equal((await sql`SELECT * FROM class_bookings_26 WHERE registration_id = ${registered.id}`).length, 1);
+      assert.equal((await sql`SELECT * FROM class_bookings_26 WHERE registration_id = ${registered.id}`).length, 5);
     });
 
     await t.test("safe timetable corrections publish without changing saved choices, bookings or order history", async () => {
@@ -150,7 +155,7 @@ test("sheet schedules publish atomically and protect real registrations on isola
 
     await t.test("retiming rejects overlaps in saved selections and retained order drafts", async () => {
       const person = await createPerson("RetimedChoices");
-      const classes = [{ sessionId: "sheet-session-a" }, { sessionId: "sheet-session-b", role: "follow" }];
+      const classes = fiveSheetClasses({ sessionId: "sheet-session-a" }, { sessionId: "sheet-session-b", role: "follow" });
       await store.submit(person, { ...empty(), classes }, "retimed-pair-01");
       const current = await store.schedule();
       const overlap = current.map((session) => session.id === "sheet-session-a" ? { ...session, end: "15:45" } : session);
@@ -167,7 +172,7 @@ test("sheet schedules publish atomically and protect real registrations on isola
       const history = { ...(await store.schedule()).find(({ id }) => id === "sheet-session-b"), id: "sheet-history", room: "History room", start: "17:30", end: "18:45" };
       publication = await store.publishSchedule(source([...(await store.schedule()), history]), publication.id);
       const person = await createPerson("RetiredChoices");
-      const order = await store.submit(person, { ...empty(), classes: [{ sessionId: history.id, role: "switch" }] }, "retired-choice-01");
+      const order = await store.submit(person, { ...empty(), classes: fiveSheetClasses({ sessionId: history.id, role: "switch" }) }, "retired-choice-01");
       const [saved] = await sql`SELECT theme_class FROM registrations_26 WHERE id = ${person.id}`;
       await store.reopenClasses(person.id, saved.theme_class);
       const next = (await store.schedule()).map((session) => session.id === history.id ? { ...session, format: "solo", partnerClass: false, capacity: { total: 30 } } : session);
@@ -187,9 +192,9 @@ test("sheet schedules publish atomically and protect real registrations on isola
       const inventory = (await store.classInventory())["sheet-session-a"];
       assert.equal(inventory.registered, 1, "Reducing capacity must not hide existing registrations");
       assert.equal(inventory.remaining, 0);
-      assert.equal((await sql`SELECT * FROM class_bookings_26 WHERE registration_id = ${registered.id}`).length, 1);
+      assert.equal((await sql`SELECT * FROM class_bookings_26 WHERE registration_id = ${registered.id}`).length, 5);
       const other = await createPerson("SheetFull");
-      await assert.rejects(store.submit(other, { ...empty(), classes: [{ sessionId: "sheet-session-a" }] }, "sheet-full-rejected-01"), (error) => error.status === 409);
+      await assert.rejects(store.submit(other, { ...empty(), classes: fiveSheetClasses({ sessionId: "sheet-session-a" }) }, "sheet-full-rejected-01"), (error) => error.status === 409);
     });
 
     await t.test("legacy saved classes and order-only references also prevent orphaned session IDs", async () => {
@@ -211,7 +216,7 @@ test("sheet schedules publish atomically and protect real registrations on isola
       publication = await store.publishSchedule(source(dated), publication.id);
       const published = await store.schedule();
       assert.ok(published.every((session) => session.date === "2026-10-30"));
-      assert.equal((await sql`SELECT * FROM class_bookings_26 WHERE registration_id = ${registered.id}`).length, 1);
+      assert.equal((await sql`SELECT * FROM class_bookings_26 WHERE registration_id = ${registered.id}`).length, 5);
       assert.equal((await store.schedulePublication()).id, publication.id);
 
       for (const date of ["2026-11-06", ""]) {
@@ -235,7 +240,7 @@ test("sheet schedules publish atomically and protect real registrations on isola
       const open = { capacity: null, remaining: null, unlimited: true };
       assert.deepEqual(JSON.parse(JSON.stringify((await store.availability()).classes[talk.id].total)), open);
       const participant = await createPerson("OpenTalkParticipant");
-      const order = await store.submit(participant, { ...empty(), classes: [{ sessionId: talk.id }] }, "open-talk-registration-01");
+      const order = await store.submit(participant, { ...empty(), classes: fiveSheetClasses({ sessionId: talk.id }) }, "open-talk-registration-01");
       assert.equal(order.status, "confirmed");
       const organizerParticipant = await createPerson("OpenTalkOrganizerEdit");
       await store.editClasses(organizerParticipant.id, [{ sessionId: talk.id }], "");

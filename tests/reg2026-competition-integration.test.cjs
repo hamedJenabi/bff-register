@@ -3,6 +3,7 @@ const assert = require("node:assert/strict");
 const postgres = require("postgres");
 const { createRegistrationStore } = require("../lib/reg2026/store");
 const { competitions } = require("../lib/reg2026/catalog");
+const { fiveClasses } = require("./reg2026-fixtures.cjs");
 
 const draft = (id, role, free = true) => ({
   classes: [], competitions: [id], competitionRoles: role ? { [id]: role } : {}, lunch: [],
@@ -22,9 +23,9 @@ test("competition limits and reservations on isolated Postgres", { skip: !proces
     }
     const store = createRegistrationStore(sql);
     let number = 0;
-    const seed = (count, id = "", role = "") => sql`INSERT INTO registrations_26
+    const seed = (count, id = "", role = "", ticket = "partyPass") => sql`INSERT INTO registrations_26
       (date,status,role,ticket,firstname,lastname,email,country,competitions,open_mixnmatch_role,newcomers_mixnmatch_role,strictly_role)
-      SELECT '2026','confirmed','advanced','parentPass',${`Competition${++number}`},'Dancer','fixture@example.com','Austria',${id},
+      SELECT '2026','confirmed','advanced',${ticket},${`Competition${++number}`},'Dancer','fixture@example.com','Austria',${id},
         ${id === "open_mixnmatch" ? role : ""},${id === "newcomers_mixnmatch" ? role : ""},${id === "strictly" ? role : ""}
       FROM generate_series(1, ${count}) RETURNING *`;
     const person = async () => (await seed(1))[0];
@@ -80,8 +81,9 @@ test("competition limits and reservations on isolated Postgres", { skip: !proces
 
     await t.test("checkout holds count once, exclude their owner, release on expiry/failure and persist while payment is pending", async () => {
       await seed(29, "solo_battle");
-      const attendee = await person();
-      const order = await store.submit(attendee, draft("solo_battle", undefined, false), "competition-paid-hold");
+      const [attendee] = await seed(1, "", "", "parentPass");
+      const paidDraft = { ...draft("solo_battle", undefined, false), classes: fiveClasses() };
+      const order = await store.submit(attendee, paidDraft, "competition-paid-hold");
       assert.equal((await places("solo_battle", "total")).remaining, 0);
       assert.deepEqual((await store.competitionInventory()).solo_battle.total, { capacity: 30, remaining: 0, registered: 29, held: 1, version: 0 });
       assert.equal(await store.competitionRegistrantCount(), 29, "Active checkout holds are not registered users");
@@ -96,12 +98,12 @@ test("competition limits and reservations on isolated Postgres", { skip: !proces
       await store.attachSession(order.id, `cs_competition_${order.id}`);
       await store.applyPayment(checkout(attendee, order, "complete", "unpaid"), "checkout.session.async_payment_failed");
       assert.equal((await places("solo_battle", "total")).remaining, 1);
-      const retry = await store.submit(attendee, draft("solo_battle", undefined, false), "competition-paid-retry");
+      const retry = await store.submit(attendee, paidDraft, "competition-paid-retry");
       await store.attachSession(retry.id, `cs_competition_${retry.id}`);
       await store.applyPayment(checkout(attendee, retry, "complete", "paid"), "checkout.session.completed");
       assert.equal((await places("solo_battle", "total")).remaining, 0, "Confirmed choices and their order consume a single place");
       await store.reopenClasses(attendee.id, (await sql`SELECT theme_class FROM registrations_26 WHERE id = ${attendee.id}`)[0].theme_class);
-      const secondOrder = await store.submit(attendee, { ...draft("solo_battle", undefined, false), lunch: ["saturday"] }, "competition-paid-lunch");
+      const secondOrder = await store.submit(attendee, { ...paidDraft, lunch: ["saturday"] }, "competition-paid-lunch");
       assert.equal(secondOrder.status, "provisional");
       assert.equal((await places("solo_battle", "total")).remaining, 0, "Saved choices and an active add-on order consume a single place");
       assert.deepEqual((await store.competitionInventory()).solo_battle.total, { capacity: 30, remaining: 0, registered: 30, held: 0, version: 0 });
@@ -206,14 +208,14 @@ test("competition limits and reservations on isolated Postgres", { skip: !proces
     });
 
     await t.test("Solo time conflicts are rejected for participant submissions and organizer class edits", async () => {
-      const attendee = await person();
+      const [attendee] = await seed(1, "", "", "parentPass");
       const conflict = { sessionId: "sat-1600-superar-1", role: "lead" };
       await assert.rejects(store.submit(attendee, { ...draft("solo_battle"), classes: [conflict] }, "competition-solo-conflict"), (error) =>
         error.status === 422 && /Cuttin'/.test(error.errors.classes));
       await sql`UPDATE registrations_26 SET competitions = 'solo_battle' WHERE id = ${attendee.id}`;
       await assert.rejects(store.editClasses(attendee.id, [conflict], ""), (error) =>
         error.status === 422 && /Cuttin'/.test(error.errors.classes));
-      await store.submit(attendee, { ...draft("solo_battle"), classes: [{ sessionId: "sun-1600-hilger", role: "lead" }] }, "competition-solo-other-day");
+      await store.submit(attendee, { ...draft("solo_battle"), classes: fiveClasses({ sessionId: "sun-1600-hilger", role: "lead" }) }, "competition-solo-other-day");
     });
   } finally {
     if (previousSheet === undefined) delete process.env.REG2026_SCHEDULE_SHEET_ID;

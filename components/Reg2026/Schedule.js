@@ -89,7 +89,7 @@ export default function Schedule({ participant, form, availability, disabled, se
   const remove = (id) => form.update("classes", draft.classes.filter((choice) => choice.sessionId !== id));
   return <section ref={scheduleRef} aria-labelledby="schedule-title">
     <h2 id="schedule-title">Your class schedule</h2>
-    <p>Choose {participant.ticket === "fullpass" ? "exactly" : "up to"} {CLASS_SELECTION_LIMIT} classes across the festival, with one per time slot. Every session is independent. Draft choices reserve no places until you submit.</p>
+    <p>Choose exactly {CLASS_SELECTION_LIMIT} classes across the festival, with one per time slot. Every session is independent. Draft choices reserve no places until you submit.</p>
     <p className={styles.levelGuide}>
       Before choosing your classes, read the{" "}
       <a href="https://www.bluesfever.eu/passes-levels/#desc" target="_blank" rel="noopener noreferrer">
