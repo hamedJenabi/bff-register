@@ -1,12 +1,12 @@
 # Attendee app launch and class-door verification
 
-Status as of 9 November 2026. The personal-link and class-schedule journey works locally, and the bulk final email is wired in the registration checkout. The hosted app responds over HTTPS. The in-app party program and door scanner still need implementation. Updating the hosted SendGrid template, applying the delivery migration, and signing in from a controlled final email remain launch checks.
+The personal-link journey, bulk final email, full program, and class-door scanner are implemented locally. Hosted rollout and a rehearsal on real phones remain launch checks.
 
 ## Problem Statement
 
 Confirmed participants need one final festival email that opens their own weekend on a phone. The app needs to show their confirmed class bookings, the full class and talk program, and the full party program. At a class door, authorized staff need to know whether the person presenting a festival QR is eligible for that specific class session.
 
-The existing **Send Email to All confirmed** action previously sent the legacy final email without an app link. Its updated backend supplies a unique `appAccessUrl` to the existing final email template, which needs the new app button before launch. The dedicated app-invitation API remains a separate action. The app already displays a participant QR. Staff still need a camera interface and class-door verification API. Parties are published on the festival website and are absent from Full Schedule. [Official party schedule](https://www.bluesfever.eu/schedule-venue/#bff-party-schedule)
+The **Send Email to All confirmed** action supplies a unique `appAccessUrl` to the existing final email template. The app displays a participant QR and offers an authenticated scanner in Festival Admin. Full Schedule includes the parties published on the festival website. [Official party schedule](https://www.bluesfever.eu/schedule-venue/#bff-party-schedule)
 
 ## Solution
 
@@ -52,4 +52,6 @@ Use the existing bulk final email action as the organizer's entry point. Send on
 
 ## Further Notes
 
-Before approving the bulk send, finish the final-email workflow, the in-app party program, and the staff scanner. Verify the hosted app-to-registration connection, database migrations, signing configuration, link expiry through the festival, active SendGrid template, and approved published schedule. Complete the controlled email and class-door rehearsal.
+Before approving the bulk send, verify the hosted app-to-registration connection, database migrations, signing configuration, link expiry through the festival, active SendGrid template, and approved published schedule. Complete the controlled email and class-door rehearsal.
+
+Apply migration `00019` to create the empty Cuttin’ roster. In the app’s `/bff-admin`, open **Class door scanner**, select Cuttin’, and use **Manage Cuttin’ roster** to add the approved confirmed registrations. There is no automatic import from Solo Battle. Before doors open, the designated organizer downloads each relevant roster and makes it available on a device or on paper. The export records when it was generated. During an outage the organizer uses that copy and checks any booking changes since export.

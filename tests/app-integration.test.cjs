@@ -4,6 +4,10 @@ const postgres = require("postgres");
 const { createRegistrationStore } = require("../lib/reg2026/store");
 const { createAttendeeStore } = require("../lib/app/store");
 const { createAppHandlers } = require("../lib/app/http");
+const { createContentHandlers } = require("../lib/app/content-http");
+const { createContentStore } = require("../lib/app/content-store");
+const { createDoorStore, CUTTIN_SESSION_ID } = require("../lib/app/door-store");
+const { hashAdminPassword } = require("../lib/app/admin-security");
 const { createAppInvitationHandler } = require("../lib/app/invitations");
 const { createFinalEmailHandler, createFinalEmailStore } = require("../lib/app/final-email");
 const { serializeThemeClass } = require("../lib/reg2026/serialization");
@@ -54,6 +58,7 @@ test(
       "APP_INVITATION_TEMPLATE_ID",
       "APP_LINK_EXPIRES_AT",
       "APP_FESTIVAL_START_DATE",
+      "APP_ADMIN_PASSWORD_HASH",
       "ADMIN_SESSION_SECRET",
       "ADMIN_USER",
       "FINAL_EMAIL_ENABLED",
@@ -81,7 +86,9 @@ test(
         "00009-create-schedule-overrides-2026",
         "00010-reg2026-reopen-registration", "00013-reg2026-sheet-schedule", "00015-reg2026-switch-role", "00016-reg2026-competition-capacities", "00017-reg2026-showcase-capacity",
         "00011-attendee-app-access",
+        "00012-festival-app-admin",
         "00018-reg2026-final-emails",
+        "00019-app-cuttin-roster",
       ]) {
         await sql.begin((tx) => require(`../migrations/${migration}`).up(tx));
       }
@@ -217,6 +224,77 @@ test(
             (await store.snapshot(session.sessionToken)).pendingRegistration,
             true,
           );
+        },
+      );
+
+      await t.test(
+        "class door checks use current confirmed bookings, open talks and the manual Cuttin’ roster",
+        async () => {
+          const password = "fictional-class-door-admin-password";
+          process.env.APP_ADMIN_PASSWORD_HASH = await hashAdminPassword(password);
+          const content = createContentStore(sql);
+          const catalog = await registration.schedule();
+          const open = "fri-1515-lot";
+          const door = createDoorStore(sql, { schedule: async () => [
+            ...catalog.map((session) => session.id === open ? { ...session, format: "talk" } : session),
+            { ...catalog.find(({ id }) => id === "sat-1600-superar-3"), id: CUTTIN_SESSION_ID, title: "Cuttin’", room: "Ankersaal", bookable: false },
+          ] });
+          const { manage } = createContentHandlers(content, store, door);
+          const admin = await content.login("bff2026-admin", password);
+          const call = async (action, body, token = admin.token) => {
+            const res = response();
+            await manage[action]({ method: body ? "POST" : "GET", headers: sessionHeaders(token), body }, res);
+            assert.equal(res.headers["Cache-Control"], "private, no-store");
+            return res;
+          };
+          const booked = "fri-1330-kantine";
+          const legacy = "sat-1130-superar-1";
+          const aliceQr = credentialToken(aliceLink.access, "qr");
+          const bobQr = credentialToken(bobLink.access, "qr");
+          const partyLink = await store.issueAccess(party.id);
+          const partyQr = credentialToken(partyLink.access, "qr");
+          const verify = async (sessionId, qr) => (await call("door-verify", { sessionId, qr })).body;
+
+          assert.equal((await call("door-sessions", undefined, aliceSession.sessionToken)).code, 401);
+          assert.equal((await call("door-verify", { sessionId: booked, qr: aliceQr }, aliceSession.sessionToken)).code, 401);
+          assert.equal((await call("door-roster", { sessionId: booked }, aliceSession.sessionToken)).code, 401);
+          assert.equal((await call("door-roster-edit", { id: alice.id, included: true }, aliceSession.sessionToken)).code, 401);
+          const list = (await call("door-sessions")).body.sessions;
+          assert.equal(list.find(({ id }) => id === CUTTIN_SESSION_ID).mode, "roster");
+          assert.equal(list.find(({ id }) => id === open).mode, "open");
+          assert.deepEqual(await verify(booked, aliceQr), { status: "eligible", firstname: "Alice", lastname: "Dancer", role: "switch" });
+          assert.deepEqual(await verify(legacy, aliceQr), { status: "ineligible" }); // provisional only
+          assert.equal((await verify(legacy, bobQr)).status, "eligible");
+          assert.equal((await verify(open, partyQr)).status, "eligible");
+          assert.deepEqual(await verify(booked, partyQr), { status: "ineligible" });
+          assert.deepEqual(await verify(booked, linkToken(aliceLink.url)), { status: "invalid" });
+          assert.deepEqual(await verify(booked, "not-a-festival-qr"), { status: "invalid" });
+          assert.equal((await call("door-verify", { sessionId: "gone", qr: aliceQr })).code, 404);
+          assert.deepEqual((await call("door-roster", { sessionId: legacy })).body.entries,
+            [{ id: bob.id, firstname: "Bob", lastname: "Dancer", role: null }]);
+
+          assert.deepEqual(await verify(CUTTIN_SESSION_ID, aliceQr), { status: "ineligible" });
+          assert.deepEqual([...(await call("door-search", { query: "Alice" })).body.participants],
+            [{ id: alice.id, firstname: "Alice", lastname: "Dancer" }]);
+          assert.equal((await call("door-roster-edit", { id: waiting.id, included: true })).code, 409);
+          for (let i = 0; i < 2; i++) assert.equal((await call("door-roster-edit", { id: alice.id, included: true })).code, 200);
+          assert.equal((await verify(CUTTIN_SESSION_ID, aliceQr)).status, "eligible");
+          assert.equal((await call("door-roster", { sessionId: CUTTIN_SESSION_ID })).body.entries.length, 1);
+          assert.equal((await call("door-roster-edit", { id: alice.id, included: false })).code, 200);
+          assert.deepEqual(await verify(CUTTIN_SESSION_ID, aliceQr), { status: "ineligible" });
+
+          const temporary = await createPerson("Temporary door fixture", "partyPass");
+          const { access } = await store.issueAccess(temporary.id);
+          const qr = credentialToken(access, "qr");
+          await sql`UPDATE registrations_26 SET status = 'canceled' WHERE id = ${temporary.id}`;
+          assert.deepEqual(await verify(open, qr), { status: "invalid" });
+          await sql`UPDATE registrations_26 SET status = 'confirmed' WHERE id = ${temporary.id}`;
+          await sql`UPDATE attendee_access_26 SET expires_at = NOW() - INTERVAL '1 second' WHERE id = ${access.id}`;
+          assert.deepEqual(await verify(open, qr), { status: "invalid" });
+          await sql`UPDATE attendee_access_26 SET expires_at = NOW() + INTERVAL '1 day' WHERE id = ${access.id}`;
+          await store.revoke(temporary.id);
+          assert.deepEqual(await verify(open, qr), { status: "invalid" });
+          await sql`UPDATE registrations_26 SET status = 'canceled' WHERE id = ${temporary.id}`;
         },
       );
 
