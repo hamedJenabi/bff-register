@@ -209,13 +209,9 @@ The requested Schedule admin page now supports persistent overrides. Mock defaul
 27. Keep database schedule/capacity tables empty initially, render frontend mock classes and persist admin edits as overrides. Add `/dashboard/schedule` for titles, descriptions, teachers, rooms, times, class type and capacities. Preserve class identifiers and existing bookings; booked class timing/type is fixed. Use the effective catalog everywhere and reject stale or unauthorized edits.
 28. Add **Remove all classes and reopen registration** to the participant Edit page reached from the Actions column in both dashboards. Release all class places and retire the prior completion lock, retaining paid competition/lunch choices and historical payments. Reopening is organizer-only, rejects stale changes and pending checkout, and lets the same link show the form again. Previous submissions and payment notifications must not restore removed classes.
 
-### Follow-up schedule invitations (open)
+### Follow-up schedule invitations
 
-After the first bulk schedule invitation to all eligible confirmed participants, the organizer wants to use the dashboard's bulk schedule email action to remind only those who still need to register for classes. The follow-up should use the schedule invitation and each recipient's personal registration link. Check registration status at send time and skip people who have already registered for classes.
-
-The current bulk action skips completed registrations and anyone whose first invitation was already accepted by SendGrid. A reminder needs to reach previously invited participants whose registration is still incomplete.
-
-Discuss before implementation whether to include Party Pass holders with unfinished competition or lunch choices, and how to handle pending checkout or a completed submission with no classes selected.
+The dashboard's bulk schedule invitation sends the same email and personal registration link to confirmed Full Pass holders whose schedule is incomplete, including those previously invited. Completion is checked at send time: saved classes or a confirmed submission (even with zero classes) count as complete. Pending checkout remains incomplete. See [organizer operations](./reg2026-launch.md#organizer-operations).
 
 ### Launch inputs and deferred details
 

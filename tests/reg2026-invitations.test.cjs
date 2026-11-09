@@ -35,26 +35,28 @@ test("schedule invitations use confirmed, incomplete participants and distinct s
              ('2026','confirmed','advanced','partyPass','Ben','Two','ben@example.com','Austria'),
              ('2026','waitinglist','advanced','fullpass','Wait','List','wait@example.com','Austria'),
              ('2026','confirmed','advanced','fullpass','Done','Classes','done@example.com','Austria'),
-             ('2026','confirmed','advanced','partyPass','Done','Empty','empty@example.com','Austria'),
+             ('2026','confirmed','advanced','fullpass','Done','Empty','empty@example.com','Austria'),
              ('2026','confirmed','advanced','fullpass','Same','A','same@example.com','Austria'),
-             ('2026','confirmed','advanced','fullpass','Same','B','same@example.com','Austria') RETURNING *`;
+             ('2026','confirmed','advanced','fullpass','Same','B','same@example.com','Austria'),
+             ('2026','confirmed','advanced','parentPass','Pat','Parent','pat@example.com','Austria') RETURNING *`;
     await sql`UPDATE registrations_26 SET theme_class = ${serializeThemeClass([{ sessionId: "fri-1330-ankersaal" }])} WHERE id = ${people[3].id}`;
     await sql`INSERT INTO reg2026_orders (registration_id,status,draft,subtotal_cents,fee_cents,total_cents)
       VALUES (${people[4].id},'confirmed','{}'::jsonb,0,0,0)`;
     const store = createRegistrationInvitationStore(sql);
     const sent = [];
-    let rejectBen = true;
+    let rejectedEmail = "ben@example.com";
     const handler = createRegistrationInvitationHandler({ store, send: async (message) => {
-      if (rejectBen && message.to === "ben@example.com") throw new Error("Fictional SendGrid failure");
+      if (message.to === rejectedEmail) throw new Error("Fictional SendGrid failure");
       sent.push(message);
     } });
     const session = response(); setAdminSession(session);
     const headers = { host: "register.example.com", origin: "https://register.example.com", cookie: session.headers["Set-Cookie"].split(";")[0] };
-    const call = async (id, otherHeaders = headers) => {
+    const call = async (id, otherHeaders = headers, options = {}) => {
       const res = response();
-      await handler({ method: "POST", headers: otherHeaders, body: { id } }, res);
+      await handler({ method: "POST", headers: otherHeaders, body: { id, ...options } }, res);
       return res;
     };
+    const resend = (id) => call(id, headers, { resend: true });
 
     await t.test("authorization and missing template prevent every send", async () => {
       assert.equal((await call(people[0].id, {})).code, 401);
@@ -106,7 +108,7 @@ test("schedule invitations use confirmed, incomplete participants and distinct s
     await t.test("failed provider acceptance can retry without repeating successful sends", async () => {
       assert.equal((await call(people[1].id)).code, 502);
       assert.equal((await sql`SELECT status, attempts FROM registration_schedule_invitations_26 WHERE registration_id = ${people[1].id}`)[0].status, "failed");
-      rejectBen = false;
+      rejectedEmail = null;
       assert.equal((await call(people[1].id)).body.status, "sent");
       assert.equal((await call(people[1].id)).body.status, "already_sent");
       assert.equal(sent.length, 2);
@@ -119,11 +121,41 @@ test("schedule invitations use confirmed, incomplete participants and distinct s
       const [person] = await sql`INSERT INTO registrations_26 (date,status,role,ticket,firstname,lastname,email,country)
         VALUES ('2026','confirmed','advanced','fullpass','Cara','Three','cara@example.com','Austria') RETURNING *`;
       await sql`INSERT INTO registration_schedule_invitations_26 (registration_id,status,attempts,updated_at)
-        VALUES (${person.id},'sending',1,NOW() - INTERVAL '11 minutes')`;
-      assert.equal((await call(person.id)).body.status, "uncertain");
-      assert.equal((await call(person.id)).body.status, "uncertain");
+        VALUES (${person.id},'sending',1,NOW())`;
+      assert.equal((await resend(person.id)).body.status, "sending");
+      await sql`UPDATE registration_schedule_invitations_26 SET updated_at = NOW() - INTERVAL '11 minutes' WHERE registration_id = ${person.id}`;
+      assert.equal((await resend(person.id)).body.status, "uncertain");
+      assert.equal((await resend(person.id)).body.status, "uncertain");
       assert.equal((await sql`SELECT status FROM registration_schedule_invitations_26 WHERE registration_id = ${person.id}`)[0].status, "uncertain");
       assert.equal(sent.length, 2);
+    });
+
+    await t.test("bulk resends recheck Full Pass eligibility and completion before sending", async () => {
+      const ada = people[0];
+      assert.equal((await resend(ada.id)).body.status, "sent");
+      assert.deepEqual(sent.at(-1), sent[0]);
+      assert.equal((await call(ada.id)).body.status, "already_sent");
+      for (const person of [people[1], people[2], people[5], people[7]]) {
+        assert.equal((await resend(person.id)).code, 409);
+      }
+      assert.equal((await resend(people[3].id)).body.status, "completed");
+      assert.equal((await resend(people[4].id)).body.status, "completed");
+      await sql`UPDATE registrations_26 SET theme_class = ${serializeThemeClass([{ sessionId: "fri-1330-ankersaal" }])} WHERE id = ${ada.id}`;
+      assert.equal((await resend(ada.id)).body.status, "completed");
+      assert.equal(sent.length, 3);
+    });
+
+    await t.test("bulk can send first invitations and retry failures without changing single-send behavior", async () => {
+      const [person] = await sql`INSERT INTO registrations_26 (date,status,role,ticket,firstname,lastname,email,country)
+        VALUES ('2026','confirmed','advanced','fullpass','Deb','Four','deb@example.com','Austria') RETURNING *`;
+      assert.equal((await resend(person.id)).body.status, "sent");
+      rejectedEmail = person.email;
+      assert.equal((await resend(person.id)).code, 502);
+      assert.equal((await call(person.id)).body.status, "already_sent");
+      assert.equal(sent.length, 4);
+      rejectedEmail = null;
+      assert.equal((await resend(person.id)).body.status, "sent");
+      assert.equal(sent.length, 5);
     });
   } finally {
     for (const key of keys) previous[key] === undefined ? delete process.env[key] : process.env[key] = previous[key];

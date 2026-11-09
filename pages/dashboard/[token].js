@@ -174,28 +174,28 @@ export default function Dashboard({ users, tickets, previewMode }) {
     }
   };
   const handleSendScheduleInvitations = async () => {
-    const confirmed = users.filter((user) => user.status === "confirmed");
-    if (!confirmed.length) {
-      setScheduleInvitationProgress({ message: "There are no confirmed participants to invite." });
+    const fullPassHolders = users.filter((user) => user.status === "confirmed" && user.ticket === "fullpass");
+    if (!fullPassHolders.length) {
+      setScheduleInvitationProgress({ message: "There are no confirmed Full Pass holders to invite." });
       return;
     }
-    if (!confirm(`Invite eligible confirmed participants from this list (up to ${confirmed.length})? Completed registrations and participants already emailed will be skipped.`)) return;
+    if (!confirm(`Send the schedule invitation to confirmed Full Pass holders with incomplete schedules (up to ${fullPassHolders.length})? This includes people who already received the invitation.`)) return;
 
     setSendingScheduleInvitations(true);
-    const counts = { sent: 0, alreadySent: 0, failed: 0, skipped: 0, uncertain: 0 };
+    const counts = { sent: 0, completed: 0, failed: 0, skipped: 0, uncertain: 0 };
     const issues = [];
     let next = 0;
     let stopped = "";
-    const report = () => setScheduleInvitationProgress({ ...counts, issues: [...issues], total: confirmed.length, stopped });
+    const report = () => setScheduleInvitationProgress({ ...counts, issues: [...issues], total: fullPassHolders.length, stopped });
     report();
     const worker = async () => {
-      while (next < confirmed.length && !stopped) {
-        const participant = confirmed[next++];
+      while (next < fullPassHolders.length && !stopped) {
+        const participant = fullPassHolders[next++];
         try {
           const response = await fetch("/api/reg2026/invite", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ id: participant.id }),
+            body: JSON.stringify({ id: participant.id, resend: true }),
           });
           const result = await response.json();
           if ([401, 403, 503].includes(response.status)) {
@@ -205,8 +205,7 @@ export default function Dashboard({ users, tickets, previewMode }) {
             else counts.failed++;
             issues.push(`${participant.firstname} ${participant.lastname} (#${participant.id}): ${result.error || "Request failed"}`);
           } else if (result.status === "sent") counts.sent++;
-          else if (result.status === "already_sent") counts.alreadySent++;
-          else if (result.status === "completed") counts.skipped++;
+          else if (result.status === "completed") counts.completed++;
           else if (result.status === "uncertain" || result.status === "sending") {
             counts.uncertain++;
             issues.push(`${participant.firstname} ${participant.lastname} (#${participant.id}): delivery needs review before another attempt.`);
@@ -221,7 +220,7 @@ export default function Dashboard({ users, tickets, previewMode }) {
         report();
       }
     };
-    await Promise.all(Array.from({ length: Math.min(3, confirmed.length) }, worker));
+    await Promise.all(Array.from({ length: Math.min(3, fullPassHolders.length) }, worker));
     setSendingScheduleInvitations(false);
     report();
   };
@@ -1048,16 +1047,16 @@ export default function Dashboard({ users, tickets, previewMode }) {
               Send Email to All confirmed
             </button>
             <button className={styles.statusButton} onClick={handleSendScheduleInvitations} disabled={sendingScheduleInvitations || sendingScheduleInvitationId !== null}>
-              {sendingScheduleInvitations ? "Sending schedule invitations…" : "Send schedule invitations to all confirmed"}
+              {sendingScheduleInvitations ? "Sending schedule invitations…" : "Send schedule invitations to confirmed Full Pass holders"}
             </button>
           </div>
           {scheduleInvitationProgress && (
             <p className={styles.invitationProgress} role={scheduleInvitationProgress.stopped ? "alert" : "status"}>
               {scheduleInvitationProgress.message ||
                 `Schedule invitations: ${scheduleInvitationProgress.sent} ${previewMode ? "captured in preview" : "accepted by SendGrid"}, ` +
-                `${scheduleInvitationProgress.alreadySent} already sent, ${scheduleInvitationProgress.skipped} skipped, ` +
-                `${scheduleInvitationProgress.failed} failed, ${scheduleInvitationProgress.uncertain} require review ` +
-                `of ${scheduleInvitationProgress.total} confirmed participants.`}
+                `${scheduleInvitationProgress.completed} already complete, ${scheduleInvitationProgress.skipped} otherwise skipped, ` +
+                `${scheduleInvitationProgress.failed} failed, ${scheduleInvitationProgress.uncertain} require review. ` +
+                `Total: ${scheduleInvitationProgress.total} confirmed Full Pass holders.`}
               {scheduleInvitationProgress.stopped && ` ${scheduleInvitationProgress.stopped}`}
             </p>
           )}
