@@ -18,11 +18,15 @@ import {
 import { unstable_FormCheckbox as FormCheckbox } from "reakit/Form";
 import { unstable_useFormState as useFormState } from "reakit/Form";
 
-export default function Dashboard({ users, tickets }) {
+export default function Dashboard({ users, tickets, previewMode }) {
   const [nameSearch, setNameSearch] = useState("");
   const [activeSideBar, setActiveSideBar] = useState("all");
   const [capacityShow, setCapacityShow] = useState(false);
   const [userToShow, setUserToShow] = useState(users || []);
+  const [sendingScheduleInvitations, setSendingScheduleInvitations] = useState(false);
+  const [scheduleInvitationProgress, setScheduleInvitationProgress] = useState(null);
+  const [sendingScheduleInvitationId, setSendingScheduleInvitationId] = useState(null);
+  const [scheduleInvitationResults, setScheduleInvitationResults] = useState({});
   const isMobile = useMedia({ maxWidth: "768px" });
   const today = new Date().toISOString().split("T")[0];
   const totalAmount = users.reduce((acc, user) => {
@@ -167,6 +171,98 @@ export default function Dashboard({ users, tickets }) {
       });
     } else {
       console.log("no");
+    }
+  };
+  const handleSendScheduleInvitations = async () => {
+    const fullPassHolders = users.filter((user) => user.status === "confirmed" && user.ticket === "fullpass");
+    if (!fullPassHolders.length) {
+      setScheduleInvitationProgress({ message: "There are no confirmed Full Pass holders to invite." });
+      return;
+    }
+    if (!confirm(`Send the schedule invitation to confirmed Full Pass holders with incomplete schedules (up to ${fullPassHolders.length})? This includes people who already received the invitation.`)) return;
+
+    setSendingScheduleInvitations(true);
+    const counts = { sent: 0, completed: 0, failed: 0, skipped: 0, uncertain: 0 };
+    const issues = [];
+    let next = 0;
+    let stopped = "";
+    const report = () => setScheduleInvitationProgress({ ...counts, issues: [...issues], total: fullPassHolders.length, stopped });
+    report();
+    const worker = async () => {
+      while (next < fullPassHolders.length && !stopped) {
+        const participant = fullPassHolders[next++];
+        try {
+          const response = await fetch("/api/reg2026/invite", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id: participant.id, resend: true }),
+          });
+          const result = await response.json();
+          if ([401, 403, 503].includes(response.status)) {
+            stopped = result.error || "The invitation batch stopped. Please check configuration and sign in again.";
+          } else if (!response.ok) {
+            if (response.status === 409) counts.skipped++;
+            else counts.failed++;
+            issues.push(`${participant.firstname} ${participant.lastname} (#${participant.id}): ${result.error || "Request failed"}`);
+          } else if (result.status === "sent") counts.sent++;
+          else if (result.status === "completed") counts.completed++;
+          else if (result.status === "uncertain" || result.status === "sending") {
+            counts.uncertain++;
+            issues.push(`${participant.firstname} ${participant.lastname} (#${participant.id}): delivery needs review before another attempt.`);
+          } else {
+            counts.failed++;
+            issues.push(`${participant.firstname} ${participant.lastname} (#${participant.id}): unexpected response.`);
+          }
+        } catch {
+          counts.failed++;
+          issues.push(`${participant.firstname} ${participant.lastname} (#${participant.id}): network request failed.`);
+        }
+        report();
+      }
+    };
+    await Promise.all(Array.from({ length: Math.min(3, fullPassHolders.length) }, worker));
+    setSendingScheduleInvitations(false);
+    report();
+  };
+  const handleSendOneScheduleInvitation = async (participant) => {
+    const name = `${participant.firstname} ${participant.lastname}`.trim();
+    if (!confirm(`Send the schedule invitation to ${name} (#${participant.id}) at ${participant.email}?`)) return;
+
+    setSendingScheduleInvitationId(participant.id);
+    setScheduleInvitationResults((previous) => ({
+      ...previous,
+      [participant.id]: { message: "Sending schedule invitation…" },
+    }));
+    try {
+      const response = await fetch("/api/reg2026/invite", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: participant.id }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "The invitation could not be sent.");
+      const messages = {
+        sent: previewMode ? "Captured in preview." : "Accepted by SendGrid.",
+        already_sent: "Already sent. No new email was sent.",
+        completed: "Registration already complete. No email was sent.",
+        uncertain: "Delivery needs review before another attempt.",
+        sending: "An invitation is already being sent.",
+      };
+      setScheduleInvitationResults((previous) => ({
+        ...previous,
+        [participant.id]: {
+          message: messages[result.status] || "Unexpected invitation response.",
+          error: !messages[result.status] || result.status === "uncertain",
+          done: ["sent", "already_sent", "completed"].includes(result.status),
+        },
+      }));
+    } catch (error) {
+      setScheduleInvitationResults((previous) => ({
+        ...previous,
+        [participant.id]: { message: error.message || "The invitation could not be sent.", error: true },
+      }));
+    } finally {
+      setSendingScheduleInvitationId(null);
     }
   };
   const handleSendOneMail = async () => {
@@ -607,12 +703,26 @@ export default function Dashboard({ users, tickets }) {
               <td>{price}</td>
               <td>{date}</td>
               <td>
-                <button
-                  className={styles.button}
-                  onClick={() => handleUser(id)}
-                >
-                  Edit
-                </button>
+                <div className={styles.rowActions}>
+                  <button className={styles.button} onClick={() => handleUser(id)}>Edit</button>
+                  {status === "confirmed" && (
+                    <>
+                      <button
+                        className={styles.button}
+                        onClick={() => handleSendOneScheduleInvitation({ id, firstname, lastname, email })}
+                        disabled={sendingScheduleInvitations || sendingScheduleInvitationId !== null || scheduleInvitationResults[id]?.done}
+                        aria-label={`Send schedule invitation to ${firstname} ${lastname} (ID ${id})`}
+                      >
+                        {sendingScheduleInvitationId === id ? "Sending…" : "Send schedule invitation"}
+                      </button>
+                      {scheduleInvitationResults[id] && (
+                        <span className={styles.rowActionMessage} role={scheduleInvitationResults[id].error ? "alert" : "status"}>
+                          {scheduleInvitationResults[id].message}
+                        </span>
+                      )}
+                    </>
+                  )}
+                </div>
               </td>
               <td>{id}</td>
               <td>{email}</td>
@@ -623,7 +733,9 @@ export default function Dashboard({ users, tickets }) {
               <td>{role}</td>
               <td>{level}</td>
               <td>
-                <RegisteredClasses id={id} firstname={firstname} lastname={lastname} themeClass={theme_class} buttonClassName={styles.button} />
+                {ticket !== "partyPass" && (
+                  <RegisteredClasses id={id} firstname={firstname} lastname={lastname} themeClass={theme_class} buttonClassName={styles.button} />
+                )}
               </td>
               <td>{competition}</td>
               <td>
@@ -682,7 +794,6 @@ export default function Dashboard({ users, tickets }) {
     <div className={styles.container}>
       <Head>
         <title>BLUES FEVER 2026</title>
-        <link rel="icon" href="/icon.png" />
       </Head>
       <Header
         isAdmin
@@ -931,13 +1042,38 @@ export default function Dashboard({ users, tickets }) {
               </CSVLink>
             </div>
           )}
-          <button
-            style={{ margin: "40px 0" }}
-            className={styles.statusButton}
-            onClick={handleSendEmail}
-          >
-            Send Email to All confirmed
-          </button>
+          <div className={styles.bulkEmailActions}>
+            <button className={styles.statusButton} onClick={handleSendEmail}>
+              Send Email to All confirmed
+            </button>
+            <button className={styles.statusButton} onClick={handleSendScheduleInvitations} disabled={sendingScheduleInvitations || sendingScheduleInvitationId !== null}>
+              {sendingScheduleInvitations ? "Sending schedule invitations…" : "Send schedule invitations to confirmed Full Pass holders"}
+            </button>
+          </div>
+          {scheduleInvitationProgress && (
+            <p className={styles.invitationProgress} role={scheduleInvitationProgress.stopped ? "alert" : "status"}>
+              {scheduleInvitationProgress.message ||
+                `Schedule invitations: ${scheduleInvitationProgress.sent} ${previewMode ? "captured in preview" : "accepted by SendGrid"}, ` +
+                `${scheduleInvitationProgress.completed} already complete, ${scheduleInvitationProgress.skipped} otherwise skipped, ` +
+                `${scheduleInvitationProgress.failed} failed, ${scheduleInvitationProgress.uncertain} require review. ` +
+                `Total: ${scheduleInvitationProgress.total} confirmed Full Pass holders.`}
+              {scheduleInvitationProgress.stopped && ` ${scheduleInvitationProgress.stopped}`}
+            </p>
+          )}
+          {scheduleInvitationProgress?.issues?.length > 0 && (
+            <ul className={styles.invitationIssues}>
+              {scheduleInvitationProgress.issues.map((issue, index) => <li key={`${issue}-${index}`}>{issue}</li>)}
+            </ul>
+          )}
+          {previewMode && (
+            <p className={styles.invitationProgress}>
+              Preview only: captured invitations are available at{" "}
+              <a href="/api/reg2026/preview-invitations" target="_blank" rel="noreferrer">the preview mailbox</a>.
+              Registration confirmations are available at{" "}
+              <a href="/api/reg2026/preview-confirmations" target="_blank" rel="noreferrer">the confirmation mailbox</a>.
+              No email leaves this preview.
+            </p>
+          )}
         </div>
       </main>
 
@@ -966,6 +1102,7 @@ export async function getServerSideProps({ req, res }) {
     props: {
       users: users,
       tickets: tickets,
+      previewMode: process.env.BFF_PREVIEW === "true" && process.env.NODE_ENV !== "production",
     },
   };
 }

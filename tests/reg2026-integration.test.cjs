@@ -4,15 +4,27 @@ const postgres = require("postgres");
 const { createRegistrationStore } = require("../lib/reg2026/store");
 const { checkoutForOrder } = require("../lib/reg2026/payments");
 const sgMail = require("@sendgrid/mail");
+const { fiveClasses } = require("./reg2026-fixtures.cjs");
 const empty = () => ({ classes: [], competitions: [], competitionRoles: {}, lunch: [] });
 
 test("registration orders on isolated Postgres", { skip: !process.env.TEST_DATABASE_URL }, async (t) => {
   const sql = postgres(process.env.TEST_DATABASE_URL, { onnotice: () => {} });
   const originalSend = sgMail.send;
-  let emailSends = 0;
-  sgMail.send = async () => { emailSends += 1; throw new Error("Registration must not send emails"); };
+  const originalSendGridKey = process.env.SENDGRID_API_KEY;
+  process.env.SENDGRID_API_KEY = "SG.fictional-test-key";
+  const emailSends = [];
+  let failNextEmail = false;
+  sgMail.send = async (message) => {
+    if (failNextEmail) {
+      failNextEmail = false;
+      const error = new Error("Fictional SendGrid rejection");
+      error.response = { statusCode: 503 };
+      throw error;
+    }
+    emailSends.push(message);
+  };
   try {
-    for (const file of ["00004-CREAT-registraion-2026", "00006-create-class-capacities-2026", "00007-create-reg2026-bookings", "00008-reg2026-order-safety", "00009-create-schedule-overrides-2026", "00010-reg2026-reopen-registration"]) {
+    for (const file of ["00004-CREAT-registraion-2026", "00006-create-class-capacities-2026", "00007-create-reg2026-bookings", "00008-reg2026-order-safety", "00009-create-schedule-overrides-2026", "00010-reg2026-reopen-registration", "00013-reg2026-sheet-schedule", "00015-reg2026-switch-role", "00016-reg2026-competition-capacities", "00017-reg2026-showcase-capacity"]) {
       await sql.begin((tx) => require(`../migrations/${file}`).up(tx));
     }
     const store = createRegistrationStore(sql);
@@ -21,18 +33,23 @@ test("registration orders on isolated Postgres", { skip: !process.env.TEST_DATAB
       assert.equal((await sql`SELECT * FROM schedule_overrides_26`).length, 0);
       const defaults = await store.availability();
       assert.equal(defaults.classes["fri-1330-ankersaal"].total.remaining, 30);
-      assert.equal(defaults.classes["fri-1330-kantine"].lead.remaining, 20);
+      assert.equal(defaults.classes["fri-1330-kantine"].total.remaining, 40);
+      assert.equal(defaults.classes["fri-1330-kantine"].lead.remaining, 40);
+      assert.equal(defaults.classes["fri-1330-kantine"].switch.remaining, 40);
       assert.equal(defaults.classes["fri-1330-kantine"].follow.remaining, 20);
       await sql`INSERT INTO class_capacities_26 (session_id, pool, capacity) VALUES ('fri-1330-kantine', 'lead', 12)`;
+      assert.equal((await store.availability()).classes["fri-1330-kantine"].lead.remaining, 40, "Legacy role limits no longer restrict the shared pool");
+      await sql`DELETE FROM class_capacities_26`;
+      await sql`INSERT INTO class_capacities_26 (session_id, pool, capacity) VALUES ('fri-1330-kantine', 'total', 24)`;
       const edited = await store.availability();
-      assert.equal(edited.classes["fri-1330-kantine"].lead.remaining, 12);
-      assert.equal(edited.classes["fri-1330-kantine"].follow.remaining, 20);
+      assert.equal(edited.classes["fri-1330-kantine"].lead.remaining, 24);
+      assert.equal(edited.classes["fri-1330-kantine"].follow.remaining, 12);
       await sql`DELETE FROM class_capacities_26`;
     });
     const [participant] = await sql`INSERT INTO registrations_26 (date,status,role,ticket,firstname,lastname,email,country,price)
-      VALUES ('2026','confirmed','advanced','fullpass','Test','Participant','test+one@example.com','Austria','200') RETURNING *`;
-    const free = { ...empty(), classes: [{ sessionId: "fri-1330-ankersaal" }] };
-    const createPerson = async (name, ticket = "fullpass") => (await sql`INSERT INTO registrations_26
+      VALUES ('2026','confirmed','advanced','parentPass','Test','Participant','test+one@example.com','Austria','200') RETURNING *`;
+    const free = { ...empty(), classes: fiveClasses({ sessionId: "fri-1330-ankersaal" }) };
+    const createPerson = async (name, ticket = "parentPass") => (await sql`INSERT INTO registrations_26
       (date,status,role,ticket,firstname,lastname,email,country)
       VALUES ('2026','confirmed','advanced',${ticket},${name},'Participant',${name + "@example.com"},'Austria') RETURNING *`)[0];
     const freeParticipant = await createPerson("Free");
@@ -51,16 +68,22 @@ test("registration orders on isolated Postgres", { skip: !process.env.TEST_DATAB
       const repeated = await store.submit(freeParticipant, free, "free-request-0001");
       assert.equal(repeated.id, order.id);
       const [counts] = await sql`SELECT COUNT(*)::INTEGER AS count FROM class_bookings_26 WHERE registration_id = ${freeParticipant.id}`;
-      assert.equal(counts.count, 1);
-      assert.equal((await sql`SELECT id FROM registration_email_retries_26 WHERE order_id = ${order.id}`).length, 0);
+      assert.equal(counts.count, 5);
+      const [queued] = await sql`SELECT delivery_status, attempts, payload FROM registration_email_retries_26 WHERE order_id = ${order.id}`;
+      assert.equal(queued.delivery_status, "pending");
+      assert.equal(queued.attempts, 0);
+      assert.deepEqual(queued.payload.data.classes[0], {
+        title: "Groove in Motion 1", day: "Friday", start: "13:30", end: "14:45",
+        teachers: "Catherine", room: "Ankersaal", role: "",
+      });
       assert.equal((await store.completedOrder(freeParticipant.id)).id, order.id);
       await assert.rejects(store.submit(freeParticipant, empty(), "free-request-0001"), /different choices/);
     });
     await t.test("completed registration rejects edits and preserves its booking", async () => {
       await assert.rejects(store.submit(freeParticipant, { ...empty(), classes: [{ sessionId: "fri-1515-lot" }] }, "changed-request-01"), /contact the organizers/);
       await assert.rejects(store.submit(freeParticipant, free, "new-key-request-01"), /contact the organizers/);
-      const [booking] = await sql`SELECT session_id FROM class_bookings_26 WHERE registration_id = ${freeParticipant.id}`;
-      assert.equal(booking.session_id, "fri-1330-ankersaal");
+      const bookings = await sql`SELECT session_id FROM class_bookings_26 WHERE registration_id = ${freeParticipant.id}`;
+      assert.deepEqual(bookings.map((booking) => booking.session_id).sort(), free.classes.map(({ sessionId }) => sessionId).sort());
     });
     await t.test("empty registrations complete once even with concurrent different submission keys", async () => {
       const person = await createPerson("Empty", "partyPass");
@@ -70,11 +93,12 @@ test("registration orders on isolated Postgres", { skip: !process.env.TEST_DATAB
       assert.equal((await store.completedOrder(person.id)).status, "confirmed");
     });
     await t.test("paid draft reserves provisionally and checkout uses a stable idempotency key", async () => {
-      const draft = { ...empty(), classes: [{ sessionId: "fri-1330-kantine", role: "lead" }], lunch: ["saturday"] };
+      const draft = { ...empty(), classes: fiveClasses({ sessionId: "fri-1330-kantine", role: "lead" }), lunch: ["saturday"] };
       const results = await Promise.all([store.submit(participant, draft, "paid-request-0001"), store.submit(participant, draft, "paid-request-0001")]);
       pending = results[0];
       assert.equal(results[1].id, pending.id);
       assert.equal(pending.total_cents, 1547);
+      assert.equal((await sql`SELECT id FROM registration_email_retries_26 WHERE order_id = ${pending.id}`).length, 0);
       const [person] = await sql`SELECT theme_class FROM registrations_26 WHERE id = ${participant.id}`;
       assert.match(person.theme_class, /ankersaal/);
       process.env.REG2026_ORIGIN = "https://register.example.com";
@@ -91,7 +115,7 @@ test("registration orders on isolated Postgres", { skip: !process.env.TEST_DATAB
     await t.test("processing payments retain reservations past the one-hour window", async () => {
       const processing = await store.applyPayment(session(), "checkout.session.completed");
       assert.equal(processing.status, "payment_pending");
-      assert.equal((await store.availability()).classes["fri-1330-kantine"].lead.remaining, 19);
+      assert.equal((await store.availability()).classes["fri-1330-kantine"].lead.remaining, 39);
       const [row] = await sql`SELECT expires_at FROM class_bookings_26 WHERE order_id = ${pending.id}`;
       assert.equal(row.expires_at, null);
     });
@@ -101,13 +125,15 @@ test("registration orders on isolated Postgres", { skip: !process.env.TEST_DATAB
       await store.applyPayment(paid, "checkout.session.async_payment_succeeded");
       await store.applyPayment(paid, "checkout.session.async_payment_succeeded");
       await store.applyPayment({ ...session(), status: "expired" }, "checkout.session.expired");
-      const [booking] = await sql`SELECT session_id, status FROM class_bookings_26 WHERE registration_id = ${participant.id}`;
-      assert.equal(booking.session_id, "fri-1330-kantine");
+      const [booking] = await sql`SELECT status FROM class_bookings_26 WHERE registration_id = ${participant.id} AND session_id = 'fri-1330-kantine'`;
       assert.equal(booking.status, "confirmed");
       const [person] = await sql`SELECT lunch, price FROM registrations_26 WHERE id = ${participant.id}`;
       assert.equal(person.lunch, "saturday");
       assert.equal(person.price, "200");
-      assert.equal((await sql`SELECT id FROM registration_email_retries_26 WHERE order_id = ${pending.id}`).length, 0);
+      assert.equal((await sql`SELECT delivery_status FROM registration_email_retries_26 WHERE order_id = ${pending.id}`)[0].delivery_status, "pending");
+      const [message] = await sql`SELECT payload FROM registration_email_retries_26 WHERE order_id = ${pending.id}`;
+      assert.equal(message.payload.data.classes[0].role, "Lead");
+      assert.equal(message.payload.data.classes[0].room, "Kantine");
       await assert.rejects(store.submit(participant, empty(), "remove-paid-0001"), /contact the organizers/);
     });
     await t.test("expired checkout releases provisional places and permits an unfinished registration to retry", async () => {
@@ -122,7 +148,7 @@ test("registration orders on isolated Postgres", { skip: !process.env.TEST_DATAB
       const retry = await store.submit(person, draft, "expiry-request-02");
       assert.equal(retry.status, "provisional");
       const bookings = await sql`SELECT session_id FROM class_bookings_26 WHERE registration_id = ${participant.id}`;
-      assert.deepEqual(bookings.map((booking) => booking.session_id), ["fri-1330-kantine"]);
+      assert.deepEqual(bookings.map((booking) => booking.session_id).sort(), pending.draft.classes.map(({ sessionId }) => sessionId).sort());
     });
     await t.test("organizers replace classes atomically without changing orders, add-ons or email deliveries", async () => {
       const person = await createPerson("OrganizerEdit");
@@ -131,6 +157,8 @@ test("registration orders on isolated Postgres", { skip: !process.env.TEST_DATAB
       const payment = { id: "cs_admin_original", amount_total: original.total_cents, currency: "eur", client_reference_id: String(person.id),
         metadata: { reg2026OrderId: String(original.id) }, status: "complete", payment_status: "paid" };
       await store.applyPayment(payment, "checkout.session.completed");
+      const [queuedEmail] = await sql`SELECT payload FROM registration_email_retries_26 WHERE order_id = ${original.id}`;
+      assert.deepEqual(queuedEmail.payload.data.competitions, [{ label: "Solo Battle", role: "" }]);
       const before = await store.organizerClasses(person.id);
       const [orderBefore] = await sql`SELECT * FROM reg2026_orders WHERE id = ${original.id}`;
       const emailsBefore = await sql`SELECT * FROM registration_email_retries_26 WHERE registration_id = ${person.id}`;
@@ -218,7 +246,7 @@ test("registration orders on isolated Postgres", { skip: !process.env.TEST_DATAB
       await store.applyPayment(payment, "checkout.session.completed");
       assert.deepEqual((await store.organizerClasses(person.id)).classes, []);
       await assert.rejects(store.submit(person, draft, "reopen-original-01"), /Reload the form/);
-      const replacement = { ...draft, classes: [{ sessionId: "fri-1515-lot" }] };
+      const replacement = { ...draft, classes: fiveClasses({ sessionId: "fri-1515-lot" }) };
       const next = await store.submit(participantAfter, replacement, "reopen-replacement-01");
       assert.equal(next.status, "confirmed"); assert.equal(next.total_cents, 0);
       assert.equal((await store.completedOrder(person.id)).id, next.id);
@@ -230,7 +258,7 @@ test("registration orders on isolated Postgres", { skip: !process.env.TEST_DATAB
     });
     await t.test("voucher registrations confirm choices and capacity once without a checkout", async () => {
       const person = await createPerson("Voucher");
-      const draft = { ...empty(), classes: [{ sessionId: "sun-1415-ankersaal" }], competitions: ["solo_battle"], lunch: ["saturday", "sunday"], voucher: "freepass26" };
+      const draft = { ...empty(), classes: fiveClasses({ sessionId: "sun-1415-ankersaal" }), competitions: ["solo_battle"], lunch: ["saturday", "sunday"], voucher: "freepass26" };
       const confirmed = await store.submit(person, draft, "voucher-request-01");
       assert.equal(confirmed.status, "confirmed"); assert.equal(confirmed.total_cents, 0); assert.equal(confirmed.fee_cents, 0);
       assert.equal(confirmed.stripe_session_id, null); assert.equal(confirmed.draft.voucher, "freepass26");
@@ -287,7 +315,7 @@ test("registration orders on isolated Postgres", { skip: !process.env.TEST_DATAB
       assert.deepEqual(await sql`SELECT * FROM registration_email_retries_26 WHERE registration_id = ${participant.id}`, emailsBefore);
 
       // Classes saved by an organizer have no supplemental order record.
-      const savedPerson = await createPerson("SavedClasses");
+      const savedPerson = await createPerson("SavedClasses", "fullpass");
       await store.editClasses(savedPerson.id, free.classes, "");
       assert.equal(await store.completedOrder(savedPerson.id), undefined);
       const savedLink = response();
@@ -331,7 +359,7 @@ test("registration orders on isolated Postgres", { skip: !process.env.TEST_DATAB
       assert.equal(invalid.code, 422); assert.ok(invalid.body.errors.title); assert.ok(invalid.body.errors.end); assert.ok(invalid.body.errors.totalCapacity);
       const changed = { ...scheduleFormValues(base), title: "Late Blues Workshop", teachers: "Catherine & Guest",
         description: "Practice pulse, connection and musical choices.", room: "Main Studio", start: "15:45", end: "17:00",
-        partnerClass: true, leadCapacity: "2", followCapacity: "3" };
+        partnerClass: true, totalCapacity: "5" };
       const emailCount = (await sql`SELECT COUNT(*)::INT AS count FROM registration_email_retries_26`)[0].count;
       const saved = response(); await endpoint({ method: "POST", headers, body: { id: base.id, version: 0, values: changed } }, saved);
       assert.equal(saved.code, 200); assert.equal(saved.body.session.version, 1);
@@ -339,24 +367,29 @@ test("registration orders on isolated Postgres", { skip: !process.env.TEST_DATAB
       assert.equal(saved.body.session.title, changed.title); assert.equal(saved.body.session.partnerClass, true);
       assert.equal((await sql`SELECT COUNT(*)::INT AS count FROM registration_email_retries_26`)[0].count, emailCount);
       assert.equal((await sql`SELECT * FROM schedule_overrides_26`).length, 1);
-      assert.equal((await sql`SELECT * FROM class_capacities_26`).length, 2);
+      assert.equal((await sql`SELECT * FROM class_capacities_26`).length, 1);
       const reloaded = await store.schedule();
       assert.equal(reloaded.find((session) => session.id === base.id).description, changed.description);
       const person = await createPerson("ScheduleParticipant");
-      const choice = { ...empty(), classes: [{ sessionId: base.id, role: "lead" }] };
+      const choice = { ...empty(), classes: fiveClasses({ sessionId: base.id, role: "lead" }) };
       assert.equal(validateDraft({ ...choice, classes: [{ sessionId: base.id }] }, person, reloaded).valid, false);
-      await store.submit(person, choice, "schedule-choice-01");
+      const order = await store.submit(person, choice, "schedule-choice-01");
+      const [confirmation] = await sql`SELECT payload FROM registration_email_retries_26 WHERE order_id = ${order.id}`;
+      assert.deepEqual(confirmation.payload.data.classes.find((entry) => entry.title === changed.title), {
+        title: changed.title, day: "Sunday", start: changed.start, end: changed.end,
+        teachers: changed.teachers, room: changed.room, role: "Lead",
+      });
       const availability = await store.availability();
-      assert.equal(availability.classes[base.id].lead.remaining, 1); assert.equal(availability.classes[base.id].follow.remaining, 3);
+      assert.equal(availability.classes[base.id].lead.remaining, 4); assert.equal(availability.classes[base.id].follow.remaining, 2);
       const organizerView = await store.organizerClasses(person.id);
       assert.equal(organizerView.schedule.find((session) => session.id === base.id).title, changed.title);
       await assert.rejects(store.editSchedule(base.id, changed, 0), /changed in another session/);
       await assert.rejects(store.editSchedule(base.id, { ...changed, partnerClass: false }, 1), /has registrations/);
       await assert.rejects(store.editSchedule(base.id, { ...changed, start: "16:00" }, 1), /has registrations/);
-      const after = await store.editSchedule(base.id, { ...changed, description: "Updated workshop description.", leadCapacity: "0" }, 1);
+      const after = await store.editSchedule(base.id, { ...changed, description: "Updated workshop description.", totalCapacity: "0" }, 1);
       assert.equal(after.version, 2); assert.equal((await store.availability()).classes[base.id].lead.remaining, 0);
       assert.deepEqual((await store.organizerClasses(person.id)).classes, choice.classes);
-      const [booking] = await sql`SELECT pool, status FROM class_bookings_26 WHERE registration_id = ${person.id}`;
+      const [booking] = await sql`SELECT pool, status FROM class_bookings_26 WHERE registration_id = ${person.id} AND session_id = ${base.id}`;
       assert.deepEqual(booking, { pool: "lead", status: "confirmed" });
     });
     await t.test("HTTP endpoints enforce signed access, complete drafts and server-owned checkout", async () => {
@@ -405,30 +438,43 @@ test("registration orders on isolated Postgres", { skip: !process.env.TEST_DATAB
       const [fullPass] = await sql`INSERT INTO registrations_26 (date,status,role,ticket,firstname,lastname,email,country)
         VALUES ('2026','confirmed','advanced','fullpass','Limit','Participant','limit@example.com','Austria') RETURNING *`;
       const fullUser = fullPass.email + "+" + fullPass.firstname;
+      const fullAccess = { user: fullUser, sig: signIdentity(fullUser) };
       const slots = new Set();
+      const { conflictsWithSolo } = require("../lib/reg2026/competitions");
       const tooMany = require("../lib/reg2026/catalog").schedule
-        .filter((session) => !slots.has(session.slotId) && slots.add(session.slotId)).slice(0, 6)
+        .filter((session) => !conflictsWithSolo(session) && !slots.has(session.slotId) && slots.add(session.slotId)).slice(0, 6)
         .map((session) => ({ sessionId: session.id, ...(session.partnerClass ? { role: "lead" } : {}) }));
       const overLimit = res();
-      await submit({ method: "POST", body: { user: fullUser, sig: signIdentity(fullUser),
+      await submit({ method: "POST", body: { ...fullAccess,
         requestKey: "http-class-limit-01", draft: { ...empty(), classes: tooMany } } }, overLimit);
       assert.equal(overLimit.code, 422);
       assert.match(overLimit.body.errors.classes, /5 classes in total/);
+      for (const count of [0, 4]) {
+        const underLimit = res();
+        await submit({ method: "POST", body: { ...fullAccess, requestKey: `http-class-minimum-${count}`,
+          draft: { ...empty(), classes: tooMany.slice(0, count), lunch: ["saturday"] } } }, underLimit);
+        assert.equal(underLimit.code, 422);
+        assert.equal(underLimit.body.errors.classes, "Choose your 5 classes before submitting.");
+      }
       assert.equal(await store.activeOrder(fullPass.id), undefined);
+      assert.equal((await sql`SELECT id FROM class_bookings_26 WHERE registration_id = ${fullPass.id}`).length, 0);
       const closed = res(); process.env.REG2026_ENABLED = "false";
       await submit({ method: "POST", body: { ...access, requestKey: "http-closed-0001", draft: empty() } }, closed);
       assert.equal(closed.code, 403); process.env.REG2026_ENABLED = "true";
-      const voucherPerson = await createPerson("VoucherHTTP");
-      const voucherUser = voucherPerson.email + "+" + voucherPerson.firstname;
-      const voucherAccess = { user: voucherUser, sig: signIdentity(voucherUser) };
-      const invalidVoucher = res(); await submit({ method: "POST", body: { ...voucherAccess, requestKey: "http-bad-voucher-01",
-        draft: { ...empty(), voucher: "invalid", lunch: ["saturday"] }, price: 0 } }, invalidVoucher);
+      const fiveClasses = tooMany.slice(0, 5);
+      const invalidVoucher = res(); await submit({ method: "POST", body: { ...fullAccess, requestKey: "http-bad-voucher-01",
+        draft: { ...empty(), classes: fiveClasses, voucher: "invalid", lunch: ["saturday"] }, price: 0 } }, invalidVoucher);
       assert.equal(invalidVoucher.code, 422); assert.match(invalidVoucher.body.errors.voucher, /not recognized/);
-      assert.equal(await store.completedOrder(voucherPerson.id), undefined);
-      const voucher = res(); await submit({ method: "POST", body: { ...voucherAccess, requestKey: "http-free-voucher-01",
-        draft: { ...free, competitions: ["solo_battle"], lunch: ["saturday", "sunday"], voucher: "freepass26" } } }, voucher);
+      assert.equal(await store.completedOrder(fullPass.id), undefined);
+      const voucher = res(); await submit({ method: "POST", body: { ...fullAccess, requestKey: "http-free-voucher-01",
+        draft: { ...empty(), classes: fiveClasses, competitions: ["solo_battle"], lunch: ["saturday", "sunday"], voucher: "freepass26" } } }, voucher);
       assert.equal(voucher.code, 200); assert.equal(voucher.body.order.status, "confirmed");
       assert.equal(voucher.body.order.totalCents, 0); assert.equal(voucher.body.checkoutUrl, null); assert.equal(sessions.size, 0);
+      assert.equal((await sql`SELECT id FROM class_bookings_26 WHERE registration_id = ${fullPass.id} AND status = 'confirmed'`).length, 5);
+      assert.equal(emailSends.length, 1);
+      assert.equal(emailSends[0].template_id, "d-4f77d740ec504650aa9ea1a78e785cae");
+      assert.deepEqual(emailSends[0].dynamic_template_data.competitions, [{ label: "Solo Battle", role: "" }]);
+      assert.deepEqual(emailSends[0].dynamic_template_data.lunch, ["Saturday", "Sunday"]);
       const paid = res(); await submit({ method: "POST", body: { ...access, requestKey: "http-payment-001", draft: { ...empty(), lunch: ["saturday"] }, price: 1 } }, paid);
       assert.equal(paid.code, 200); assert.equal(paid.body.order.totalCents, 1547);
       assert.equal(paid.body.checkoutUrl, "https://checkout.example.com/http");
@@ -455,6 +501,10 @@ test("registration orders on isolated Postgres", { skip: !process.env.TEST_DATAB
       const signature = verifier.webhooks.generateTestHeaderString({ payload: raw, secret: process.env.REG2026_STRIPE_WEBHOOK_SECRET });
       assert.equal((await invoke(signature)).code, 200);
       assert.equal((await invoke(signature)).code, 200);
+      assert.equal(emailSends.length, 2);
+      assert.equal(emailSends[1].to, person.email);
+      assert.deepEqual(emailSends[1].dynamic_template_data.classes, []);
+      assert.deepEqual(emailSends[1].dynamic_template_data.lunch, ["Saturday"]);
       assert.equal((await store.order(paid.body.order.id, person.id)).status, "confirmed");
       const state = res(); await load({ method: "GET", query: { ...access, order: paid.body.order.id } }, state);
       assert.deepEqual(state.body.choices.lunch, ["saturday"]);
@@ -484,9 +534,182 @@ test("registration orders on isolated Postgres", { skip: !process.env.TEST_DATAB
       } }, protectedBooking);
       assert.equal(protectedBooking.code, 410);
     });
-    await t.test("registration, webhooks and status checks neither send nor queue emails", async () => {
-      assert.equal(emailSends, 0);
-      assert.deepEqual(await sql`SELECT * FROM registration_email_retries_26 ORDER BY id`, historicalDeliveries);
+    await t.test("failed confirmation delivery leaves the order confirmed and can retry once", async () => {
+      const person = await createPerson("EmailRetry", "partyPass");
+      const order = await store.submit(person, empty(), "email-retry-0001");
+      const { deliverConfirmation } = require("../lib/reg2026/confirmations");
+      failNextEmail = true;
+      assert.equal(await deliverConfirmation(store, order.id), "failed");
+      assert.equal((await store.completedOrder(person.id)).id, order.id);
+      assert.deepEqual((await sql`SELECT delivery_status, attempts FROM registration_email_retries_26 WHERE order_id = ${order.id}`)[0],
+        { delivery_status: "failed", attempts: 1 });
+      assert.equal(await deliverConfirmation(store, order.id), "sent");
+      assert.equal(await deliverConfirmation(store, order.id), "already_sent");
+      assert.deepEqual((await sql`SELECT delivery_status, attempts FROM registration_email_retries_26 WHERE order_id = ${order.id}`)[0],
+        { delivery_status: "sent", attempts: 2 });
     });
-  } finally { sgMail.send = originalSend; await sql.end(); }
+    await t.test("uncertain transport delivery is held instead of automatically duplicated", async () => {
+      const person = await createPerson("EmailUncertain", "partyPass");
+      const order = await store.submit(person, empty(), "email-uncertain-01");
+      const { deliverConfirmation } = require("../lib/reg2026/confirmations");
+      const timeout = async () => { throw new Error("Fictional network timeout"); };
+      assert.equal(await deliverConfirmation(store, order.id, timeout), "uncertain");
+      assert.equal(await deliverConfirmation(store, order.id), "sending");
+      assert.deepEqual((await sql`SELECT delivery_status, attempts FROM registration_email_retries_26 WHERE order_id = ${order.id}`)[0],
+        { delivery_status: "sending", attempts: 1 });
+      assert.equal((await store.completedOrder(person.id)).id, order.id);
+    });
+    await t.test("local preview captures confirmation data without calling SendGrid", async () => {
+      const previousPreview = process.env.BFF_PREVIEW;
+      process.env.BFF_PREVIEW = "true";
+      try {
+        const person = await createPerson("EmailPreview", "partyPass");
+        const order = await store.submit(person, empty(), "email-preview-0001");
+        const { deliverConfirmation } = require("../lib/reg2026/confirmations");
+        const { previewConfirmations } = require("../lib/reg2026/preview-invitation-mailbox");
+        assert.equal(await deliverConfirmation(store, order.id), "sent");
+        assert.equal(emailSends.length, 3);
+        assert.deepEqual(previewConfirmations().at(-1), {
+          to: person.email, templateId: "d-4f77d740ec504650aa9ea1a78e785cae",
+          firstname: person.firstname, classes: [], competitions: [], lunch: [],
+        });
+      } finally {
+        if (previousPreview === undefined) delete process.env.BFF_PREVIEW;
+        else process.env.BFF_PREVIEW = previousPreview;
+      }
+    });
+    await t.test("confirmed orders queue once and preserve historical delivery records", async () => {
+      assert.equal(emailSends.length, 3);
+      assert.deepEqual(await sql`SELECT * FROM registration_email_retries_26 WHERE id = ${historicalDeliveries[0].id}`, historicalDeliveries);
+    });
+    await t.test("confirmed Full, Parent, and Party Pass holders can edit eligible choices through November 20 in Vienna", async () => {
+      const now = Date.now;
+      const previousEnabled = process.env.REG2026_ENABLED;
+      const previousClose = process.env.REG2026_CLOSES_AT;
+      process.env.REG2026_ENABLED = "true";
+      process.env.REG2026_CLOSES_AT = "2026-11-19T23:00:00+01:00";
+      Date.now = () => Date.parse("2026-11-20T23:59:59+01:00");
+      const { loadRegistrationState } = require("../lib/reg2026/state");
+      const { signIdentity } = require("../lib/reg2026/security");
+      const submit = require("../pages/api/reg2026/submit").default;
+      const load = require("../pages/api/reg2026/index").default;
+      const res = () => ({ code: 200, setHeader() {}, status(c) { this.code = c; return this; }, json(body) { this.body = body; return this; } });
+      const signed = (person) => {
+        const user = person.email + "+" + person.firstname;
+        return { user, sig: signIdentity(user) };
+      };
+      const state = async (person) => {
+        const response = res(); await load({ method: "GET", query: signed(person) }, response);
+        assert.equal(response.code, 200);
+        return response.body;
+      };
+      const save = async (person, requestKey, editVersion, draft) => {
+        const response = res(); await submit({ method: "POST", body: { ...signed(person), requestKey, editVersion, draft } }, response);
+        return response;
+      };
+      try {
+        const full = await createPerson("EditFull", "fullpass");
+        const slots = new Set();
+        const classes = (await store.schedule()).filter((s) => !slots.has(s.slotId) && slots.add(s.slotId)).slice(0, 5)
+          .map((s) => ({ sessionId: s.id, ...(s.partnerClass ? { role: "lead" } : {}) }));
+        const fullDraft = { ...empty(), classes, lunch: ["saturday"] };
+        const initialFull = await store.submit(full, { ...fullDraft, voucher: "freepass26" }, "before-full-edit-01");
+        const initialState = await state(full);
+        assert.equal(initialState.completed, true);
+        assert.equal(initialState.open, true);
+        assert.equal(initialState.edit.closesAt, Date.parse("2026-11-20T23:00:00Z"));
+        const replacement = [{ sessionId: "fri-1330-lot", role: "lead" }, ...classes.slice(1)];
+        const update = { ...fullDraft, classes: replacement };
+        assert.equal((await save(full, "edit-full-short-01", initialState.edit.version, { ...update, classes: replacement.slice(1) })).body.errors.classes,
+          "Choose your 5 classes before submitting.");
+        const replaced = await save(full, "edit-full-classes-01", initialState.edit.version, update);
+        assert.equal(replaced.code, 200);
+        assert.equal(replaced.body.order.totalCents, 0);
+        assert.equal((await save(full, "edit-full-classes-01", initialState.edit.version, update)).body.order.id, replaced.body.order.id);
+        assert.equal((await save(full, "edit-full-stale-01", initialState.edit.version, fullDraft)).code, 409);
+        assert.equal((await store.order(initialFull.id, full.id)).status, "confirmed");
+        assert.deepEqual((await state(full)).choices.classes, replacement);
+        assert.equal((await sql`SELECT count(*)::int AS count FROM class_bookings_26 WHERE registration_id = ${full.id} AND session_id = ${classes[0].sessionId}`)[0].count, 0);
+        const roleChange = { ...update, classes: [{ ...replacement[0], role: "follow" }, ...replacement.slice(1)],
+          competitions: ["strictly"], competitionRoles: { strictly: "lead" } };
+        const beforeHold = (await store.availability()).classes[replacement[0].sessionId];
+        const tentative = await store.submit(full, roleChange, "edit-full-pending-01", (await state(full)).edit.version);
+        await store.attachSession(tentative.id, "cs_edit_full");
+        const hold = { id: "cs_edit_full", currency: "eur", amount_total: tentative.total_cents,
+          client_reference_id: String(full.id), metadata: { reg2026OrderId: String(tentative.id) }, status: "complete", payment_status: "unpaid" };
+        await store.applyPayment(hold, "checkout.session.completed");
+        const duringHold = (await store.availability()).classes[replacement[0].sessionId];
+        assert.equal(duringHold.total.remaining, beforeHold.total.remaining);
+        assert.equal(duringHold.follow.remaining, beforeHold.follow.remaining - 1);
+        await store.applyPayment(hold, "checkout.session.async_payment_failed");
+        assert.deepEqual((await state(full)).choices.classes, replacement);
+        assert.deepEqual((await store.availability()).classes[replacement[0].sessionId], beforeHold);
+
+        const party = await createPerson("EditParty", "partyPass");
+        const partyDraft = { ...empty(), lunch: ["saturday"], competitions: ["strictly"], competitionRoles: { strictly: "lead" } };
+        const prior = await store.submit(party, { ...partyDraft, voucher: "freepass26" }, "before-party-edit-01");
+        const partyVersion = (await state(party)).edit.version;
+        for (const [key, field, change] of [
+          ["lunch-add", "lunch", { lunch: ["saturday", "sunday"] }],
+          ["lunch-remove", "lunch", { lunch: [] }],
+          ["comp-remove", "competitions", { competitions: [] }],
+          ["role-change", "competitions", { competitionRoles: { strictly: "follow" } }],
+          ["class-add", "classes", { classes: [classes[0]] }],
+        ]) {
+          const response = await save(party, `edit-party-${key}`, partyVersion, { ...partyDraft, ...change });
+          assert.equal(response.code, 422);
+          assert.ok(response.body.errors[field]);
+        }
+        const addComp = { ...partyDraft, competitions: ["strictly", "open_mixnmatch"], competitionRoles: { strictly: "lead", open_mixnmatch: "follow" } };
+        const newOrder = await store.submit(party, addComp, "edit-party-add-paid-01", partyVersion);
+        assert.equal(newOrder.status, "provisional");
+        assert.equal(newOrder.subtotal_cents, 1000);
+        assert.equal((await store.completedOrder(party.id)).id, prior.id);
+        assert.equal((await loadRegistrationState(store, party)).order.id, newOrder.id);
+        assert.equal((await loadRegistrationState(store, party)).edit, null);
+        await store.attachSession(newOrder.id, "cs_edit_party");
+        const payment = { id: "cs_edit_party", currency: "eur", amount_total: newOrder.total_cents,
+          client_reference_id: String(party.id), metadata: { reg2026OrderId: String(newOrder.id) }, status: "complete", payment_status: "paid" };
+
+        const parent = await createPerson("EditParent", "parentPass");
+        const partialParent = { ...empty(), classes: classes.slice(0, 4) };
+        await assert.rejects(store.submit(parent, partialParent, "parent-first-too-short"), (error) =>
+          error.status === 422 && error.errors.classes === "Choose your 5 classes before submitting.");
+        await store.editClasses(parent.id, partialParent.classes, "");
+        const parentState = await state(parent);
+        assert.equal(parentState.open, true);
+        assert.equal(parentState.edit.closesAt, initialState.edit.closesAt);
+        const parentEdit = { ...empty(), classes: replacement, competitions: ["fever_showcase"], voucher: "freepass26" };
+        assert.equal((await save(parent, "edit-parent-choices-01", parentState.edit.version, parentEdit)).code, 200);
+        const editedParent = await state(parent);
+        assert.deepEqual(editedParent.choices.classes, replacement);
+        assert.deepEqual(editedParent.choices.competitions, parentEdit.competitions);
+        const fullVersion = (await state(full)).edit.version;
+        Date.now = () => Date.parse("2026-11-21T00:00:00+01:00");
+        assert.equal((await state(full)).edit, null);
+        assert.equal((await save(full, "edit-full-after-close", fullVersion, fullDraft)).code, 409);
+        assert.equal((await state(parent)).edit, null);
+        assert.equal((await save(parent, "edit-parent-after-close", editedParent.edit.version, parentEdit)).code, 409);
+        await store.applyPayment(payment, "checkout.session.completed");
+        await store.applyPayment(payment, "checkout.session.completed");
+        const final = await state(party);
+        assert.equal(final.order.id, String(newOrder.id));
+        assert.equal(final.edit, null);
+        assert.deepEqual(final.choices.competitions, addComp.competitions);
+        assert.deepEqual(final.choices.lunch, partyDraft.lunch);
+        assert.equal(final.choices.competitionRoles.strictly, "lead");
+      } finally {
+        Date.now = now;
+        if (previousEnabled === undefined) delete process.env.REG2026_ENABLED;
+        else process.env.REG2026_ENABLED = previousEnabled;
+        if (previousClose === undefined) delete process.env.REG2026_CLOSES_AT;
+        else process.env.REG2026_CLOSES_AT = previousClose;
+      }
+    });
+  } finally {
+    sgMail.send = originalSend;
+    if (originalSendGridKey === undefined) delete process.env.SENDGRID_API_KEY;
+    else process.env.SENDGRID_API_KEY = originalSendGridKey;
+    await sql.end();
+  }
 });

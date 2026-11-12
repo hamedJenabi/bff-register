@@ -3,8 +3,23 @@ require("../extractHerokuDatabaseEnvVars")();
 // const argon2 = require("argon2");
 
 const postgres = require("postgres");
+const previewDatabaseUrl = () => {
+  if (process.env.BFF_PREVIEW !== "true") return null;
+  if (process.env.NODE_ENV === "production" || !process.env.BFF_PREVIEW_DATABASE_URL) {
+    throw new Error("Preview database is not configured.");
+  }
+  const url = new URL(process.env.BFF_PREVIEW_DATABASE_URL);
+  if (!["postgres:", "postgresql:"].includes(url.protocol) || url.hostname !== "127.0.0.1" ||
+      !url.port || url.pathname !== "/postgres") {
+    throw new Error("Preview database must be the isolated loopback cluster.");
+  }
+  return url.toString();
+};
+const previewUrl = previewDatabaseUrl();
 const sql =
-  process.env.NODE_ENV === "production"
+  previewUrl
+    ? postgres(previewUrl)
+    : process.env.NODE_ENV === "production"
     ? // Heroku needs SSL connections but
       // has an "unauthorized" certificate
       // https://devcenter.heroku.com/changelog-items/852

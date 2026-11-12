@@ -22,7 +22,7 @@ import {
 } from "../components/Reg2026/AddOnSections";
 import { CLASS_SELECTION_LIMIT, FREE_PASS_VOUCHER } from "../lib/reg2026/catalog";
 import { priceDraft } from "../lib/reg2026/pricing";
-import { validateDraft } from "../lib/reg2026/validation";
+import { requiredClassesError, validateDraft } from "../lib/reg2026/validation";
 import styles from "../components/Reg2026/Registration.module.scss";
 
 const euros = (cents) =>
@@ -38,16 +38,19 @@ const passLabel = {
 
 export default function Registration({ initial, access, loadError }) {
   const router = useRouter();
+  const { user, sig } = access;
   const [data, setData] = useState(initial);
   const [requestKey, setRequestKey] = useState("");
   const [hydrated, setHydrated] = useState(false);
   const [redirecting, setRedirecting] = useState(false);
   const [networkBusy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
-  const completed = !!(data?.completed || data?.order?.status === "confirmed");
-  const pending = !completed && ["provisional", "payment_pending"].includes(
+  const [editing, setEditing] = useState(false);
+  const pending = ["provisional", "payment_pending"].includes(
     data?.order?.status,
   );
+  const editingChoices = editing && !!data?.edit && !pending;
+  const completed = !!data?.completed && !pending && !editingChoices;
 
   const form = useFormState({
     baseId: "reg2026",
@@ -61,6 +64,7 @@ export default function Registration({ initial, access, loadError }) {
         data.participant,
         data.choices,
         data.schedule,
+        editingChoices,
       );
       if (Object.keys(errors).length) throw errors;
     },
@@ -69,6 +73,7 @@ export default function Registration({ initial, access, loadError }) {
         registrationDraft(values),
         data.participant,
         data.schedule,
+        editingChoices ? data.choices : undefined,
       );
       setMessage("");
       try {
@@ -79,11 +84,12 @@ export default function Registration({ initial, access, loadError }) {
             ...access,
             draft: validated.value,
             requestKey,
+            ...(editingChoices ? { editVersion: data.edit.version } : {}),
           }),
         });
         const result = await response.json();
         if (!response.ok) {
-          if ([409, 422].includes(response.status)) await refresh().catch(() => {});
+          if ([409, 422].includes(response.status)) await refresh(undefined, true).catch(() => {});
           setMessage(
             result.error || "Could not submit. Your draft has been kept.",
           );
@@ -101,8 +107,10 @@ export default function Registration({ initial, access, loadError }) {
         setData((current) => ({
           ...current,
           order: result.order,
-          pendingDraft: validated.value,
+          completed: current.completed || result.order.status === "confirmed",
+          edit: null,
         }));
+        setEditing(false);
         await refresh(result.order.id);
         // Keep the verified order in the URL so refreshes display the confirmation.
         await router.replace(
@@ -124,6 +132,7 @@ export default function Registration({ initial, access, loadError }) {
     },
   });
   const draft = registrationDraft(form.values);
+  const missingClasses = requiredClassesError(data?.participant.ticket, draft.classes.length);
   const busy = networkBusy || form.submitting || redirecting;
   const { update } = form;
   const restoreForm = (choices, compete) => {
@@ -148,6 +157,7 @@ export default function Registration({ initial, access, loadError }) {
   }, []);
   useEffect(() => {
     setData(initial);
+    setEditing(false);
     if (!initial) return;
     Object.entries(
       registrationFormValues(initial.pendingDraft || initial.choices),
@@ -156,7 +166,7 @@ export default function Registration({ initial, access, loadError }) {
     setHydrated(true);
   }, [initial, update]);
 
-  const refresh = async (orderId = data?.order?.id) => {
+  const refresh = async (orderId = data?.order?.id, preserveDraft = false) => {
     const query = new URLSearchParams({
       ...access,
       ...(orderId ? { order: orderId } : {}),
@@ -167,9 +177,16 @@ export default function Registration({ initial, access, loadError }) {
     setData(result);
     if (["expired", "payment_failed"].includes(result.order?.status))
       setRequestKey(newKey());
-    if (result.order?.status === "confirmed") {
+    const sameEdit = preserveDraft && editingChoices && result.edit?.version === data.edit.version;
+    if (result.completed && !result.pendingDraft && !sameEdit) {
       restoreForm(result.choices);
-      setMessage("Your festival choices are confirmed.");
+      setRequestKey(newKey());
+      if (!preserveDraft || !result.edit) setEditing(false);
+      if (!preserveDraft) {
+        setMessage(pending && data.completed && result.order?.id !== orderId
+          ? "Your previously confirmed choices are unchanged."
+          : "");
+      }
     }
     return result;
   };
@@ -182,6 +199,63 @@ export default function Registration({ initial, access, loadError }) {
     // Poll only while the participant is waiting for a verified payment status.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pending, data?.order?.id]);
+  const editClosesAt = data?.edit?.closesAt;
+  useEffect(() => {
+    if (!editClosesAt) return;
+    let timer;
+    const checkDeadline = () => {
+      const remaining = editClosesAt - Date.now();
+      if (remaining <= 0) {
+        setData((current) => current?.edit?.closesAt === editClosesAt ? { ...current, edit: null, open: false } : current);
+      } else {
+        timer = setTimeout(checkDeadline, Math.min(remaining, 2147483647));
+      }
+    };
+    checkDeadline();
+    return () => clearTimeout(timer);
+  }, [editClosesAt]);
+  useEffect(() => {
+    if (!hydrated || completed || pending) return;
+    const controller = new AbortController();
+    let active = true;
+    let refreshing = false;
+    const refreshAvailability = async () => {
+      if (document.visibilityState === "hidden" || refreshing) return;
+      refreshing = true;
+      try {
+        const query = new URLSearchParams({ user, sig });
+        const response = await fetch(`/api/reg2026?${query}`, {
+          cache: "no-store",
+          signal: controller.signal,
+        });
+        if (!response.ok) return;
+        const result = await response.json();
+        if (active) setData((current) => current ? {
+          ...current,
+          availability: result.availability,
+          open: result.open,
+          // Keep the draft's original version so a stale tab can't overwrite newer choices.
+          edit: result.edit ? current.edit : null,
+        } : current);
+      } catch {
+        // Retain the last known availability during temporary network failures.
+        // Submission still checks capacity under the booking lock.
+      } finally {
+        refreshing = false;
+      }
+    };
+    refreshAvailability();
+    const timer = setInterval(refreshAvailability, 10000);
+    window.addEventListener("focus", refreshAvailability);
+    document.addEventListener("visibilitychange", refreshAvailability);
+    return () => {
+      active = false;
+      controller.abort();
+      clearInterval(timer);
+      window.removeEventListener("focus", refreshAvailability);
+      document.removeEventListener("visibilitychange", refreshAvailability);
+    };
+  }, [hydrated, completed, pending, user, sig]);
   const checkoutAction = async (cancel) => {
     setBusy(true);
     try {
@@ -214,7 +288,7 @@ export default function Registration({ initial, access, loadError }) {
         totalCents: data.order.totalCents,
       }
     : draft && data
-      ? priceDraft(draft, data.choices)
+      ? priceDraft(draft, data.choices, editingChoices)
       : null;
   return (
     <div className={styles.page}>
@@ -251,7 +325,7 @@ export default function Registration({ initial, access, loadError }) {
                   : "Classes, competitions and lunch"}
               </p>
             </div>
-            {!data.open && !completed && (
+            {!data.open && !completed && !data.completed && (
               <p className={styles.notice}>
                 Registration is closed. You can check pending payment status.
               </p>
@@ -265,7 +339,9 @@ export default function Registration({ initial, access, loadError }) {
                       ? "Checkout is open. These choices are provisional for up to one hour. Payment has not yet been confirmed."
                       : ["expired", "payment_failed"].includes(data.order?.status)
                         ? "Checkout expired or payment failed. Please review your choices and try again."
-                        : "Review your choices, then submit them together.")}
+                        : editingChoices
+                          ? "Edit your festival choices through November 20 (Vienna time)."
+                          : "Review your choices, then submit them together.")}
               </div>
             )}
             {pending && (
@@ -301,10 +377,21 @@ export default function Registration({ initial, access, loadError }) {
             )}
             {completed ? (
               <section aria-labelledby="complete-title">
-                <h2 id="complete-title">You have already registered</h2>
-                <p>Your classes, competitions and lunch registration is complete. Thank you!</p>
+                <h2 id="complete-title">Registration confirmed</h2>
+                <p>Thank you! Your festival choices have been saved.</p>
+                {data.edit && (
+                  <div className={styles.actions}>
+                    <button type="button" className={styles.primary} disabled={!hydrated || busy} onClick={() => {
+                      restoreForm(data.choices);
+                      setRequestKey(newKey());
+                      setMessage("");
+                      setEditing(true);
+                    }}>Edit festival choices</button>
+                  </div>
+                )}
+                {message && <p role="status">{message}</p>}
                 <p>
-                  For any changes, contact{" "}
+                  {data.edit ? "For help, contact" : "For any changes, contact"}{" "}
                   the organizers at{" "}
                   <a href="mailto:registration@bluesfever.eu">registration@bluesfever.eu</a>.
                 </p>
@@ -354,7 +441,7 @@ export default function Registration({ initial, access, loadError }) {
                       <strong>{draft.classes.length}</strong>{" "}
                       {draft.classes.length === 1 ? "class" : "classes"} selected
                     </span>
-                    <p>Maximum {CLASS_SELECTION_LIMIT} across all days</p>
+                    <p>Required: {CLASS_SELECTION_LIMIT} across all days</p>
                   </aside>
                 )}
                 <Form {...form} aria-busy={busy}>
@@ -364,20 +451,23 @@ export default function Registration({ initial, access, loadError }) {
                       form={editForm}
                       availability={data.availability.classes}
                       sessions={data.schedule}
+                      savedClasses={editingChoices ? data.choices.classes : undefined}
                       disabled={busy || pending || !data.open}
                     />
                   )}
                   <CompetitionSection
                     form={editForm}
                     saved={data.choices}
-                    remaining={data.availability.soloBattleRemaining}
+                    availability={data.availability.competitions}
+                    sessions={data.schedule}
                     disabled={busy || pending || !data.open}
+                    editing={editingChoices}
                   />
-                  <LunchSection
+                  {!editingChoices && <LunchSection
                     form={editForm}
                     saved={data.choices}
                     disabled={busy || pending || !data.open}
-                  />
+                  />}
                   <section
                     className={styles.review}
                     aria-labelledby="review-title"
@@ -386,8 +476,9 @@ export default function Registration({ initial, access, loadError }) {
                     <p>
                       {data.participant.ticket !== "partyPass" &&
                         "Class registration is included in your pass. "}
-                      Competition entries and lunch are paid together. Existing
-                      purchases are credited.
+                      {editingChoices
+                        ? "You only pay for new competition entries. Lunch bookings stay as confirmed."
+                        : "Competition entries and lunch are paid together. Existing purchases are credited."}
                     </p>
                     <dl>
                       <div>
@@ -408,10 +499,7 @@ export default function Registration({ initial, access, loadError }) {
                         "Adding classes here is a draft action. "}
                       Availability is checked again on submission.
                     </p>
-                    <p>
-                      This is a one-time registration. Review all choices before
-                      submitting. Contact the organizers for any later changes.
-                    </p>
+                    <p>Review all choices before submitting.</p>
                     <div className={styles.voucher}>
                       <FormLabel {...editForm} name="voucher">Voucher</FormLabel>
                       <FormInput {...editForm} name="voucher" type="text" className={styles.voucherInput}
@@ -421,10 +509,14 @@ export default function Registration({ initial, access, loadError }) {
                       {draft.voucher === FREE_PASS_VOUCHER && <p role="status" aria-live="polite">Voucher applied. All selected options are free.</p>}
                     </div>
                     <FormMessage {...form} name="formError" />
+                    {missingClasses && (
+                      <p id="reg2026-required-classes" className={styles.requiredClasses}>{missingClasses}</p>
+                    )}
                     <FormSubmitButton
                       {...form}
                       className={styles.primary}
-                      disabled={busy || pending || !data.open || !hydrated}
+                      aria-describedby={missingClasses ? "reg2026-required-classes" : undefined}
+                      disabled={busy || pending || !data.open || !hydrated || !!missingClasses}
                     >
                       {redirecting
                         ? "Opening secure checkout…"
@@ -432,7 +524,7 @@ export default function Registration({ initial, access, loadError }) {
                           ? "Saving…"
                           : price.totalCents > 0
                             ? `Continue to payment · ${euros(price.totalCents)}`
-                            : "Save festival choices"}
+                            : editingChoices ? "Save changes" : "Save festival choices"}
                     </FormSubmitButton>
                   </section>
                 </Form>
@@ -457,27 +549,22 @@ export async function getServerSideProps({ query, res }) {
   };
   try {
     const { registrationStore: store } = await import("../db/reg2026");
-    const { resolveParticipant, publicParticipant, assertRegistrationOpen } =
+    const { resolveParticipant, publicParticipant, isRegistrationOpen } =
       await import("../lib/reg2026/access");
     const { choicesFromParticipant } =
       await import("../lib/reg2026/serialization");
     const { publicOrder } = await import("../lib/reg2026/http");
     const { loadRegistrationState } = await import("../lib/reg2026/state");
     const participant = await resolveParticipant(access, store);
-    const { order, completed } = await loadRegistrationState(store, participant, query.order);
-    let open = true;
-    try {
-      assertRegistrationOpen();
-    } catch {
-      open = false;
-    }
+    const { order, completed, edit } = await loadRegistrationState(store, participant, query.order);
     const initial = {
       participant: publicParticipant(participant),
       choices: choicesFromParticipant(participant),
       availability: await store.availability(participant.id),
       schedule: await store.schedule(),
-      open,
+      open: completed ? !!edit : isRegistrationOpen(),
       completed,
+      edit,
       order: publicOrder(order),
       pendingDraft: ["provisional", "payment_pending"].includes(order?.status)
         ? order.draft

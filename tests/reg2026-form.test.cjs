@@ -2,17 +2,18 @@ const { test } = require("node:test");
 const assert = require("node:assert/strict");
 const { registrationFormValues, registrationDraft, registrationFormErrors, validateRegistrationForm } = require("../lib/reg2026/form");
 const { priceDraft } = require("../lib/reg2026/pricing");
+const { fiveClasses } = require("./reg2026-fixtures.cjs");
 const empty = () => ({ classes: [], competitions: [], competitionRoles: {}, lunch: [] });
-const participant = { ticket: "fullpass" };
+const participant = { ticket: "partyPass" };
 
 test("Reakit values restore a draft and keep UI-only fields out of the request", () => {
-  const draft = { ...empty(), classes: [{ sessionId: "fri-1330-kantine", role: "lead" }],
+  const draft = { ...empty(), classes: fiveClasses({ sessionId: "fri-1330-kantine", role: "lead" }),
     competitions: ["strictly"], competitionRoles: { strictly: "follow" }, lunch: ["saturday"] };
   const values = registrationFormValues(draft);
   assert.equal(values.compete, "yes");
   assert.equal(values.competitionRoles.open_mixnmatch, "");
   assert.deepEqual(registrationDraft(values), draft);
-  assert.deepEqual(validateRegistrationForm(values, participant, empty()), {});
+  assert.deepEqual(validateRegistrationForm(values, { ticket: "parentPass" }, empty()), {});
   assert.equal(priceDraft(registrationDraft(values), empty()).totalCents, 2561);
 });
 
@@ -47,15 +48,19 @@ test("empty and partial local drafts initialize all fields and preserve competit
 });
 
 
-test("Reakit validation applies the festival-wide five-class cap", () => {
+test("Full Pass and Parent Pass submissions both require exactly five classes", () => {
   const { schedule } = require("../lib/reg2026/catalog");
   const slots = new Set();
   const classes = schedule.filter((session) => !slots.has(session.slotId) && slots.add(session.slotId))
     .slice(0, 6).map((session) => ({ sessionId: session.id, ...(session.partnerClass ? { role: "lead" } : {}) }));
-  const values = registrationFormValues({ ...empty(), classes });
-  assert.match(validateRegistrationForm(values, participant, empty()).classes, /5 classes in total/);
-  values.classes = classes.slice(0, 5);
-  assert.deepEqual(validateRegistrationForm(values, participant, empty()), {});
+  for (const ticket of ["fullpass", "parentPass"]) {
+    const values = registrationFormValues({ ...empty(), classes });
+    assert.match(validateRegistrationForm(values, { ticket }, empty()).classes, /5 classes in total/);
+    values.classes = classes.slice(0, 5);
+    assert.deepEqual(validateRegistrationForm(values, { ticket }, empty()), {});
+    values.classes.pop();
+    assert.equal(validateRegistrationForm(values, { ticket }, empty()).classes, "Choose your 5 classes before submitting.");
+  }
 });
 
 test("Reakit vouchers survive draft restoration and blank codes preserve the original draft format", () => {
