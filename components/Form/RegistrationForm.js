@@ -535,7 +535,7 @@ export default function RegistrationForm({
           ))}
         <div className={styles.infoTextWrapper}>
           <p className={styles.infoText}>
-            You choose <strong>"Both"</strong> role if you will attend some
+            You choose <strong>&quot;Both&quot;</strong> role if you will attend some
             classes as LEAD and some as FOLLOW to help balance out the ratio
             between the two roles.
           </p>

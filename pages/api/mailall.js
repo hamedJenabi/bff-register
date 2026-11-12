@@ -1,3 +1,4 @@
+import { requireAdmin } from "../../lib/admin/session";
 import {
   titleCase,
   groupLevelsToShow,
@@ -21,6 +22,8 @@ const sendEmail = async (msg) => {
 };
 
 export default async function mailall(req, response) {
+  if (req.method !== "POST") { response.setHeader("Allow", "POST"); return response.status(405).end(); }
+  if (!requireAdmin(req, response)) return;
   const user = req.body;
 
   const requestData = {

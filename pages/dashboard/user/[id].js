@@ -1,9 +1,10 @@
+import { adminPageRedirect } from "../../../lib/admin/session";
 import Head from "next/head";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import useMedia from "use-media";
 import Router from "next/router";
-import React, { useEffect } from "react";
+import React, { useState } from "react";
 import { unstable_useFormState as useFormState } from "reakit/Form";
 import styles from "./user.module.scss";
 import Header from "../../../components/Header/Header.js";
@@ -30,7 +31,10 @@ const header = [
   "lunch",
 ];
 
-export default function User({ user }) {
+export default function User({ user, classRegistration }) {
+  const [classes, setClasses] = useState(classRegistration);
+  const [reopening, setReopening] = useState(false);
+  const [classMessage, setClassMessage] = useState("");
   const isMobile = useMedia({ maxWidth: "768px" });
   const form = useFormState({
     values: {
@@ -55,6 +59,7 @@ export default function User({ user }) {
       tshirt: user.tshirt,
       lunch: user.lunch,
       terms: user.terms,
+      theme_class: user.theme_class || "",
     },
     onValidate: (values) => {
       // noob
@@ -80,14 +85,25 @@ export default function User({ user }) {
         .catch((error) => console.log(error));
     },
   });
-  if (typeof window !== "undefined") {
-    const admin = localStorage.getItem("login_admin");
-    if (admin !== "true") {
-      Router.push("/login/admin");
-    }
-  }
+
   const handleClick = (key) => {
     alert(key);
+  };
+
+  const reopenClasses = async () => {
+    setReopening(true); setClassMessage("");
+    try {
+      const response = await fetch("/api/reg2026/admin-classes", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: user.id, action: "reopen", version: classes.version }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Could not reopen registration.");
+      setClasses({ ...classes, ...result, reopenable: false });
+      form.update("theme_class", result.version);
+      setClassMessage("All classes removed. The participant can register again using the same link.");
+    } catch (error) { setClassMessage(error.message); }
+    finally { setReopening(false); }
   };
 
   return (
@@ -105,6 +121,17 @@ export default function User({ user }) {
         <Link className={styles.linkButton} href="/dashboard/fdjhfdskjfhdskjh">
           Back to Dashboard
         </Link>
+
+        <section className={styles.classRegistration} aria-labelledby="class-registration-title">
+          <h2 id="class-registration-title">Class registration</h2>
+          <p>{classes.classes.length} classes registered.</p>
+          <p>Remove all classes to let this participant register again using their existing link. Their class places will be released. Paid competition and lunch bookings are kept.</p>
+          <button type="button" className={styles.button} disabled={reopening || !classes.reopenable} onClick={reopenClasses}>
+            {reopening ? "Reopening…" : "Remove all classes and reopen registration"}
+          </button>
+          {!classes.editable && <p>Available for confirmed Full/Parent passes after any pending checkout is finished or cancelled.</p>}
+          <p role="status" aria-live="polite">{classMessage}</p>
+        </section>
 
         <p style={{ margin: "10px" }}>
           Accepted status: 1.registered 2. email-sent 3. confirmed 4.
@@ -135,13 +162,19 @@ export default function User({ user }) {
   );
 }
 
-export async function getServerSideProps({ params }) {
+export async function getServerSideProps({ params, req, res }) {
+  const redirect = adminPageRedirect(req, res);
+  if (redirect) return redirect;
   const { id } = params;
   const { getUserById } = await import("../../../db/db");
   const user = await getUserById(id);
+  if (!user) return { notFound: true };
+  const { registrationStore } = await import("../../../db/reg2026");
+  const classRegistration = await registrationStore.organizerClasses(user.id);
   return {
     props: {
       user: user,
+      classRegistration: JSON.parse(JSON.stringify(classRegistration)),
     },
   };
 }

@@ -11,6 +11,8 @@ const sql =
       postgres({ ssl: { rejectUnauthorized: false } })
     : postgres();
 
+export { sql };
+
 export async function getTickets() {
   const tickets = await sql`
       SELECT id, name, label, capacity, waiting_list FROM tickets_26

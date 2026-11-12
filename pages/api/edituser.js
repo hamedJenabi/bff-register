@@ -1,3 +1,4 @@
+import { requireAdmin } from "../../lib/admin/session";
 import {
   titleCase,
   discounts,
@@ -56,6 +57,8 @@ const getTicketLabel = (ticket) => {
   }
 };
 export default async function edituser(req, response) {
+  if (req.method !== "POST") { response.setHeader("Allow", "POST"); return response.status(405).end(); }
+  if (!requireAdmin(req, response)) return;
   const statusList = [
     "registered",
     "reminder",
