@@ -46,6 +46,14 @@ test("only new add-ons are charged, no free Full Pass entry, fees use cents", ()
   assert.equal(priceDraft(draft, draft).totalCents, 0);
   assert.ok(priceDraft(empty(), draft).errors.lunch);
 });
+test("confirmed registration edits charge only for added meals and protect booked lunch", () => {
+  const saved = { ...empty(), lunch: ["saturday"] };
+  const draft = { ...saved, lunch: ["saturday", "sunday"] };
+  assert.deepEqual(priceDraft(draft, saved, true), { errors: {}, subtotalCents: 1500, feeCents: 47, totalCents: 1547 });
+  assert.equal(priceDraft(draft, draft, true).totalCents, 0);
+  assert.equal(priceDraft({ ...draft, voucher: "freepass26" }, saved, true).totalCents, 0);
+  assert.match(priceDraft({ ...saved, lunch: ["sunday"] }, saved, true).errors.lunch, /remove paid add-ons/);
+});
 test("competition roles and invalid choices cannot bypass validation", () => {
   assert.equal(validateDraft({ ...empty(), competitions: ["strictly"] }, { ticket: "fullpass" }).valid, false);
   assert.equal(validateDraft({ ...empty(), lunch: [null] }, { ticket: "fullpass" }).valid, false);

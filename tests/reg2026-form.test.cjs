@@ -38,6 +38,16 @@ test("saved paid bookings and roles remain protected in Reakit validation", () =
   assert.match(validateRegistrationForm(values, participant, saved).lunch, /remove paid/);
 });
 
+test("confirmed Full, Parent, and Party Pass forms allow additional lunch and retain booked meals", () => {
+  for (const ticket of ["fullpass", "parentPass", "partyPass"]) {
+    const saved = { ...empty(), classes: ticket === "partyPass" ? [] : fiveClasses(), lunch: ["saturday"] };
+    const values = registrationFormValues({ ...saved, lunch: ["saturday", "sunday"] });
+    assert.deepEqual(validateRegistrationForm(values, { ticket }, saved, undefined, true), {});
+    values.lunch = ["sunday"];
+    assert.match(validateRegistrationForm(values, { ticket }, saved, undefined, true).lunch, /remove paid/);
+  }
+});
+
 test("empty and partial local drafts initialize all fields and preserve competition intent", () => {
   const values = registrationFormValues(undefined, "yes");
   assert.equal(values.compete, "yes");

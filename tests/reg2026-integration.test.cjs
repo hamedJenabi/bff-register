@@ -631,7 +631,7 @@ test("registration orders on isolated Postgres", { skip: !process.env.TEST_DATAB
         assert.deepEqual((await state(full)).choices.classes, replacement);
         assert.equal((await sql`SELECT count(*)::int AS count FROM class_bookings_26 WHERE registration_id = ${full.id} AND session_id = ${classes[0].sessionId}`)[0].count, 0);
         const roleChange = { ...update, classes: [{ ...replacement[0], role: "follow" }, ...replacement.slice(1)],
-          competitions: ["strictly"], competitionRoles: { strictly: "lead" } };
+          competitions: ["strictly"], competitionRoles: { strictly: "lead" }, lunch: ["saturday", "sunday"] };
         const beforeHold = (await store.availability()).classes[replacement[0].sessionId];
         const tentative = await store.submit(full, roleChange, "edit-full-pending-01", (await state(full)).edit.version);
         await store.attachSession(tentative.id, "cs_edit_full");
@@ -643,14 +643,51 @@ test("registration orders on isolated Postgres", { skip: !process.env.TEST_DATAB
         assert.equal(duringHold.follow.remaining, beforeHold.follow.remaining - 1);
         await store.applyPayment(hold, "checkout.session.async_payment_failed");
         assert.deepEqual((await state(full)).choices.classes, replacement);
+        assert.deepEqual((await state(full)).choices.lunch, fullDraft.lunch);
         assert.deepEqual((await store.availability()).classes[replacement[0].sessionId], beforeHold);
+
+        const lunchDraft = { ...update, lunch: ["saturday", "sunday"] };
+        const lunchVersion = (await state(full)).edit.version;
+        const cancelledLunch = await store.submit(full, lunchDraft, "edit-full-lunch-cancel", lunchVersion);
+        assert.equal(cancelledLunch.status, "provisional");
+        assert.equal(cancelledLunch.subtotal_cents, 1500);
+        assert.deepEqual((await state(full)).choices.lunch, fullDraft.lunch);
+        await store.attachSession(cancelledLunch.id, "cs_edit_lunch_cancel");
+        await store.applyPayment({ id: "cs_edit_lunch_cancel", currency: "eur", amount_total: cancelledLunch.total_cents,
+          client_reference_id: String(full.id), metadata: { reg2026OrderId: String(cancelledLunch.id) },
+          status: "expired", payment_status: "unpaid" }, "checkout.session.expired");
+        assert.deepEqual((await state(full)).choices.lunch, fullDraft.lunch);
+        assert.equal((await state(full)).edit.version, lunchVersion);
+
+        const lunchOrder = await store.submit(full, lunchDraft, "edit-full-lunch-paid-01", lunchVersion);
+        assert.notEqual(lunchOrder.id, replaced.body.order.id);
+        assert.equal(lunchOrder.total_cents, 1547);
+        assert.equal((await store.submit(full, lunchDraft, "edit-full-lunch-paid-01", lunchVersion)).id, lunchOrder.id);
+        const lunchCheckout = await checkoutForOrder(store, full, lunchOrder, { checkout: { sessions: { create: async (args) => {
+          assert.equal(args.line_items[0].price_data.unit_amount, 1547);
+          assert.match(args.line_items[0].price_data.product_data.name, /lunch/);
+          return { id: "cs_edit_lunch", url: "https://checkout.example.com/lunch" };
+        } } } });
+        assert.equal(lunchCheckout, "https://checkout.example.com/lunch");
+        const lunchPayment = { id: "cs_edit_lunch", currency: "eur", amount_total: lunchOrder.total_cents,
+          client_reference_id: String(full.id), metadata: { reg2026OrderId: String(lunchOrder.id) }, status: "complete", payment_status: "paid" };
+        await store.applyPayment(lunchPayment, "checkout.session.completed");
+        await store.applyPayment(lunchPayment, "checkout.session.completed");
+        const lunchState = await state(full);
+        assert.deepEqual(lunchState.choices.lunch, lunchDraft.lunch);
+        assert.deepEqual(lunchState.choices.classes, replacement);
+        const lunchConfirmations = await sql`SELECT payload FROM registration_email_retries_26 WHERE order_id = ${lunchOrder.id}`;
+        assert.equal(lunchConfirmations.length, 1);
+        assert.deepEqual(lunchConfirmations[0].payload.data.lunch, ["Saturday", "Sunday"]);
+        const unchangedLunch = await save(full, "edit-full-lunch-unchanged", lunchState.edit.version, lunchDraft);
+        assert.equal(unchangedLunch.code, 200);
+        assert.equal(unchangedLunch.body.order.id, String(lunchOrder.id));
 
         const party = await createPerson("EditParty", "partyPass");
         const partyDraft = { ...empty(), lunch: ["saturday"], competitions: ["strictly"], competitionRoles: { strictly: "lead" } };
         const prior = await store.submit(party, { ...partyDraft, voucher: "freepass26" }, "before-party-edit-01");
         const partyVersion = (await state(party)).edit.version;
         for (const [key, field, change] of [
-          ["lunch-add", "lunch", { lunch: ["saturday", "sunday"] }],
           ["lunch-remove", "lunch", { lunch: [] }],
           ["comp-remove", "competitions", { competitions: [] }],
           ["role-change", "competitions", { competitionRoles: { strictly: "follow" } }],
@@ -660,10 +697,11 @@ test("registration orders on isolated Postgres", { skip: !process.env.TEST_DATAB
           assert.equal(response.code, 422);
           assert.ok(response.body.errors[field]);
         }
-        const addComp = { ...partyDraft, competitions: ["strictly", "open_mixnmatch"], competitionRoles: { strictly: "lead", open_mixnmatch: "follow" } };
+        const addComp = { ...partyDraft, competitions: ["strictly", "open_mixnmatch"], competitionRoles: { strictly: "lead", open_mixnmatch: "follow" },
+          lunch: ["saturday", "sunday"] };
         const newOrder = await store.submit(party, addComp, "edit-party-add-paid-01", partyVersion);
         assert.equal(newOrder.status, "provisional");
-        assert.equal(newOrder.subtotal_cents, 1000);
+        assert.equal(newOrder.subtotal_cents, 2500);
         assert.equal((await store.completedOrder(party.id)).id, prior.id);
         assert.equal((await loadRegistrationState(store, party)).order.id, newOrder.id);
         assert.equal((await loadRegistrationState(store, party)).edit, null);
@@ -679,11 +717,13 @@ test("registration orders on isolated Postgres", { skip: !process.env.TEST_DATAB
         const parentState = await state(parent);
         assert.equal(parentState.open, true);
         assert.equal(parentState.edit.closesAt, initialState.edit.closesAt);
-        const parentEdit = { ...empty(), classes: replacement, competitions: ["fever_showcase"], voucher: "freepass26" };
+        const parentEdit = { ...empty(), classes: replacement, competitions: ["fever_showcase"], lunch: ["saturday", "sunday"], voucher: "freepass26" };
         assert.equal((await save(parent, "edit-parent-choices-01", parentState.edit.version, parentEdit)).code, 200);
         const editedParent = await state(parent);
         assert.deepEqual(editedParent.choices.classes, replacement);
         assert.deepEqual(editedParent.choices.competitions, parentEdit.competitions);
+        assert.deepEqual(editedParent.choices.lunch, parentEdit.lunch);
+        assert.equal(editedParent.order.totalCents, 0);
         const fullVersion = (await state(full)).edit.version;
         Date.now = () => Date.parse("2026-11-21T00:00:00+01:00");
         assert.equal((await state(full)).edit, null);
@@ -696,7 +736,7 @@ test("registration orders on isolated Postgres", { skip: !process.env.TEST_DATAB
         assert.equal(final.order.id, String(newOrder.id));
         assert.equal(final.edit, null);
         assert.deepEqual(final.choices.competitions, addComp.competitions);
-        assert.deepEqual(final.choices.lunch, partyDraft.lunch);
+        assert.deepEqual(final.choices.lunch, addComp.lunch);
         assert.equal(final.choices.competitionRoles.strictly, "lead");
       } finally {
         Date.now = now;

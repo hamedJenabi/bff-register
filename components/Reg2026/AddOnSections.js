@@ -118,11 +118,12 @@ export function CompetitionSection({ form, saved, availability, sessions = [], d
   );
 }
 
-export function LunchSection({ form, saved, disabled }) {
+export function LunchSection({ form, saved, disabled, editing }) {
   return (
     <section className={styles.lunchSection} aria-labelledby="lunch-title">
       <h2 id="lunch-title">Lunch at the venue</h2>
       <p>€15 per meal: main course, dessert and one drink. Vegan, vegetarian and gluten-free options are available.</p>
+      {editing && <p>You can add lunch for either day. Confirmed meals stay as booked.</p>}
       <fieldset disabled={disabled}>
         <legend>Choose Saturday, Sunday, both, or neither</legend>
         {["saturday", "sunday"].map((day) => (

@@ -463,11 +463,12 @@ export default function Registration({ initial, access, loadError }) {
                     disabled={busy || pending || !data.open}
                     editing={editingChoices}
                   />
-                  {!editingChoices && <LunchSection
+                  <LunchSection
                     form={editForm}
                     saved={data.choices}
                     disabled={busy || pending || !data.open}
-                  />}
+                    editing={editingChoices}
+                  />
                   <section
                     className={styles.review}
                     aria-labelledby="review-title"
@@ -477,7 +478,7 @@ export default function Registration({ initial, access, loadError }) {
                       {data.participant.ticket !== "partyPass" &&
                         "Class registration is included in your pass. "}
                       {editingChoices
-                        ? "You only pay for new competition entries. Lunch bookings stay as confirmed."
+                        ? "You only pay for new competition entries and lunch meals. Existing bookings stay as confirmed."
                         : "Competition entries and lunch are paid together. Existing purchases are credited."}
                     </p>
                     <dl>
