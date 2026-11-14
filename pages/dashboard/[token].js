@@ -1,6 +1,7 @@
 import RegisteredClasses from "../../components/Reg2026/RegisteredClasses";
 import RegistrationLink from "../../components/Reg2026/RegistrationLink";
 import { adminPageRedirect } from "../../lib/admin/session";
+import { isClassPass } from "../../lib/reg2026/catalog";
 import Head from "next/head";
 import useMedia from "use-media";
 import Router from "next/router";
@@ -174,23 +175,23 @@ export default function Dashboard({ users, tickets, previewMode }) {
     }
   };
   const handleSendScheduleInvitations = async () => {
-    const fullPassHolders = users.filter((user) => user.status === "confirmed" && user.ticket === "fullpass");
-    if (!fullPassHolders.length) {
-      setScheduleInvitationProgress({ message: "There are no confirmed Full Pass holders to invite." });
+    const classPassHolders = users.filter((user) => user.status === "confirmed" && isClassPass(user.ticket));
+    if (!classPassHolders.length) {
+      setScheduleInvitationProgress({ message: "There are no confirmed Full or Parent Pass holders to invite." });
       return;
     }
-    if (!confirm(`Send the schedule invitation to confirmed Full Pass holders with incomplete schedules (up to ${fullPassHolders.length})? This includes people who already received the invitation.`)) return;
+    if (!confirm(`Send the schedule invitation to confirmed Full and Parent Pass holders with incomplete schedules (up to ${classPassHolders.length})? This includes people who already received the invitation.`)) return;
 
     setSendingScheduleInvitations(true);
     const counts = { sent: 0, completed: 0, failed: 0, skipped: 0, uncertain: 0 };
     const issues = [];
     let next = 0;
     let stopped = "";
-    const report = () => setScheduleInvitationProgress({ ...counts, issues: [...issues], total: fullPassHolders.length, stopped });
+    const report = () => setScheduleInvitationProgress({ ...counts, issues: [...issues], total: classPassHolders.length, stopped });
     report();
     const worker = async () => {
-      while (next < fullPassHolders.length && !stopped) {
-        const participant = fullPassHolders[next++];
+      while (next < classPassHolders.length && !stopped) {
+        const participant = classPassHolders[next++];
         try {
           const response = await fetch("/api/reg2026/invite", {
             method: "POST",
@@ -220,7 +221,7 @@ export default function Dashboard({ users, tickets, previewMode }) {
         report();
       }
     };
-    await Promise.all(Array.from({ length: Math.min(3, fullPassHolders.length) }, worker));
+    await Promise.all(Array.from({ length: Math.min(3, classPassHolders.length) }, worker));
     setSendingScheduleInvitations(false);
     report();
   };
@@ -1047,7 +1048,7 @@ export default function Dashboard({ users, tickets, previewMode }) {
               Send Email to All confirmed
             </button>
             <button className={styles.statusButton} onClick={handleSendScheduleInvitations} disabled={sendingScheduleInvitations || sendingScheduleInvitationId !== null}>
-              {sendingScheduleInvitations ? "Sending schedule invitations…" : "Send schedule invitations to confirmed Full Pass holders"}
+              {sendingScheduleInvitations ? "Sending schedule invitations…" : "Send schedule invitations to confirmed Full and Parent Pass holders"}
             </button>
           </div>
           {scheduleInvitationProgress && (
@@ -1056,7 +1057,7 @@ export default function Dashboard({ users, tickets, previewMode }) {
                 `Schedule invitations: ${scheduleInvitationProgress.sent} ${previewMode ? "captured in preview" : "accepted by SendGrid"}, ` +
                 `${scheduleInvitationProgress.completed} already complete, ${scheduleInvitationProgress.skipped} otherwise skipped, ` +
                 `${scheduleInvitationProgress.failed} failed, ${scheduleInvitationProgress.uncertain} require review. ` +
-                `Total: ${scheduleInvitationProgress.total} confirmed Full Pass holders.`}
+                `Total: ${scheduleInvitationProgress.total} confirmed Full and Parent Pass holders.`}
               {scheduleInvitationProgress.stopped && ` ${scheduleInvitationProgress.stopped}`}
             </p>
           )}

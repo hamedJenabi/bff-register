@@ -130,12 +130,12 @@ test("schedule invitations use confirmed, incomplete participants and distinct s
       assert.equal(sent.length, 2);
     });
 
-    await t.test("bulk resends recheck Full Pass eligibility and completion before sending", async () => {
+    await t.test("bulk resends recheck pass eligibility and completion before sending", async () => {
       const ada = people[0];
       assert.equal((await resend(ada.id)).body.status, "sent");
       assert.deepEqual(sent.at(-1), sent[0]);
       assert.equal((await call(ada.id)).body.status, "already_sent");
-      for (const person of [people[1], people[2], people[5], people[7]]) {
+      for (const person of [people[1], people[2], people[5]]) {
         assert.equal((await resend(person.id)).code, 409);
       }
       assert.equal((await resend(people[3].id)).body.status, "completed");
@@ -156,6 +156,24 @@ test("schedule invitations use confirmed, incomplete participants and distinct s
       rejectedEmail = null;
       assert.equal((await resend(person.id)).body.status, "sent");
       assert.equal(sent.length, 5);
+    });
+
+    await t.test("Parent Pass holders receive the same invitation again only while incomplete", async () => {
+      const parent = people[7];
+      const sentBefore = sent.length;
+      assert.equal((await call(parent.id)).body.status, "sent");
+      const firstInvitation = sent.at(-1);
+      assert.equal(firstInvitation.to, parent.email);
+      assert.equal(firstInvitation.dynamic_template_data.isPartyPass, false);
+      assert.equal((await resend(parent.id)).body.status, "sent");
+      assert.deepEqual(sent.at(-1), firstInvitation);
+      await sql`UPDATE registrations_26 SET theme_class = ${serializeThemeClass([{ sessionId: "fri-1330-ankersaal" }])} WHERE id = ${parent.id}`;
+      assert.equal((await resend(parent.id)).body.status, "completed");
+      await sql`UPDATE registrations_26 SET theme_class = '' WHERE id = ${parent.id}`;
+      await sql`INSERT INTO reg2026_orders (registration_id,status,draft,subtotal_cents,fee_cents,total_cents)
+        VALUES (${parent.id},'confirmed','{}'::jsonb,0,0,0)`;
+      assert.equal((await resend(parent.id)).body.status, "completed");
+      assert.equal(sent.length, sentBefore + 2);
     });
   } finally {
     for (const key of keys) previous[key] === undefined ? delete process.env[key] : process.env[key] = previous[key];
