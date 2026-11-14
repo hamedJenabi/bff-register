@@ -29,7 +29,7 @@ function CompetitionRow({ competition, pool, entry, disabled, onBusyChange, onSa
     finally { setSaving(false); onBusyChange(false); }
   };
   return <>
-    <tr role="row">
+    <tr role="row" className={!entry?.unlimited && entry?.remaining === 0 ? styles.capacitySoldOut : undefined}>
       <th role="rowheader" scope="row">{roleLabels[pool]}</th>
       <td role="cell" className={styles.number}><span className={styles.mobileLabel} aria-hidden="true">Capacity</span>{entry?.unlimited ? "Unlimited" : entry?.capacity ?? "—"}</td>
       <td role="cell" className={styles.number}><span className={styles.mobileLabel} aria-hidden="true">Registered</span>{entry?.registered ?? "—"}</td>
