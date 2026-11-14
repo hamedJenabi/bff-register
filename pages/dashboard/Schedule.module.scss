@@ -99,7 +99,7 @@
 .capacityNotice { --capacity-background: #99f6e4; --capacity-text: #073e3b; --capacity-border: #5eead4; }
 .capacityLow { --capacity-background: #2dd4bf; --capacity-text: #073e3b; --capacity-border: #14b8a6; }
 .capacityCritical { --capacity-background: #0f766e; --capacity-text: #fff; --capacity-border: #0d5c56; }
-.capacitySoldOut { --capacity-background: #fee2e2; --capacity-text: #991b1b; --capacity-border: #fecaca; }
+.capacitySoldOut { --capacity-background: #b91c1c; --capacity-text: #fff; --capacity-border: #991b1b; }
 .capacityTable tbody tr {
   &.capacityNotice, &.capacityLow, &.capacityCritical, &.capacitySoldOut {
     background: var(--capacity-background); color: var(--capacity-text);
