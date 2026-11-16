@@ -15,6 +15,7 @@ const { createScheduleHandler } = require("../lib/app/schedule");
 const { createContentStore } = require("../lib/app/content-store");
 const { createContentHandlers } = require("../lib/app/content-http");
 const { createDoorStore } = require("../lib/app/door-store");
+const { createVolunteerStore } = require("../lib/app/volunteer-store");
 const { hashAdminPassword } = require("../lib/app/admin-security");
 const { createAppInvitationHandler } = require("../lib/app/invitations");
 const { setAdminSession } = require("../lib/admin/session");
@@ -86,6 +87,7 @@ const webpush = require("web-push");
       "00010-reg2026-reopen-registration", "00013-reg2026-sheet-schedule", "00015-reg2026-switch-role", "00016-reg2026-competition-capacities", "00017-reg2026-showcase-capacity",
       "00011-attendee-app-access",
       "00012-festival-app-admin",
+      "00020-festival-volunteer-access",
     ]) {
       await sql.begin((tx) => require(`../migrations/${file}`).up(tx));
     }
@@ -165,7 +167,7 @@ const webpush = require("web-push");
         pushes.push(payload);
       },
     });
-    const contentHandlers = createContentHandlers(content, store, createDoorStore(sql, registration));
+    const contentHandlers = createContentHandlers(content, store, createDoorStore(sql, registration), createVolunteerStore(sql));
     const handlers = createAppHandlers(store, content);
     const ecdh = crypto.createECDH("prime256v1");
     ecdh.generateKeys();
@@ -231,7 +233,7 @@ const webpush = require("web-push");
         await store.revoke(people[0].id);
         return res.json({ ok: true });
       }
-      const grouped = /^\/api\/app\/(manage|updates)\/([a-z-]+)$/.exec(
+      const grouped = /^\/api\/app\/(manage|updates|volunteer)\/([a-z-]+)$/.exec(
         url.pathname,
       );
       const handler =
