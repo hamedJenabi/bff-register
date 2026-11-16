@@ -13,7 +13,7 @@ const { createAttendeeStore } = require("../lib/app/store");
 const { createAppHandlers } = require("../lib/app/http");
 const { createContentStore } = require("../lib/app/content-store");
 const { createContentHandlers } = require("../lib/app/content-http");
-const { createDoorStore, CUTTIN_SESSION_ID } = require("../lib/app/door-store");
+const { createDoorStore } = require("../lib/app/door-store");
 const { hashAdminPassword } = require("../lib/app/admin-security");
 const { createAppInvitationHandler } = require("../lib/app/invitations");
 const { setAdminSession } = require("../lib/admin/session");
@@ -85,7 +85,6 @@ const webpush = require("web-push");
       "00010-reg2026-reopen-registration", "00013-reg2026-sheet-schedule", "00015-reg2026-switch-role", "00016-reg2026-competition-capacities", "00017-reg2026-showcase-capacity",
       "00011-attendee-app-access",
       "00012-festival-app-admin",
-      "00019-app-cuttin-roster",
     ]) {
       await sql.begin((tx) => require(`../migrations/${file}`).up(tx));
     }
@@ -114,8 +113,6 @@ const webpush = require("web-push");
     }));
     sessions.push({ ...sessions[0], id: "fixture-competitors-class", title: "Fixture competitors class",
       room: "Fixture room", bookable: false });
-    sessions.push({ ...sessions.find(({ id }) => id === "sat-1600-superar-3"), id: CUTTIN_SESSION_ID,
-      title: "Cuttin' for Solo competitors only", room: "Ankersaal", bookable: false });
     const publish = async (catalog) => registration.publishSchedule({
       sessions: catalog, spreadsheetId: "fictional-browser-schedule", sheetName: "APP_SCHEDULE",
       sourceHash: crypto.createHash("sha256").update(JSON.stringify(catalog)).digest("hex"),

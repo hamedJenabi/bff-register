@@ -33,9 +33,11 @@ The app server needs `BFF_REGISTER_ORIGIN` pointing to this ticketing server. It
 
 Before hosted deployment, review migrations **00011-attendee-app-access** and **00012-festival-app-admin** and apply it to the intended environment with the existing Ley migration workflow. On 14 October 2026, the requested data demonstration applied this additive migration to the configured local `localhost/bluesfever` database. It adds app access/session tables; participant, booking, and payment records are not changed by the migration. Hosted production has not been migrated by this task.
 
+For the current feature set, also review schedule publication migration `00013` and final-email delivery migration `00018`, together with intervening registration migrations required by the release. Verify which migrations are already applied in the intended environment. The latest working tree deletes the old Cuttin’ migration `00019`; it is not a launch prerequisite.
+
 Use a separate app-invitation email and template, with `firstname`, `lastname`, **`appAccessUrl`**, and `accessExpiresAt` dynamic fields. Click tracking is disabled for these authentication links. Verify that the complete fragment survives template rendering and the intended mail client. Each recipient and credential come from the server's stored registration ID, even if a caller supplies different names or email addresses. SendGrid rejections return an error to the invitation caller; acceptance by SendGrid is not proof of inbox delivery.
 
-The existing `/api/mailall` endpoint, its template, and its dashboard actions are unchanged. App invitations use **`POST /api/app/admin/invite`** with body `{ "id": participantId }`, existing organizer authentication, and the dedicated template. This endpoint sends one invitation per explicit request. A later dedicated app-invitation dashboard can call it for selected participants or all confirmed participants without reusing the registration email buttons. No automatic mail queue or live sends are part of this implementation.
+App invitations use **`POST /api/app/admin/invite`** with body `{ "id": participantId }`, existing organizer authentication, and the dedicated template. This endpoint sends one invitation per explicit request. A separate app-invitation dashboard remains later scope. The later final-festival-email implementation now uses `/api/mailall` and selected/all-confirmed dashboard actions with personalized `appAccessUrl` values and its own delivery ledger; see [the launch PRD](./attendee-app-launch.md) and [final email setup](../email/final-festival-email.md). These are distinct email purposes. No live send is authorized by this documentation review.
 
 ## API contract
 
@@ -53,6 +55,18 @@ The app's same-origin `/api/app/claim`, `/api/app/me`, and `/api/app/logout` fa�
 Links are opaque, purpose-bound credentials in `/claim#token=...`. GET does not consume them, and email scanners cannot create a participant session by merely following the URL. They are reusable until recorded expiry or organizer revocation, allowing a participant to open their email on another device. Recovery is reopening a valid link or having an organizer reissue an expired/revoked link through the link endpoint or separate app-invitation endpoint. Reissuing valid access keeps the existing link stable; reissuing expired/revoked access generates a new credential and QR and retires old sessions.
 
 Sessions use random secrets; only SHA-256 hashes are stored. Access records contain a random public UUID and nonce, linked to `registrations_26`. Access and QR signatures use distinct purposes; a QR cannot be exchanged for a login session. The QR contains no name, email, or class list. Its actual door verification endpoint and staff authorization are milestone 5.
+
+## Class-door verification and roster API
+
+Implemented locally; reviewed 12 November 2026. All three operations currently require the dedicated Festival Admin bearer. Participant sessions are rejected. A separate volunteer role is proposed in [the Admin and Volunteers completion PRD](../../../bff-app/docs/prd/admin-volunteers-completion.md), not implemented yet.
+
+| Endpoint | Authorization today | Contract |
+| --- | --- | --- |
+| `GET /api/app/manage/door-sessions` | Festival Admin bearer | Eligible class sessions and open talks, with stable ID, day/date, time, room and admission mode. |
+| `POST /api/app/manage/door-verify` | Festival Admin bearer | Body `sessionId` and `qr`; returns eligible with name/role, ineligible or invalid. Request failure is presented by the app as unavailable verification. |
+| `POST /api/app/manage/door-roster` | Festival Admin bearer | Body `sessionId`; returns selected session, roster names/roles and `generatedAt`. App supports organizer download for offline fallback. |
+
+Ordinary classes use current confirmed bookings and the shared legacy projection. Talks are open to confirmed passes. Invalid, expired, revoked or wrong-purpose QR credentials cannot grant access. Verification is online and does not record attendance or enforce duplicate entry. The latest working trees remove Cuttin’ special-roster management and migration `00019`; do not restore the old editing endpoints. Participant competition information is separate from scanner eligibility.
 
 ## Booking projection
 

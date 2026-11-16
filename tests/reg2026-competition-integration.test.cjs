@@ -84,6 +84,7 @@ test("competition limits and reservations on isolated Postgres", { skip: !proces
       const [attendee] = await seed(1, "", "", "parentPass");
       const paidDraft = { ...draft("solo_battle", undefined, false), classes: fiveClasses() };
       const order = await store.submit(attendee, paidDraft, "competition-paid-hold");
+      await store.attachSession(order.id, `cs_competition_${order.id}`);
       assert.equal((await places("solo_battle", "total")).remaining, 0);
       assert.deepEqual((await store.competitionInventory()).solo_battle.total, { capacity: 30, remaining: 0, registered: 29, held: 1, version: 0 });
       assert.equal(await store.competitionRegistrantCount(), 29, "Active checkout holds are not registered users");
@@ -95,7 +96,6 @@ test("competition limits and reservations on isolated Postgres", { skip: !proces
       await sql`UPDATE reg2026_orders SET status = 'payment_pending', expires_at = NULL WHERE id = ${order.id}`;
       assert.equal((await places("solo_battle", "total")).remaining, 0);
       assert.equal(await store.competitionRegistrantCount(), 29, "Pending payment is not a confirmed competition registration");
-      await store.attachSession(order.id, `cs_competition_${order.id}`);
       await store.applyPayment(checkout(attendee, order, "complete", "unpaid"), "checkout.session.async_payment_failed");
       assert.equal((await places("solo_battle", "total")).remaining, 1);
       const retry = await store.submit(attendee, paidDraft, "competition-paid-retry");

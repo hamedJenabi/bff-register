@@ -392,7 +392,7 @@ test("registration orders on isolated Postgres", { skip: !process.env.TEST_DATAB
       const [booking] = await sql`SELECT pool, status FROM class_bookings_26 WHERE registration_id = ${person.id} AND session_id = ${base.id}`;
       assert.deepEqual(booking, { pool: "lead", status: "confirmed" });
     });
-    await t.test("HTTP endpoints enforce signed access, complete drafts and server-owned checkout", async () => {
+    await t.test("HTTP endpoints enforce signed access, complete drafts and server-owned checkout", async (http) => {
       process.env.REG2026_ENABLED = "true";
       const { signIdentity } = require("../lib/reg2026/security");
       const payments = require("../lib/reg2026/payments");
@@ -400,6 +400,10 @@ test("registration orders on isolated Postgres", { skip: !process.env.TEST_DATAB
       const mockStripe = { checkout: { sessions: {
         create: async (args, options) => {
           assert.equal(args.line_items[0].price_data.unit_amount, 1547);
+          assert.equal(args.customer_email, "http+test@example.com");
+          const returnAccess = new URL(args.success_url).searchParams;
+          assert.equal(returnAccess.get("user"), " http+test@example.com+HTTP");
+          assert.equal(returnAccess.get("sig"), signIdentity(returnAccess.get("user")));
           const value = { id: "cs_http_test", url: "https://checkout.example.com/http", amount_total: 1547, currency: "eur",
             status: "open", payment_status: "unpaid", metadata: args.metadata, client_reference_id: args.client_reference_id };
           sessions.set(value.id, value); return value;
@@ -412,6 +416,7 @@ test("registration orders on isolated Postgres", { skip: !process.env.TEST_DATAB
       };
       const submit = require("../pages/api/reg2026/submit").default;
       const load = require("../pages/api/reg2026/index").default;
+      const cancel = require("../pages/api/reg2026/cancel").default;
       const res = () => ({ headers: {}, code: 200, setHeader(k,v) { this.headers[k] = v; }, status(c) { this.code = c; return this; }, json(body) { this.body = body; return this; }, end() { return this; } });
       const [savedPerson] = await sql`SELECT * FROM registrations_26 WHERE firstname = 'SavedClasses'`;
       const savedUser = savedPerson.email + "+" + savedPerson.firstname;
@@ -424,7 +429,7 @@ test("registration orders on isolated Postgres", { skip: !process.env.TEST_DATAB
       const savedEdit = res(); await submit({ method: "POST", body: { ...savedAccess, requestKey: "saved-classes-edit-01", draft: empty() } }, savedEdit);
       assert.equal(savedEdit.code, 409); assert.match(savedEdit.body.error, /contact the organizers/);
       const [person] = await sql`INSERT INTO registrations_26 (date,status,role,ticket,firstname,lastname,email,country)
-        VALUES ('2026','confirmed','advanced','partyPass','HTTP','Participant','http+test@example.com','Austria') RETURNING *`;
+        VALUES ('2026','confirmed','advanced','partyPass','HTTP','Participant',' http+test@example.com','Austria') RETURNING *`;
       const user = person.email + "+" + person.firstname;
       const access = { user, sig: signIdentity(user) };
       const rejected = res(); await load({ method: "GET", query: { user, sig: "tampered" } }, rejected);
@@ -502,7 +507,7 @@ test("registration orders on isolated Postgres", { skip: !process.env.TEST_DATAB
       assert.equal((await invoke(signature)).code, 200);
       assert.equal((await invoke(signature)).code, 200);
       assert.equal(emailSends.length, 2);
-      assert.equal(emailSends[1].to, person.email);
+      assert.equal(emailSends[1].to, "http+test@example.com");
       assert.deepEqual(emailSends[1].dynamic_template_data.classes, []);
       assert.deepEqual(emailSends[1].dynamic_template_data.lunch, ["Saturday"]);
       assert.equal((await store.order(paid.body.order.id, person.id)).status, "confirmed");
@@ -520,6 +525,27 @@ test("registration orders on isolated Postgres", { skip: !process.env.TEST_DATAB
       assert.equal(repeat.code, 200); assert.equal(repeat.body.order.id, paid.body.order.id);
       const wrongOrder = res(); await load({ method: "GET", query: { ...access, order: "999999" } }, wrongOrder);
       assert.equal(wrongOrder.body.completed, true);
+      await http.test("Cancel releases an unattached order and blocks a late Stripe redirect", async () => {
+        const registrant = await createPerson("CancelCheckout");
+        const identity = registrant.email + "+" + registrant.firstname;
+        const signedLink = { user: identity, sig: signIdentity(identity) };
+        const draft = { ...empty(), classes: free.classes, lunch: ["saturday"] };
+        const stuck = await store.submit(registrant, draft, "stuck-checkout-01");
+        assert.equal(stuck.stripe_session_id, null);
+        const payment = { checkout: { sessions: { create: async () => {
+          // Stripe is still creating the session when the participant cancels.
+          const cancelled = res();
+          await cancel({ method: "POST", body: signedLink }, cancelled);
+          assert.equal(cancelled.code, 200);
+          assert.equal(cancelled.body.order.status, "expired");
+          return { id: "cs_test_late", url: "https://checkout.example.com/late" };
+        } } } };
+        assert.equal(await checkoutForOrder(store, registrant, stuck, payment), null);
+        assert.equal((await store.order(stuck.id, registrant.id)).stripe_session_id, null);
+        assert.equal((await sql`SELECT id FROM class_bookings_26 WHERE order_id = ${stuck.id}`).length, 0);
+        const retry = await store.submit(registrant, draft, "stuck-checkout-02");
+        assert.equal(retry.status, "provisional");
+      });
       require.cache[require.resolve("../db/db")] = { loaded: true, exports: {
         getConfirmedUserByEmailAndName: async () => person,
         setUserLunchById: () => { throw new Error("Legacy writes must not be reached"); },

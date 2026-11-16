@@ -2,6 +2,8 @@
 
 The personal-link journey, bulk final email, full program, and class-door scanner are implemented locally. Hosted rollout and a rehearsal on real phones remain launch checks.
 
+12 November 2026 status review: the scanner currently requires the organizer login; independent scanner-only volunteer access is still open. The latest working tree removes Cuttin’ roster management and migration `00019` following the user's read-only app clarification. The [cross-repository delivery status](../../../bff-app/docs/prd/implementation-status.md) and [Admin and Volunteers completion PRD](../../../bff-app/docs/prd/admin-volunteers-completion.md) record completed work, pending staff scope and ordered next steps. Do not use older Cuttin’ deployment instructions.
+
 ## Problem Statement
 
 Confirmed participants need one final festival email that opens their own weekend on a phone. The app needs to show their confirmed class bookings, the full class and talk program, and the full party program. At a class door, authorized staff need to know whether the person presenting a festival QR is eligible for that specific class session.
@@ -26,7 +28,6 @@ Use the existing bulk final email action as the organizer's entry point. Send on
 10. As authorized door staff, I want to select a class session by title, time, and room, so that each scan answers the question for the correct door.
 11. As authorized door staff, I want clear results for eligible, ineligible, invalid QR, and verification unavailable, so that I can distinguish an admission decision from a technical failure.
 12. As the designated organizer, I want an available class roster to consult when scanning fails, so that I can make the door decision while connectivity is restored.
-13. As an organizer, I want to manage the Cuttin’ roster separately, so that its door check follows the approved roster for that session.
 
 ## Implementation Decisions
 
@@ -35,12 +36,12 @@ Use the existing bulk final email action as the organizer's entry point. Send on
 - Update the final-email template and bulk action together. Require organizer authorization, confirmation of the audience, and visible progress. Adapt the existing tracked invitation pattern with delivery state specific to the final email. Distinguish provider acceptance, failed attempts, and uncertain outcomes. Review uncertain outcomes before retrying. Keep schedule-registration invitations separate.
 - Use `bff-register` as the app's source for the published class catalog and current participant bookings. Continue publishing the reviewed `APP_SCHEDULE` snapshot through registration. Use the public website's published schedule as the authority for the party program, including when it differs from the team sheet. Represent the party program separately from class bookings, with party nights, venues or floors, times, and program details. Preserve the website's after-midnight grouping and show a link to the official program for reference.
 - Add an organizer-authorized scanner that submits the personal QR and a stable class-session ID to `bff-register`. Validate the QR's purpose, expiry, revocation, and linked confirmed festival registration on the server. Use current confirmed bookings for ordinary classes and reuse the existing eligibility policy for legacy saved classes so that My Schedule and the door agree. Treat open talks as open to all passes without a class booking check.
-- Give Cuttin’ its own organizer-managed roster and use that roster for verification. Confirm who maintains it and how it is available at the door during rehearsal. Scope the scan response to the selected session and the minimum information staff need.
+- Show sessions that accept class bookings and talks that are open to all passes in the scanner. Scope each scan to the selected session and the information staff need to check eligibility.
 - On camera or connectivity failure, show that verification is unavailable and direct staff to the designated organizer. The organizer checks the class roster and makes the admission decision. Rehearse how the organizer accesses that roster during an outage.
 
 ## Testing Decisions
 
-- Extend the existing isolated PostgreSQL and captured SendGrid integration tests. Verify that bulk sends select only confirmed registrations, deliver the correct personal link to each recipient, report partial failures, and resume without duplicate acceptance. Verify staff authorization, exact-session matching, confirmed and provisional bookings, legacy eligibility, expired or revoked QR credentials, and the Cuttin’ roster exception.
+- Extend the existing isolated PostgreSQL and captured SendGrid integration tests. Verify that bulk sends select only confirmed registrations, deliver the correct personal link to each recipient, report partial failures, and resume without duplicate acceptance. Verify staff authorization, exact-session matching, confirmed and provisional bookings, legacy eligibility, and expired or revoked QR credentials.
 - Extend the existing browser journey from captured final email through sign-in, My Schedule, Full Schedule, and QR display. Include a Party Pass, a night spanning midnight, and a separate staff session that exercises scanner results and the unavailable state. Verify that the app shows the published website's party program when it differs from the team sheet.
 - Rehearse on the hosted HTTPS origins before the bulk send. Use one organizer-controlled mailbox and real phones to verify email rendering and the complete token fragment, the correct participant's bookings, the reviewed class publication and party program, an eligible and an ineligible door scan, and the organizer roster fallback with connectivity disabled.
 
@@ -54,4 +55,4 @@ Use the existing bulk final email action as the organizer's entry point. Send on
 
 Before approving the bulk send, verify the hosted app-to-registration connection, database migrations, signing configuration, link expiry through the festival, active SendGrid template, and approved published schedule. Complete the controlled email and class-door rehearsal.
 
-Apply migration `00019` to create the empty Cuttin’ roster. In the app’s `/bff-admin`, open **Class door scanner**, select Cuttin’, and use **Manage Cuttin’ roster** to add the approved confirmed registrations. There is no automatic import from Solo Battle. Before doors open, the designated organizer downloads each relevant roster and makes it available on a device or on paper. The export records when it was generated. During an outage the organizer uses that copy and checks any booking changes since export.
+Before doors open, the designated organizer downloads each relevant class roster from **Class door scanner** in `/bff-admin` and makes it available on a device or on paper. The export records when it was generated. During an outage the organizer uses that copy and checks any booking changes since export.
