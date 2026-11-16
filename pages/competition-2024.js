@@ -104,7 +104,6 @@ export default function Home({ tickets, clientID }) {
           content="https://www.bluesfever.eu/wp-content/uploads/2023/07/bff2023-scaled.jpg"
         />
 
-        <link rel="icon" href="/icon.png" />
       </Head>
       <Header
         title="BLUES FEVER 2026"

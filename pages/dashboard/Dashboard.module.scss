@@ -276,16 +276,63 @@
 
 .button {
   width: 100%;
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.65;
+  }
+}
+
+.rowActions {
+  display: grid;
+  min-width: 145px;
+  gap: 6px;
+}
+
+.rowActionMessage {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.35;
 }
 
 .statusButton {
   margin: 12px;
+
+  &:disabled {
+    cursor: wait;
+    opacity: 0.65;
+  }
 
   &.disable {
     border-color: var(--danger);
     background: var(--danger);
     color: white;
   }
+}
+
+.bulkEmailActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin: 28px 12px 0;
+
+  .statusButton {
+    margin: 0;
+  }
+}
+
+.invitationProgress {
+  margin: 12px;
+  color: var(--text);
+  line-height: 1.5;
+}
+
+.invitationIssues {
+  margin: 0 12px 12px;
+  padding-left: 20px;
+  color: var(--danger);
+  line-height: 1.5;
 }
 
 .search .statusButton {

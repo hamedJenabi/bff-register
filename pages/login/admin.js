@@ -60,7 +60,6 @@ export default function Admin({ tickets }) {
       <Head>
         <title>BLUES FEVER 2026</title>
         <meta name="description" content="BLUES FEVER 2026 Registration" />
-        <link rel="icon" href="/icon.png" />
       </Head>
       <Header
         title="BLUES FEVER 2026"

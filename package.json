@@ -34,6 +34,7 @@
     "sass": "^1.62.0",
     "stripe": "^17.7.0",
     "use-media": "^1.4.0",
+    "web-push": "^3.6.7",
     "yarn-upgrade-all": "^0.7.2"
   },
   "devDependencies": {

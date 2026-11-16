@@ -16,6 +16,7 @@ import {
 } from "../../utils/functions";
 
 import Stripe from "stripe";
+import { registrationInvitationMessage } from "../../lib/reg2026/invitations";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -26,7 +27,7 @@ const time = new Date();
 
 //******** Send Email *********/
 const sendEmail = async (msg) => {
-  sgMail
+  return sgMail
     .send(msg)
     .then(() => {
       console.log("Email sent");
@@ -133,8 +134,12 @@ export default async function register(req, response) {
   //******** Check Capacity ********/
   if (isAlreadyRegistered) {
     // 302 -> already registered
-    response.status(302).json();
+    return response.status(302).json();
   }
+
+  const scheduleInvitation = user_status === "confirmed"
+    ? registrationInvitationMessage(requestData, template)
+    : null;
 
   if (!isAlreadyRegistered) {
     // await updateTicketCapacity(ticketId); TODO - update capacity??
@@ -158,7 +163,6 @@ export default async function register(req, response) {
 
     // await updateGoogle(user);
 
-    response.status(200).json();
     // send registration email
   }
 
@@ -193,10 +197,12 @@ export default async function register(req, response) {
   //   }
   // }
   const msg = {
+    ...scheduleInvitation,
     from: "registration@bluesfever.eu",
     to: `${requestData.email}`,
     template_id: template,
     dynamic_template_data: {
+      ...scheduleInvitation?.dynamic_template_data,
       firstname: `${requestData.firstname}`,
       lastname: `${requestData.lastname}`,
       country: `${requestData.country}`,
@@ -235,8 +241,9 @@ export default async function register(req, response) {
   //     return "message";
   //   }
   // };
-  if (!isSoldOut) {
+  if (!isSoldOut && scheduleInvitation) {
     await sendEmail(msg);
   }
+  return response.status(200).json();
   // await sendEmail(user.status, msg);
 }
