@@ -527,6 +527,7 @@ export default function Dashboard({ users, tickets, previewMode }) {
       "country",
       "terms",
       "registration link",
+      "app link",
     ];
     return header.map((key, index) => {
       return <th key={index}>{key.toUpperCase()}</th>;
@@ -786,6 +787,9 @@ export default function Dashboard({ users, tickets, previewMode }) {
               <td>Yes</td>
               <td>
                 <RegistrationLink id={id} firstname={firstname} lastname={lastname} buttonClassName={styles.button} />
+              </td>
+              <td>
+                <RegistrationLink id={id} firstname={firstname} lastname={lastname} buttonClassName={styles.button} kind="app" />
               </td>
             </tr>
           );

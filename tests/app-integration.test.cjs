@@ -4,6 +4,7 @@ const postgres = require("postgres");
 const { createRegistrationStore } = require("../lib/reg2026/store");
 const { createAttendeeStore } = require("../lib/app/store");
 const { createAppHandlers } = require("../lib/app/http");
+const { createScheduleHandler } = require("../lib/app/schedule");
 const { createContentHandlers } = require("../lib/app/content-http");
 const { createContentStore } = require("../lib/app/content-store");
 const { createDoorStore } = require("../lib/app/door-store");
@@ -126,6 +127,29 @@ test(
         host: "register.example.com",
         origin: "https://register.example.com",
       };
+
+      await t.test("the public catalog matches participant class details without exposing private data", async () => {
+        const result = response();
+        await createScheduleHandler(registration)({ method: "GET", headers: {} }, result);
+        assert.equal(result.code, 200);
+        const personal = await store.snapshot(aliceSession.sessionToken);
+        assert.deepEqual(result.body.catalog, personal.catalog);
+        assert.deepEqual(result.body.festivalDates, personal.festivalDates);
+        assert.deepEqual(Object.keys(result.body).sort(), ["catalog", "festivalDates", "timezone"]);
+        assert.ok(result.body.catalog.length > 0);
+        for (const session of result.body.catalog) {
+          assert.deepEqual(Object.keys(session).sort(), ["bookable", "date", "day", "description", "detailsMissing", "end", "format", "levels", "role", "room", "sessionId", "source", "start", "teachers", "title"]);
+          assert.equal(session.role, null);
+        }
+        const method = response();
+        await createScheduleHandler(registration)({ method: "POST" }, method);
+        assert.equal(method.code, 405);
+        const failed = response();
+        await createScheduleHandler({ schedule: async () => { throw Error("private database diagnostic"); } })({ method: "GET" }, failed);
+        assert.equal(failed.code, 503);
+        assert.equal(failed.body.catalog, undefined);
+        assert.doesNotMatch(JSON.stringify(failed.body), /private database/);
+      });
 
       await t.test(
         "each bearer resolves only its own confirmed registration and minimizes data",

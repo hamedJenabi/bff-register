@@ -11,6 +11,7 @@ const postgres = require("postgres");
 const { createRegistrationStore } = require("../lib/reg2026/store");
 const { createAttendeeStore } = require("../lib/app/store");
 const { createAppHandlers } = require("../lib/app/http");
+const { createScheduleHandler } = require("../lib/app/schedule");
 const { createContentStore } = require("../lib/app/content-store");
 const { createContentHandlers } = require("../lib/app/content-http");
 const { createDoorStore } = require("../lib/app/door-store");
@@ -239,6 +240,7 @@ const webpush = require("web-push");
           "/api/app/claim": handlers.claim,
           "/api/app/me": handlers.me,
           "/api/app/logout": handlers.logout,
+          "/api/app/schedule": createScheduleHandler(registration),
         }[url.pathname];
       if (!handler) return res.status(404).json({ error: "Not found" });
       try {

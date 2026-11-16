@@ -4,6 +4,12 @@ The participant app is read-only for festival registrations and class bookings. 
 
 ## Participant journey: connected and verified locally
 
+16 November update: `GET /api/app/schedule` publicly exposes the same class-detail projection and festival dates as the private participant snapshot. It includes no participant identity, bookings, capacity, signing credentials or QR. App Full Schedule uses this endpoint whether signed in or out, and shows retry/last-loaded states on failure instead of a mock program.
+
+Both registration dashboard routes now have a separate **App link** column. **Generate app link** calls the existing organizer-protected `POST /api/app/admin/link` with the stored registration ID; the dialog supports copying/opening the returned `appAccessUrl`. The final email already uses this same link generator. Generating a link creates/reuses app access only, sends no email and changes no registration, booking or payment data. The existing registration-edit link stays separate.
+
+Hosted setup: on `bff-app`, set `BFF_REGISTER_ORIGIN=https://register.bluesfever.eu`; on this backend, set `APP_ORIGIN=https://app.bluesfever.eu` and the existing app signing/expiry configuration. Deploy both changes. `package.json` selects Node `22.x`, matching verified backend tests; Node 26 reproduces a `buffer-equal-constant-time`/`jwa` module-load failure in the existing push dependency before app endpoints can run. No production configuration or database is changed by this local implementation.
+
 Requested on 27 October 2026 and implemented locally on 29 October following the user's email-to-app journey request. The registration backend projects the published Google Sheets catalog and each participant's confirmed registration data through `/api/app/me`. See the adjacent app's [current participant journey](../../../bff-app/docs/prd/participant-journey.md) and the dedicated [app-invitation email draft](../email/participant-app-invitation.md).
 
 - [x] Inspect the existing app client and verify the local `BFF_REGISTER_ORIGIN=http://localhost:3000`, reusing the current participant-access/session flow. Hosted backend/origin configuration remains a rollout step.
