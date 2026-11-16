@@ -2,7 +2,7 @@
 
 The personal-link journey, bulk final email, full program, and class-door scanner are implemented locally. Hosted rollout and a rehearsal on real phones remain launch checks.
 
-12 November 2026 status review: the scanner currently requires the organizer login; independent scanner-only volunteer access is still open. The latest working tree removes Cuttin’ roster management and migration `00019` following the user's read-only app clarification. The [cross-repository delivery status](../../../bff-app/docs/prd/implementation-status.md) and [Admin and Volunteers completion PRD](../../../bff-app/docs/prd/admin-volunteers-completion.md) record completed work, pending staff scope and ordered next steps. Do not use older Cuttin’ deployment instructions.
+16 November 2026 status review: one shared password-free volunteer link with QR scanning only is the agreed policy. Its local implementation and migration 00020 are checkpointed with unfinished browser verification; admin communications and full rosters remain password-protected. Cuttin’ roster management and its migration `00019` were removed in the earlier commits. The install card is removed by the latest user decision. The [cross-repository delivery status](../../../bff-app/docs/prd/implementation-status.md), [staff PRD](../../../bff-app/docs/prd/admin-volunteers-completion.md) and [today's record](../../../bff-app/docs/prd/session-2026-11-16.md) give the exact stopping point. Do not use older Cuttin’ deployment instructions.
 
 ## Problem Statement
 

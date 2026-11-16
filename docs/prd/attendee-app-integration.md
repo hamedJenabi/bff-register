@@ -2,6 +2,8 @@
 
 The participant app is read-only for festival registrations and class bookings. This repo remains the source of truth. The new app API projects existing data and adds access credentials/sessions, announcements, and optional Web Push subscription/delivery records. Participant registrations and bookings remain read-only.
 
+16 November checkpoint: the user selected one shared password-free volunteer link with QR scanning only. The local implementation adds a separate volunteer API/session boundary and migration 00020; announcements, notifications, roster downloads and link provisioning remain admin-only. The app's install card is removed by the latest decision. Work is paused with unfinished browser verification; see [today's record](../../../bff-app/docs/prd/session-2026-11-16.md) and the [current staff PRD](../../../bff-app/docs/prd/admin-volunteers-completion.md). The user requested commits in both repositories; no production migration or deployment is performed by this checkpoint.
+
 ## Participant journey: connected and verified locally
 
 16 November update: `GET /api/app/schedule` publicly exposes the same class-detail projection and festival dates as the private participant snapshot. It includes no participant identity, bookings, capacity, signing credentials or QR. App Full Schedule uses this endpoint whether signed in or out, and shows retry/last-loaded states on failure instead of a mock program.
@@ -64,7 +66,7 @@ Sessions use random secrets; only SHA-256 hashes are stored. Access records cont
 
 ## Class-door verification and roster API
 
-Implemented locally; reviewed 12 November 2026. All three operations currently require the dedicated Festival Admin bearer. Participant sessions are rejected. A separate volunteer role is proposed in [the Admin and Volunteers completion PRD](../../../bff-app/docs/prd/admin-volunteers-completion.md), not implemented yet.
+Reviewed 16 November 2026. All three manage operations below require the dedicated Festival Admin bearer. Participant and volunteer sessions are rejected there. A separate volunteer namespace now provides session listing and QR verification only as an unfinished local checkpoint; it never provides full rosters. See [Admin and Volunteers](../../../bff-app/docs/prd/admin-volunteers-completion.md) for the agreed policy and remaining verification.
 
 | Endpoint | Authorization today | Contract |
 | --- | --- | --- |
@@ -72,7 +74,28 @@ Implemented locally; reviewed 12 November 2026. All three operations currently r
 | `POST /api/app/manage/door-verify` | Festival Admin bearer | Body `sessionId` and `qr`; returns eligible with name/role, ineligible or invalid. Request failure is presented by the app as unavailable verification. |
 | `POST /api/app/manage/door-roster` | Festival Admin bearer | Body `sessionId`; returns selected session, roster names/roles and `generatedAt`. App supports organizer download for offline fallback. |
 
-Ordinary classes use current confirmed bookings and the shared legacy projection. Talks are open to confirmed passes. Invalid, expired, revoked or wrong-purpose QR credentials cannot grant access. Verification is online and does not record attendance or enforce duplicate entry. The latest working trees remove Cuttin’ special-roster management and migration `00019`; do not restore the old editing endpoints. Participant competition information is separate from scanner eligibility.
+Ordinary classes use current confirmed bookings and the shared legacy projection. Talks are open to confirmed passes. Invalid, expired, revoked or wrong-purpose QR credentials cannot grant access. Verification is online and does not record attendance or enforce duplicate entry. Cuttin’ special-roster management and its migration `00019` were removed in the earlier 16 November commits; do not restore the old editing endpoints. Participant competition information is separate from scanner eligibility.
+
+## Shared volunteer access checkpoint
+
+The user chose one shared link and QR scanning only. `/bff-admin` keeps the existing username/password login. Authenticated admins generate/show, replace or disable the shared link; volunteers use `/bff-volunteer#token=…` and press **Open scanner**, without a password.
+
+| Endpoint | Authorization | Contract |
+| --- | --- | --- |
+| `POST /api/app/manage/volunteer-link` | Festival Admin bearer | Creates the shared link or returns the current valid link and expiry. Sends no email. |
+| `POST /api/app/manage/volunteer-replace` | Festival Admin bearer | Changes the shared credential and invalidates all volunteer sessions. |
+| `POST /api/app/manage/volunteer-revoke` | Festival Admin bearer | Disables shared access and invalidates all volunteer sessions. |
+| `POST /api/app/volunteer/claim` | Shared purpose-bound link token in JSON | Creates an independent device session capped by link expiry. |
+| `GET /api/app/volunteer/me` | Volunteer bearer | Returns volunteer role and session expiry. |
+| `POST /api/app/volunteer/logout` | Volunteer bearer | Revokes this device's session. |
+| `GET /api/app/volunteer/door-sessions` | Volunteer bearer | Lists the same eligible door sessions as the admin scanner. |
+| `POST /api/app/volunteer/door-verify` | Volunteer bearer | Verifies the selected session and QR through the existing eligibility store. |
+
+Migration **00020** creates the singleton shared credential and hashed volunteer-session tables; it is unrelated to the deleted Cuttin' migration. It has run only in disposable test databases, not the operational database or production. Links default to 30 days; session creation is limited to 500 successful exchanges per 15-minute shared-link window. Replacement, revocation, expiry and signing-secret rotation invalidate volunteer access. Independent logout leaves other devices working.
+
+The app facade uses its own host-only HttpOnly volunteer cookie, separate from participant and admin cookies. It enforces same-origin mutations and keeps the bearer out of browser JavaScript. The backend independently rejects volunteer bearers for admin communication, provisioning and roster operations.
+
+Verification: four new volunteer database subtests pass, and both builds/lint checks pass with existing backend lint warnings. The final browser run is 26 passed / 2 failed; both volunteer variants stop at an ambiguous alert assertion that also matches Next.js's route announcer. Later logout/disable browser steps require a passing rerun. The full backend suite has one unrelated checkout subtest failure, reproduced on the unchanged baseline. See the linked daily record for exact counts. Deploy both repositories and apply migration 00020 only after completing review; then generate the actual production volunteer link from the authenticated admin screen.
 
 ## Booking projection
 
