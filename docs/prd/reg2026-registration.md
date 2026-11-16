@@ -211,7 +211,7 @@ The requested Schedule admin page now supports persistent overrides. Mock defaul
 
 ### Follow-up schedule invitations
 
-The dashboard's bulk schedule invitation sends the same email and personal registration link to confirmed Full Pass holders whose schedule is incomplete, including those previously invited. Completion is checked at send time: saved classes or a confirmed submission (even with zero classes) count as complete. Pending checkout remains incomplete. See [organizer operations](./reg2026-launch.md#organizer-operations).
+The dashboard's bulk schedule invitation sends the same email and personal registration link to confirmed Full and Parent Pass holders whose schedule is incomplete, including those previously invited. Completion is checked at send time: saved classes or a confirmed submission (even with zero classes) count as complete. Pending checkout remains incomplete. See [organizer operations](./reg2026-launch.md#organizer-operations).
 
 ### Launch inputs and deferred details
 

@@ -13,8 +13,10 @@ test("Reakit values restore a draft and keep UI-only fields out of the request",
   assert.equal(values.compete, "yes");
   assert.equal(values.competitionRoles.open_mixnmatch, "");
   assert.deepEqual(registrationDraft(values), draft);
-  assert.deepEqual(validateRegistrationForm(values, { ticket: "parentPass" }, empty()), {});
-  assert.equal(priceDraft(registrationDraft(values), empty()).totalCents, 2561);
+  const saved = { ...empty(), lunch: ["saturday"] };
+  assert.deepEqual(validateRegistrationForm(values, { ticket: "parentPass" }, saved), {});
+  assert.equal(priceDraft(registrationDraft(values), saved).totalCents, 1040);
+  assert.match(validateRegistrationForm(values, { ticket: "parentPass" }, empty()).lunch, /sold out/);
 });
 
 test("missing competition roles use nested Reakit errors and recover after a valid edit", () => {
@@ -36,6 +38,18 @@ test("saved paid bookings and roles remain protected in Reakit validation", () =
   assert.match(validateRegistrationForm(values, participant, saved).competitions, /paid competition role/);
   values.lunch = [];
   assert.match(validateRegistrationForm(values, participant, saved).lunch, /remove paid/);
+});
+
+test("confirmed Full, Parent, and Party Pass forms reject additional lunch and retain booked meals", () => {
+  for (const ticket of ["fullpass", "parentPass", "partyPass"]) {
+    const saved = { ...empty(), classes: ticket === "partyPass" ? [] : fiveClasses(), lunch: ["saturday"] };
+    const values = registrationFormValues({ ...saved, lunch: ["saturday", "sunday"] });
+    assert.match(validateRegistrationForm(values, { ticket }, saved, undefined, true).lunch, /sold out/);
+    values.lunch = saved.lunch;
+    assert.deepEqual(validateRegistrationForm(values, { ticket }, saved, undefined, true), {});
+    values.lunch = [];
+    assert.match(validateRegistrationForm(values, { ticket }, saved, undefined, true).lunch, /remove paid/);
+  }
 });
 
 test("empty and partial local drafts initialize all fields and preserve competition intent", () => {
@@ -64,7 +78,7 @@ test("Full Pass and Parent Pass submissions both require exactly five classes", 
 });
 
 test("Reakit vouchers survive draft restoration and blank codes preserve the original draft format", () => {
-  const values = registrationFormValues({ ...empty(), lunch: ["saturday"], voucher: "freepass26" });
+  const values = registrationFormValues({ ...empty(), competitions: ["solo_battle"], voucher: "freepass26" });
   assert.equal(values.voucher, "freepass26");
   assert.equal(registrationDraft(values).voucher, "freepass26");
   assert.deepEqual(validateRegistrationForm(values, participant, empty()), {});

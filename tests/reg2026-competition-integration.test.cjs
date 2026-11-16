@@ -103,7 +103,7 @@ test("competition limits and reservations on isolated Postgres", { skip: !proces
       await store.applyPayment(checkout(attendee, retry, "complete", "paid"), "checkout.session.completed");
       assert.equal((await places("solo_battle", "total")).remaining, 0, "Confirmed choices and their order consume a single place");
       await store.reopenClasses(attendee.id, (await sql`SELECT theme_class FROM registrations_26 WHERE id = ${attendee.id}`)[0].theme_class);
-      const secondOrder = await store.submit(attendee, { ...paidDraft, lunch: ["saturday"] }, "competition-paid-lunch");
+      const secondOrder = await store.submit(attendee, { ...paidDraft, competitions: ["solo_battle", "fever_showcase"] }, "competition-paid-addon");
       assert.equal(secondOrder.status, "provisional");
       assert.equal((await places("solo_battle", "total")).remaining, 0, "Saved choices and an active add-on order consume a single place");
       assert.deepEqual((await store.competitionInventory()).solo_battle.total, { capacity: 30, remaining: 0, registered: 30, held: 0, version: 0 });

@@ -42,9 +42,23 @@ test("five classes across the festival are allowed; six and eight are rejected",
 });
 test("only new add-ons are charged, no free Full Pass entry, fees use cents", () => {
   const draft = { ...empty(), competitions: ["solo_battle"], lunch: ["saturday"] };
-  assert.deepEqual(priceDraft(draft, empty()), { errors: {}, subtotalCents: 2500, feeCents: 61, totalCents: 2561 });
+  assert.deepEqual(priceDraft(draft, { ...empty(), lunch: ["saturday"] }), { errors: {}, subtotalCents: 1000, feeCents: 40, totalCents: 1040 });
   assert.equal(priceDraft(draft, draft).totalCents, 0);
   assert.ok(priceDraft(empty(), draft).errors.lunch);
+});
+test("sold-out lunch rejects new meals, including vouchers, and preserves confirmed lunch", () => {
+  const saved = { ...empty(), lunch: ["saturday"] };
+  for (const editing of [false, true]) {
+    for (const lunch of [["saturday"], ["sunday"], ["saturday", "sunday"]]) {
+      for (const voucher of [undefined, "freepass26"]) {
+        const draft = { ...empty(), lunch, ...(voucher ? { voucher } : {}) };
+        assert.match(priceDraft(draft, empty(), editing).errors.lunch, /sold out/);
+        assert.deepEqual(priceDraft(draft, draft, editing).errors, {});
+      }
+    }
+    assert.match(priceDraft({ ...saved, lunch: ["saturday", "sunday"] }, saved, editing).errors.lunch, /sold out/);
+    assert.match(priceDraft(empty(), saved, editing).errors.lunch, /remove paid add-ons/);
+  }
 });
 test("competition roles and invalid choices cannot bypass validation", () => {
   assert.equal(validateDraft({ ...empty(), competitions: ["strictly"] }, { ticket: "fullpass" }).valid, false);
@@ -84,8 +98,8 @@ test("Switch is a partner-class role and survives saved choices, but competition
 
 test("freepass26 waives all add-ons and fees while preserving booking validation", () => {
   const draft = { ...empty(), competitions: ["solo_battle", "open_mixnmatch", "newcomers_mixnmatch", "strictly", "fever_showcase"],
-    competitionRoles: { open_mixnmatch: "lead", newcomers_mixnmatch: "follow", strictly: "lead" }, lunch: ["saturday", "sunday"] };
-  assert.equal(priceDraft(draft, empty()).totalCents, 8139);
+    competitionRoles: { open_mixnmatch: "lead", newcomers_mixnmatch: "follow", strictly: "lead" } };
+  assert.equal(priceDraft(draft, empty()).totalCents, 5096);
   const valid = validateDraft({ ...draft, voucher: " freepass26 " }, { ticket: "partyPass" });
   assert.equal(valid.valid, true); assert.equal(valid.value.voucher, "freepass26");
   assert.deepEqual(priceDraft(valid.value, empty()), { errors: {}, subtotalCents: 0, feeCents: 0, totalCents: 0 });

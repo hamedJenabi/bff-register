@@ -14,7 +14,8 @@ function CapacityRow({ session, inventory, sheetsMode, version, disabled, onBusy
   const label = `${session.title}, ${session.day} ${session.start}`;
   const over = !open && inventory && inventory.registered + inventory.held > total;
   const registered = inventory?.registered;
-  const highlight = !open && Number.isFinite(registered)
+  const soldOut = !open && inventory?.remaining === 0;
+  const highlight = soldOut ? styles.capacitySoldOut : !open && Number.isFinite(registered)
     ? registered <= 5 ? styles.capacityNotice : registered < 15 ? styles.capacityLow : styles.capacityCritical
     : "";
   const rowClassName = [session.bookable === false ? styles.notBookable : "", highlight].filter(Boolean).join(" ");
@@ -89,6 +90,7 @@ export default function CapacityOverview({ sessions, inventory, classRegistrantC
       <span className={styles.capacityNotice}>0–5 registered</span>
       <span className={styles.capacityLow}>6–14 registered</span>
       <span className={styles.capacityCritical}>15+ registered</span>
+      <span className={styles.capacitySoldOut}>Sold out</span>
     </div>
     {cannotEdit && sheetsMode && <p className={styles.overviewHint}>Capacity editing needs a published schedule and configured Google Sheets access.</p>}
     {!groups.length && <p className={styles.emptyOverview}>{sessions.length ? "No classes match your filters." : "Sync the schedule to see classes and capacities here."}</p>}

@@ -128,7 +128,7 @@ const webpush = require("web-push");
       await sql`DELETE FROM registration_email_retries_26 WHERE registration_id = ${mira.id}`;
       await sql`DELETE FROM class_bookings_26 WHERE registration_id = ${mira.id}`;
       await sql`DELETE FROM reg2026_orders WHERE registration_id = ${mira.id}`;
-      await sql`UPDATE registrations_26 SET theme_class = '', lunch = '', competitions = '', competition = 'no', strictly_role = '' WHERE id = ${mira.id}`;
+      await sql`UPDATE registrations_26 SET theme_class = '', lunch = 'saturday', competitions = '', competition = 'no', strictly_role = '' WHERE id = ${mira.id}`;
       await publish(sessions);
       journeyOrder = await registration.submit(mira, {
         classes: [
