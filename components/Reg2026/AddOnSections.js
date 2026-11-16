@@ -7,7 +7,7 @@ import {
   unstable_FormRadio as FormRadio,
   unstable_FormRadioGroup as FormRadioGroup,
 } from "reakit/Form";
-import { competitions } from "../../lib/reg2026/catalog";
+import { competitions, LUNCH_SOLD_OUT } from "../../lib/reg2026/catalog";
 import { emptyCompetitionRoles } from "../../lib/reg2026/form";
 import { conflictsWithSolo, SOLO_COMPETITION_NOTICE } from "../../lib/reg2026/competitions";
 import { remainingPlaces } from "../../lib/reg2026/schedule";
@@ -122,14 +122,15 @@ export function LunchSection({ form, saved, disabled, editing }) {
   return (
     <section className={styles.lunchSection} aria-labelledby="lunch-title">
       <h2 id="lunch-title">Lunch at the venue</h2>
+      {LUNCH_SOLD_OUT && <p>Lunch is sold out for Saturday and Sunday. Confirmed meals stay as booked.</p>}
       <p>€15 per meal: main course, dessert and one drink. Vegan, vegetarian and gluten-free options are available.</p>
-      {editing && <p>You can add lunch for either day. Confirmed meals stay as booked.</p>}
-      <fieldset disabled={disabled}>
-        <legend>Choose Saturday, Sunday, both, or neither</legend>
+      {editing && !LUNCH_SOLD_OUT && <p>You can add lunch for either day. Confirmed meals stay as booked.</p>}
+      <fieldset disabled={disabled || LUNCH_SOLD_OUT}>
+        <legend>{LUNCH_SOLD_OUT ? "Lunch bookings" : "Choose Saturday, Sunday, both, or neither"}</legend>
         {["saturday", "sunday"].map((day) => (
           <label key={day}>
-            <FormCheckbox {...form} name="lunch" value={day} disabled={disabled || saved.lunch.includes(day)} />
-            {day === "saturday" ? "Saturday" : "Sunday"} lunch · €15
+            <FormCheckbox {...form} name="lunch" value={day} disabled={disabled || LUNCH_SOLD_OUT || saved.lunch.includes(day)} />
+            {day === "saturday" ? "Saturday" : "Sunday"} lunch · €15{LUNCH_SOLD_OUT ? " · Sold out" : ""}
           </label>
         ))}
       </fieldset>

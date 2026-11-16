@@ -20,7 +20,7 @@ import {
   CompetitionSection,
   LunchSection,
 } from "../components/Reg2026/AddOnSections";
-import { CLASS_SELECTION_LIMIT, FREE_PASS_VOUCHER } from "../lib/reg2026/catalog";
+import { CLASS_SELECTION_LIMIT, FREE_PASS_VOUCHER, LUNCH_SOLD_OUT } from "../lib/reg2026/catalog";
 import { priceDraft } from "../lib/reg2026/pricing";
 import { requiredClassesError, validateDraft } from "../lib/reg2026/validation";
 import styles from "../components/Reg2026/Registration.module.scss";
@@ -177,6 +177,7 @@ export default function Registration({ initial, access, loadError }) {
     setData(result);
     if (["expired", "payment_failed"].includes(result.order?.status))
       setRequestKey(newKey());
+    if (LUNCH_SOLD_OUT && !result.pendingDraft) update("lunch", result.choices.lunch);
     const sameEdit = preserveDraft && editingChoices && result.edit?.version === data.edit.version;
     if (result.completed && !result.pendingDraft && !sameEdit) {
       restoreForm(result.choices);
@@ -477,7 +478,9 @@ export default function Registration({ initial, access, loadError }) {
                     <p>
                       {data.participant.ticket !== "partyPass" &&
                         "Class registration is included in your pass. "}
-                      {editingChoices
+                      {LUNCH_SOLD_OUT
+                        ? "You only pay for new competition entries. Existing bookings stay as confirmed."
+                        : editingChoices
                         ? "You only pay for new competition entries and lunch meals. Existing bookings stay as confirmed."
                         : "Competition entries and lunch are paid together. Existing purchases are credited."}
                     </p>
