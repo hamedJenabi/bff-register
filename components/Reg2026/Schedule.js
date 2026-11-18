@@ -18,7 +18,7 @@ import { conflictsWithSolo, SOLO_COMPETITION_NOTICE } from "../../lib/reg2026/co
 import SwitchRoleNotice from "./SwitchRoleNotice";
 import styles from "./Registration.module.scss";
 
-export default function Schedule({ participant, form, availability, disabled, sessions = [], savedClasses = [] }) {
+export default function Schedule({ participant, form, availability, disabled, sessions = [], savedClasses = [], allowSoldOutClasses = false }) {
   const schedule = sessions;
   const scheduleById = indexSchedule(schedule);
   const draft = registrationDraft(form.values);
@@ -68,7 +68,7 @@ export default function Schedule({ participant, form, availability, disabled, se
         throw { selectionError: result.errors.classes || result.errors.form };
       }
       const keptClass = savedClasses.some((choice) => choice.sessionId === active.id && choice.role === (active.partnerClass ? role : undefined));
-      if (!keptClass && places(active, active.partnerClass ? role : "total") <= 0) {
+      if (!allowSoldOutClasses && !keptClass && places(active, active.partnerClass ? role : "total") <= 0) {
         throw { selectionError: "This place is full. Choose another class or role." };
       }
     },
@@ -90,6 +90,7 @@ export default function Schedule({ participant, form, availability, disabled, se
   return <section ref={scheduleRef} aria-labelledby="schedule-title">
     <h2 id="schedule-title">Your class schedule</h2>
     <p>Choose exactly {CLASS_SELECTION_LIMIT} classes across the festival, with one per time slot. Every session is independent. Draft choices reserve no places until you submit.</p>
+    {allowSoldOutClasses && <p className={styles.informationText}>Internal registration: sold-out classes and dance roles can be selected.</p>}
     <p className={styles.levelGuide}>
       Before choosing your classes, read the{" "}
       <a href="https://www.bluesfever.eu/passes-levels/#desc" target="_blank" rel="noopener noreferrer">
@@ -122,7 +123,7 @@ export default function Schedule({ participant, form, availability, disabled, se
                       : session.partnerClass && places(session, "follow") <= 0 ? "Sold out for followers" : null;
                 return <button key={session.id} type="button" className={styles.classCard} aria-pressed={!!choice}
                   data-blocked={blocked || undefined}
-                  disabled={disabled || blocked || (full(session) && !choice)} onClick={(event) => open(session, event)}>
+                  disabled={disabled || blocked || (!allowSoldOutClasses && full(session) && !choice)} onClick={(event) => open(session, event)}>
                   <strong>{session.title}</strong><span>{session.teachers}</span>
                   {session.levels && <span>Levels: {Array.isArray(session.levels) ? session.levels.join(", ") : session.levels}</span>}
                   {!sharedEnd && <span>{session.start}–{session.end}</span>}
@@ -156,7 +157,7 @@ export default function Schedule({ participant, form, availability, disabled, se
                 {CLASS_ROLES.map((value) => <label key={value}>
                   <FormRadio {...classForm} name="role" value={value} id={`reg2026-class-role-${value}`}
                     ref={value === "switch" ? switchFocusRef : undefined}
-                    disabled={places(active, value) <= 0 && selected(active.id)?.role !== value}
+                    disabled={!allowSoldOutClasses && places(active, value) <= 0 && selected(active.id)?.role !== value}
                     onChange={(event) => { if (value === "switch" && event.currentTarget.checked) switchDialog.show(); }} />
                   {CLASS_ROLE_LABELS[value]}{places(active, value) <= 0 ? " · Sold out" : ""}
                 </label>)}

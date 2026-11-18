@@ -71,6 +71,69 @@ test("partner roles share capacity and serialize competing bookings on isolated 
       await reset();
     });
 
+    await t.test("internal registration can exceed the follower limit and keeps the booking in capacity counts", async () => {
+      await seed(20, "follow");
+      const attendee = await person();
+      await assert.rejects(store.submit(attendee, draft("follow"), "intern-follow-normal"), (error) => error.status === 409);
+      const order = await store.submit(attendee, draft("follow"), "intern-follow-override", undefined, { intern: true });
+      assert.equal(order.status, "confirmed");
+      const [saved] = await sql`SELECT * FROM registrations_26 WHERE id = ${attendee.id}`;
+      assert.deepEqual(choicesFromParticipant(saved).classes, draft("follow").classes);
+      const inventory = (await store.classInventory())[sessionId];
+      assert.equal(inventory.registered, 21);
+      assert.equal(inventory.followRemaining, 0);
+      await reset();
+    });
+
+    await t.test("internal registration can select any role in a full class while regular registration stays blocked", async () => {
+      await seed(40, "lead");
+      for (const role of ["lead", "follow", "switch"]) {
+        const attendee = await person();
+        await assert.rejects(store.submit(attendee, draft(role), `intern-full-normal-${role}`), (error) => error.status === 409);
+        const order = await store.submit(attendee, draft(role), `intern-full-override-${role}`, undefined, { intern: true });
+        assert.equal(order.status, "confirmed");
+      }
+      assert.equal((await store.classInventory())[sessionId].registered, 43);
+      assert.equal((await places()).total.remaining, 0);
+      await reset();
+    });
+
+    await t.test("internal registration can book a sold-out solo class", async () => {
+      const soloId = "fri-1330-ankersaal";
+      await sql`INSERT INTO class_capacities_26 (session_id, pool, capacity) VALUES (${soloId}, 'total', 0)`;
+      try {
+        const attendee = await person();
+        const choice = { ...draft("lead"), classes: fiveClasses({ sessionId: soloId }) };
+        await assert.rejects(store.submit(attendee, choice, "intern-solo-normal"), (error) => error.status === 409);
+        const order = await store.submit(attendee, choice, "intern-solo-override", undefined, { intern: true });
+        assert.equal(order.status, "confirmed");
+        assert.equal((await store.classInventory())[soloId].registered, 1);
+      } finally {
+        await sql`DELETE FROM class_capacities_26 WHERE session_id = ${soloId}`;
+        await reset();
+      }
+    });
+
+    await t.test("internal registration still requires exactly five classes and rejects overlaps, invalid roles and sold-out lunch", async () => {
+      const { schedule, scheduleById } = require("../lib/reg2026/catalog");
+      const choice = draft("lead");
+      const slots = new Set(choice.classes.map(({ sessionId }) => scheduleById[sessionId].slotId));
+      const sixth = schedule.find((session) => session.bookable !== false && !slots.has(session.slotId));
+      const attendee = await person();
+      const invalid = [
+        { ...choice, classes: choice.classes.slice(0, 4) },
+        { ...choice, classes: [...choice.classes, { sessionId: sixth.id, ...(sixth.partnerClass ? { role: "lead" } : {}) }] },
+        { ...choice, classes: [...choice.classes.slice(0, 4), { sessionId: "fri-1330-ankersaal" }] },
+        { ...choice, classes: [{ sessionId }, ...choice.classes.slice(1)] },
+        { ...choice, lunch: ["saturday"] },
+      ];
+      for (let i = 0; i < invalid.length; i += 1) {
+        await assert.rejects(store.submit(attendee, invalid[i], `intern-invalid-${i}`, undefined, { intern: true }), (error) => error.status === 422);
+      }
+      assert.equal((await sql`SELECT id FROM reg2026_orders WHERE registration_id = ${attendee.id}`).length, 0);
+      await reset();
+    });
+
     await t.test("active holds count in both limits, expired holds do not, and the participant's own place is excluded", async () => {
       await seed(18, "follow");
       await seed(1, "follow", "provisional", new Date(Date.now() + 60000));

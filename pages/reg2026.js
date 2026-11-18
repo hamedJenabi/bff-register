@@ -495,6 +495,7 @@ export default function Registration({ initial, access, loadError }) {
                       savedClasses={
                         editingChoices ? data.choices.classes : undefined
                       }
+                      allowSoldOutClasses={access.intern === "true"}
                       disabled={busy || pending || !data.open}
                     />
                   )}
@@ -620,6 +621,7 @@ export async function getServerSideProps({ query, res }) {
   const access = {
     user: typeof query.user === "string" ? query.user : "",
     sig: typeof query.sig === "string" ? query.sig : "",
+    ...(query.intern === "true" ? { intern: "true" } : {}),
   };
   try {
     const { registrationStore: store } = await import("../db/reg2026");

@@ -1291,8 +1291,8 @@ test(
           require.cache[require.resolve("../lib/reg2026/payments")].exports = {
             ...payments,
             getStripe: () => mockStripe,
-            checkoutForOrder: (...args) =>
-              payments.checkoutForOrder(...args, mockStripe),
+            checkoutForOrder: (store, participant, order, payment = mockStripe, options) =>
+              payments.checkoutForOrder(store, participant, order, payment, options),
             reconcileOrder: (...args) =>
               payments.reconcileOrder(...args, mockStripe),
           };
@@ -1688,7 +1688,7 @@ test(
               const draft = {
                 ...empty(),
                 classes: free.classes,
-                lunch: ["saturday"],
+                competitions: ["fever_showcase"],
               };
               const stuck = await store.submit(
                 registrant,

@@ -9,7 +9,8 @@ export default async function handler(req, res) {
     let order = await store.activeOrder(participant.id);
     if (!order) return res.json({ order: null, checkoutUrl: null });
     order = await reconcileOrder(store, order);
-    const checkoutUrl = order.status === "provisional" ? await checkoutForOrder(store, participant, order) : null;
+    const checkoutUrl = order.status === "provisional"
+      ? await checkoutForOrder(store, participant, order, undefined, { intern: req.body.intern === "true" }) : null;
     return res.json({ order: publicOrder(order), checkoutUrl });
   } catch (error) { return apiError(res, error); }
 }

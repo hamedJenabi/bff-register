@@ -36,10 +36,11 @@ export default async function handler(req, res) {
         }
       }
     }
-    const order = await store.submit(participant, draft, requestKey, editVersion);
+    const options = { intern: req.body.intern === "true" };
+    const order = await store.submit(participant, draft, requestKey, editVersion, options);
     if (order.status === "confirmed") await deliverConfirmation(store, order.id);
     let checkoutUrl = null;
-    if (order.status === "provisional") checkoutUrl = await checkoutForOrder(store, participant, order);
+    if (order.status === "provisional") checkoutUrl = await checkoutForOrder(store, participant, order, undefined, options);
     return res.json({ order: publicOrder(order), checkoutUrl });
   } catch (error) { return apiError(res, error); }
 }
