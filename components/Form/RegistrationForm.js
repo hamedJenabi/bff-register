@@ -289,15 +289,16 @@ export default function RegistrationForm({
     //         ? "No competitions"
     //         : "Optional",
     // },
-    {
-      label: "T-shirt",
-      value:
-        values.shirtinfo === "yes"
-          ? values.tshirt || "Choose a size"
-          : values.shirtinfo === "no"
-            ? "No T-shirt"
-            : "Optional",
-    },
+    // T-shirts are sold out. Restore this row with renderShirtSection below.
+    // {
+    //   label: "T-shirt",
+    //   value:
+    //     values.shirtinfo === "yes"
+    //       ? values.tshirt || "Choose a size"
+    //       : values.shirtinfo === "no"
+    //         ? "No T-shirt"
+    //         : "Optional",
+    // },
     {
       label: "Donation",
       value:
@@ -855,7 +856,8 @@ export default function RegistrationForm({
               {isFullPass && renderTrackSection()}
               {isFullPass && renderLevelSection()}
               {renderCompetitionSection()}
-              {renderShirtSection()}
+              {/* T-shirts are sold out. Restore when available. */}
+              {/* {renderShirtSection()} */}
               {renderDonationSection()}
               {renderVoucherSection()}
             </div>

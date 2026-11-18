@@ -252,8 +252,7 @@ export function LunchSection({ form, saved, disabled, editing }) {
         </p>
       )}
       <p>
-        €15 per meal: main course, dessert and one drink. Vegan, vegetarian and
-        gluten-free options are available.
+        €15 per meal. Vegan, vegetarian and gluten-free options are available.
       </p>
       {editing && !LUNCH_SOLD_OUT && (
         <p>You can add lunch for either day. Confirmed meals stay as booked.</p>
