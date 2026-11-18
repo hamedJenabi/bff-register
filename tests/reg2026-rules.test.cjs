@@ -1,0 +1,111 @@
+const { test } = require("node:test");
+const assert = require("node:assert/strict");
+const { validateDraft } = require("../lib/reg2026/validation");
+const { priceDraft } = require("../lib/reg2026/pricing");
+const { schedule } = require("../lib/reg2026/catalog");
+const { serializeThemeClass, parseThemeClass } = require("../lib/reg2026/serialization");
+const { buildRegistrationPath, verifyIdentitySignature } = require("../lib/reg2026/security");
+const empty = () => ({ classes: [], competitions: [], competitionRoles: {}, lunch: [] });
+
+test("signed links preserve plus-addressed email and reject tampering", () => {
+  process.env.REG2026_SIGNING_SECRET = "test-secret";
+  const url = new URL(buildRegistrationPath({ email: "a+b@example.com", firstname: "A B" }), "https://example.com");
+  const identity = url.searchParams.get("user");
+  assert.equal(identity, "a+b@example.com+A B");
+  assert.ok(verifyIdentitySignature(identity, url.searchParams.get("sig")));
+  assert.equal(verifyIdentitySignature(identity + "x", url.searchParams.get("sig")), false);
+});
+test("Party Pass, malformed drafts, slots and partner roles are enforced", () => {
+  const draft = { ...empty(), classes: [{ sessionId: "fri-1330-kantine", role: "lead" }] };
+  assert.equal(validateDraft(draft, { ticket: "partyPass" }).valid, false);
+  assert.equal(validateDraft(null, { ticket: "fullpass" }).valid, false);
+  assert.equal(validateDraft({ ...draft, classes: [{ sessionId: "fri-1330-kantine" }] }, { ticket: "fullpass" }).valid, false);
+  draft.classes.push({ sessionId: "fri-1330-studio" });
+  assert.match(validateDraft(draft, { ticket: "fullpass" }).errors.classes, /time slot/);
+});
+test("five classes across the festival are allowed; six and eight are rejected", () => {
+  const seen = new Set();
+  const sessions = schedule.filter((session) => !seen.has(session.slotId) && seen.add(session.slotId))
+    .map((session) => ({ sessionId: session.id, ...(session.partnerClass ? { role: "follow" } : {}) }));
+  assert.equal(sessions.length, 8);
+  const classes = sessions.slice(0, 5);
+  for (const ticket of ["fullpass", "parentPass"]) {
+    assert.equal(validateDraft(empty(), { ticket }).valid, true);
+    assert.equal(validateDraft({ ...empty(), classes }, { ticket }).valid, true);
+    for (const count of [6, 8]) {
+      const result = validateDraft({ ...empty(), classes: sessions.slice(0, count) }, { ticket });
+      assert.equal(result.valid, false);
+      assert.match(result.errors.classes, /5 classes in total/);
+    }
+  }
+  assert.deepEqual(parseThemeClass(serializeThemeClass(classes)), classes);
+});
+test("only new add-ons are charged, no free Full Pass entry, fees use cents", () => {
+  const draft = { ...empty(), competitions: ["solo_battle"], lunch: ["saturday"] };
+  assert.deepEqual(priceDraft(draft, { ...empty(), lunch: ["saturday"] }), { errors: {}, subtotalCents: 1000, feeCents: 40, totalCents: 1040 });
+  assert.equal(priceDraft(draft, draft).totalCents, 0);
+  assert.ok(priceDraft(empty(), draft).errors.lunch);
+});
+test("sold-out lunch rejects new meals, including vouchers, and preserves confirmed lunch", () => {
+  const saved = { ...empty(), lunch: ["saturday"] };
+  for (const editing of [false, true]) {
+    for (const lunch of [["saturday"], ["sunday"], ["saturday", "sunday"]]) {
+      for (const voucher of [undefined, "freepass26"]) {
+        const draft = { ...empty(), lunch, ...(voucher ? { voucher } : {}) };
+        assert.match(priceDraft(draft, empty(), editing).errors.lunch, /sold out/);
+        assert.deepEqual(priceDraft(draft, draft, editing).errors, {});
+      }
+    }
+    assert.match(priceDraft({ ...saved, lunch: ["saturday", "sunday"] }, saved, editing).errors.lunch, /sold out/);
+    assert.match(priceDraft(empty(), saved, editing).errors.lunch, /remove paid add-ons/);
+  }
+});
+test("competition roles and invalid choices cannot bypass validation", () => {
+  assert.equal(validateDraft({ ...empty(), competitions: ["strictly"] }, { ticket: "fullpass" }).valid, false);
+  assert.equal(validateDraft({ ...empty(), lunch: [null] }, { ticket: "fullpass" }).valid, false);
+  assert.equal(validateDraft({ ...empty(), classes: [null] }, { ticket: "fullpass" }).valid, false);
+});
+
+test("Solo competitors reserve Saturday 16:00-17:15, including partially overlapping published classes", () => {
+  const participant = { ticket: "fullpass" };
+  const solo = { ...empty(), competitions: ["solo_battle"] };
+  for (const session of schedule.filter((session) => session.day === "Saturday" && session.start === "16:00")) {
+    const result = validateDraft({ ...solo, classes: [{ sessionId: session.id, role: "lead" }] }, participant);
+    assert.equal(result.valid, false);
+    assert.match(result.errors.classes, /Cuttin'.*Saturday, 16:00–17:15/);
+    assert.equal(result.errors.competitions, result.errors.classes);
+    assert.equal(validateDraft({ ...empty(), classes: [{ sessionId: session.id, role: "lead" }] }, participant).valid, true);
+  }
+  const base = schedule.find((session) => !session.partnerClass);
+  for (const [day, start, end, conflict] of [
+    ["Saturday", "15:30", "16:15", true], ["Saturday", "17:00", "18:00", true],
+    ["Saturday", "15:00", "16:00", false], ["Saturday", "17:15", "18:30", false],
+    ["Sunday", "16:00", "17:15", false],
+  ]) {
+    const sessions = [{ ...base, day, start, end }];
+    assert.equal(validateDraft({ ...solo, classes: [{ sessionId: base.id }] }, participant, sessions).valid, !conflict);
+  }
+  assert.equal(validateDraft(solo, { ticket: "partyPass" }).valid, true);
+});
+
+test("Switch is a partner-class role and survives saved choices, but competition roles stay lead/follow", () => {
+  const draft = { ...empty(), classes: [{ sessionId: "fri-1330-kantine", role: "switch" }] };
+  const result = validateDraft(draft, { ticket: "fullpass" });
+  assert.equal(result.valid, true);
+  assert.deepEqual(parseThemeClass(serializeThemeClass(result.value.classes)), draft.classes);
+  assert.equal(validateDraft({ ...draft, competitions: ["strictly"], competitionRoles: { strictly: "switch" } }, { ticket: "fullpass" }).valid, false);
+});
+
+test("freepass26 waives all add-ons and fees while preserving booking validation", () => {
+  const draft = { ...empty(), competitions: ["solo_battle", "open_mixnmatch", "newcomers_mixnmatch", "strictly", "fever_showcase"],
+    competitionRoles: { open_mixnmatch: "lead", newcomers_mixnmatch: "follow", strictly: "lead" } };
+  assert.equal(priceDraft(draft, empty()).totalCents, 5096);
+  const valid = validateDraft({ ...draft, voucher: " freepass26 " }, { ticket: "partyPass" });
+  assert.equal(valid.valid, true); assert.equal(valid.value.voucher, "freepass26");
+  assert.deepEqual(priceDraft(valid.value, empty()), { errors: {}, subtotalCents: 0, feeCents: 0, totalCents: 0 });
+  for (const voucher of ["invalid", "Freepass26", true, ["freepass26"]]) {
+    assert.ok(validateDraft({ ...draft, voucher }, { ticket: "partyPass" }).errors.voucher);
+  }
+  assert.equal(validateDraft({ ...draft, voucher: "freepass26", competitionRoles: {} }, { ticket: "partyPass" }).valid, false);
+  assert.equal(validateDraft({ ...draft, voucher: "freepass26", classes: [{ sessionId: "fri-1330-ankersaal" }] }, { ticket: "partyPass" }).valid, false);
+});

@@ -70,7 +70,7 @@ export default function Header({ title, menuItems, isAdmin }) {
 
         <div className={styles.linkWrapper}>
           {menuItems.map(({ title, link }) => (
-            <div onClick={handleClick} key={title}>
+            <div onClick={link === "/login/admin" ? handleClick : undefined} key={title}>
               <Link href={link} className={styles.menuItem}>
                 {title}
               </Link>

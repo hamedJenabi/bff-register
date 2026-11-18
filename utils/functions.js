@@ -1,9 +1,9 @@
 export const titleCase = (s) =>
   s?.replace(/^_*(.)|_+(.)/g, (s, c, d) =>
-    c ? c.toUpperCase() : " " + d.toUpperCase()
+    c ? c.toUpperCase() : " " + d.toUpperCase(),
   );
 
-export const levelsToShow = [
+export const levelsToShow_old = [
   {
     label: "Beginner/Intermediate",
     value: "beg/int",
@@ -52,7 +52,33 @@ export const levelsToShow = [
       "You consistently demonstrate, describe, and differentiate between a range of styles and movements, while maintaining blues aesthetic. You include some layered movements. You can observe and work out movement execution. You may teach blues at your local scene and do lots of international workshops.",
   },
 ];
+export const levelFor2026 = [
+  {
+    label: "Beginner/Intermediate",
+    value: "beg/int",
+    detail:
+      "You have had one or two blues dance classes and are ready to know more about Blues.",
+  },
+  {
+    label: "Intermediate",
+    value: "int",
+    detail:
+      "You have had local classes and maybe one or more international workshops. You can execute the basic movements and steps. You know some variations of basics and you can choose them depending on the style of music.",
+  },
 
+  {
+    label: "Advanced",
+    value: "adv",
+    detail:
+      "You travel internationally to festivals and have attended workshops. You have an expanded vocabulary (aesthetics and movements) and have achieved good musicality. You have a high understanding of partnership in dancing.",
+  },
+  {
+    label: "Advanced +",
+    value: "adv+",
+    detail:
+      "You and Blues have a long story together. You end up going to finals in almost every competition, you practice regularly, and may teach Blues not only in your scene but also internationally.",
+  },
+];
 export const finalLevelsToShow = [
   {
     label: "Beginner/Intermediate",
@@ -178,20 +204,20 @@ export const compettionsInfo = [
       "This level is for those who have been dancing Blues since birth, or at least three years. You have attended many international workshops and maybe even teaching in your local scene. Done competitions and reached the final now and then. There will be no audition but we don’t spare you in this level, so please don’t misjudge your ability, for your sake and for your class mates.",
   },
 ];
-let fullpassPriceTemp = 235;
-let partyPriceTemp = 135;
+let fullpassPriceTemp = 245;
+let partyPriceTemp = 145;
 
-if (isAfterTargetDate("2025-08-04T00:12:00+02:00")) {
-  fullpassPriceTemp = 245;
+if (isAfterTargetDate("2026-08-04T11:59:00+02:00")) {
+  fullpassPriceTemp = 265;
 }
 
-if (isAfterTargetDate("2025-09-15T00:01:00+02:00")) {
-  fullpassPriceTemp = 255;
-}
+// if (isAfterTargetDate("2026-09-15T00:01:00+02:00")) {
+//   fullpassPriceTemp = 285;
+// }
 
-if (isAfterTargetDate("2025-09-15T00:01:00+02:00")) {
-  partyPriceTemp = 145;
-}
+// if (isAfterTargetDate("2026-09-15T00:01:00+02:00")) {
+//   partyPriceTemp = 165;
+// }
 
 export const fullpassPrice = fullpassPriceTemp;
 export const partyPrice = partyPriceTemp;
@@ -201,12 +227,18 @@ export const getPrice = (requestData, isGroupDiscount, voucher = "") => {
     requestData.ticket === "partyPass" || requestData.ticket === "parentPass"
       ? partyPrice
       : fullpassPrice;
-  if (voucher === "staff2025bff" || voucher === "scholar2025bff") {
+  if (voucher === "staff2026bff" || voucher === "scholar2026bff") {
     initialPrice = 0; // Free for staff
-  } else if (voucher === "bffdiscount2025") {
-    initialPrice = initialPrice; // No discount applied
-  } else if (voucher?.includes("freepass25")) {
-    initialPrice = initialPrice - 145;
+  } else if (voucher === "bffdiscount2026") {
+    // 10 % discount for bffdiscount2026
+    initialPrice = Math.round((initialPrice / 100) * 90);
+  } else if (voucher?.includes("freepass26")) {
+    initialPrice = initialPrice - partyPriceTemp; // Free for freepass26
+  } else if (
+    voucher?.includes("bah10") &&
+    !isAfterTargetDate("2026-09-03T00:00:00+02:00")
+  ) {
+    initialPrice = initialPrice - 10; // 10 euro discount for bah10
   }
 
   const ticketPrice = isGroupDiscount
@@ -217,28 +249,26 @@ export const getPrice = (requestData, isGroupDiscount, voucher = "") => {
     requestData.competition === "yes"
       ? requestData.competitions?.length * 10
       : 0;
-  const theme_class =
-    requestData.theme_class === "no" || requestData.theme_class === "" ? 0 : 45;
-  const fullPassdiscount =
-    requestData.ticket === "fullpass" &&
-    requestData.competition === "yes" &&
-    requestData.competitions?.length > 0
-      ? -10
-      : 0;
+  // const theme_class =
+  // requestData.theme_class === "no" || requestData.theme_class === "" ? 0 : 45;
+  // const fullPassdiscount =
+  //   requestData.ticket === "fullpass" &&
+  //   requestData.competition === "yes" &&
+  //   requestData.competitions?.length > 0
+  //     ? -10
+  //     : 0;
   const donationAmount = requestData.donation_amount
     ? parseInt(requestData.donation_amount)
     : 0;
-  const tshirtPrice = requestData.tshirt.length > 0 ? 25 : 0;
+  const hasSelectedTshirt =
+    requestData.shirtinfo === undefined
+      ? requestData.tshirt?.length > 0
+      : requestData.shirtinfo === "yes" && requestData.tshirt?.length > 0;
+  const tshirtPrice = hasSelectedTshirt ? 25 : 0;
   const lunchMoney = requestData.lunch?.length * 15 || 0;
 
   const totalPrice =
-    ticketPrice +
-    donationAmount +
-    tshirtPrice +
-    competitions +
-    theme_class +
-    lunchMoney +
-    fullPassdiscount;
+    ticketPrice + donationAmount + tshirtPrice + competitions + lunchMoney;
 
   return totalPrice;
 };

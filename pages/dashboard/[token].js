@@ -1,3 +1,7 @@
+import RegisteredClasses from "../../components/Reg2026/RegisteredClasses";
+import RegistrationLink from "../../components/Reg2026/RegistrationLink";
+import { adminPageRedirect } from "../../lib/admin/session";
+import { isClassPass } from "../../lib/reg2026/catalog";
 import Head from "next/head";
 import useMedia from "use-media";
 import Router from "next/router";
@@ -8,19 +12,24 @@ import styles from "./Dashboard.module.scss";
 import Header from "../../components/Header/Header.js";
 import classNames from "classnames";
 import {
-  levelsToShow,
   finalLevelsToShow,
-  groupLevelsToShow,
+  levelFor2026,
   titleCase,
 } from "../../utils/functions";
 import { unstable_FormCheckbox as FormCheckbox } from "reakit/Form";
 import { unstable_useFormState as useFormState } from "reakit/Form";
 
-export default function Dashboard({ users, tickets }) {
+export default function Dashboard({ users, tickets, previewMode }) {
   const [nameSearch, setNameSearch] = useState("");
   const [activeSideBar, setActiveSideBar] = useState("all");
   const [capacityShow, setCapacityShow] = useState(false);
   const [userToShow, setUserToShow] = useState(users || []);
+  const [sendingScheduleInvitations, setSendingScheduleInvitations] = useState(false);
+  const [scheduleInvitationProgress, setScheduleInvitationProgress] = useState(null);
+  const [sendingScheduleInvitationId, setSendingScheduleInvitationId] = useState(null);
+  const [scheduleInvitationResults, setScheduleInvitationResults] = useState({});
+  const [sendingFinalEmails, setSendingFinalEmails] = useState(false);
+  const [finalEmailProgress, setFinalEmailProgress] = useState(null);
   const isMobile = useMedia({ maxWidth: "768px" });
   const today = new Date().toISOString().split("T")[0];
   const totalAmount = users.reduce((acc, user) => {
@@ -136,100 +145,192 @@ export default function Dashboard({ users, tickets }) {
     alert("done");
   };
 
-  const handleSendEmail = async () => {
-    const confirmedUsers = users.filter((user) => user.status === "confirmed");
+  const handleFinalEmails = async (selectedIds) => {
+    setSendingFinalEmails(true);
+    setFinalEmailProgress(null);
+    try {
+      const audience = await fetch("/api/mailall", { cache: "no-store" });
+      const { recipients, error } = await audience.json();
+      if (!audience.ok) throw new Error(error);
+      const selected = selectedIds ? new Set(selectedIds.map(Number)) : null;
+      const participants = selected ? recipients.filter(({ id }) => selected.has(id)) : recipients;
+      if (!participants.length) {
+        setFinalEmailProgress({ message: "There are no confirmed registrations in this audience." });
+        return;
+      }
+      const target = participants.length === 1
+        ? `${participants[0].firstname} ${participants[0].lastname} (${participants[0].email})`
+        : `${participants.length} ${selected ? "selected " : ""}confirmed registrations`;
+      if (!confirm(`${previewMode ? "Simulate sending" : "Send"} the final email to ${target}? Previously accepted emails will be skipped.`)) return;
 
-    if (
-      confirm("are you sure you want to send emails to all confirmed users?")
-    ) {
-      console.log("ok");
-
-      confirmedUsers.map((user) => {
-        fetch("/api/mailall", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Cache-Control": "no-cache, no-store",
-          },
-          body: JSON.stringify(user),
-        })
-          .then((response) => {
-            if (response.status === 200) {
-              //               router.reload(window.location.pathname);
+      const counts = { sent: 0, already_sent: 0, skipped: 0, failed: 0, uncertain: 0, sending: 0 };
+      const issues = [];
+      let next = 0;
+      let stopped = "";
+      const report = () => setFinalEmailProgress({ ...counts, issues: [...issues], total: participants.length, stopped });
+      report();
+      const worker = async () => {
+        while (next < participants.length && !stopped) {
+          const participant = participants[next++];
+          const label = `${participant.firstname} ${participant.lastname} (#${participant.id})`;
+          try {
+            const response = await fetch("/api/mailall", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ id: participant.id }),
+            });
+            const result = await response.json();
+            if ([401, 403, 503].includes(response.status)) {
+              stopped = result.error || "Sending stopped. Check the configuration and organizer session.";
+              issues.push(`${label}. ${stopped}`);
+            } else if (!response.ok) {
+              const status = { 409: "skipped", 422: "failed", 502: "failed" }[response.status] || "uncertain";
+              counts[status]++;
+              issues.push(`${label}. ${result.error || "Delivery status is unavailable."}`);
+            } else if (Object.hasOwn(counts, result.status)) {
+              counts[result.status]++;
+              if (result.status === "uncertain") issues.push(`${label}. Review SendGrid activity before retrying.`);
+            } else {
+              counts.uncertain++;
+              issues.push(`${label}. Delivery status is unavailable.`);
             }
-            if (response.status === 401) {
-              alert("Please write a valid status");
-            }
-          })
-          .catch((error) => console.log(error));
-      });
-    } else {
-      console.log("no");
+          } catch {
+            counts.uncertain++;
+            issues.push(`${label}. Connection lost while checking delivery. Resume to see the recorded status.`);
+          }
+          report();
+        }
+      };
+      await Promise.all(Array.from({ length: Math.min(3, participants.length) }, worker));
+    } catch (error) {
+      setFinalEmailProgress({ message: error.message || "The final email audience could not be loaded.", stopped: true });
+    } finally {
+      setSendingFinalEmails(false);
     }
   };
-  const handleSendOneMail = async () => {
-    const idsToSend = form.values.users;
-    let array = [];
-    idsToSend.map((id) => {
-      array.push(users.find((userinfo) => userinfo.id === id));
-    });
-    if (confirm("are you sure you want to send emails to this user?")) {
-      console.log("ok");
-      array.map((item) => {
-        fetch("/api/mailall", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Cache-Control": "no-cache, no-store",
-          },
-          body: JSON.stringify(item),
-        })
-          .then((response) => {
-            if (response.status === 200) {
-              router.reload(window.location.pathname);
-            }
-            if (response.status === 401) {
-              alert("Please write a valid status");
-            }
-          })
-          .catch((error) => console.log(error));
+  const handleSendScheduleInvitations = async () => {
+    const classPassHolders = users.filter((user) => user.status === "confirmed" && isClassPass(user.ticket));
+    if (!classPassHolders.length) {
+      setScheduleInvitationProgress({ message: "There are no confirmed Full or Parent Pass holders to invite." });
+      return;
+    }
+    if (!confirm(`Send the schedule invitation to confirmed Full and Parent Pass holders with incomplete schedules (up to ${classPassHolders.length})? This includes people who already received the invitation.`)) return;
+
+    setSendingScheduleInvitations(true);
+    const counts = { sent: 0, completed: 0, failed: 0, skipped: 0, uncertain: 0 };
+    const issues = [];
+    let next = 0;
+    let stopped = "";
+    const report = () => setScheduleInvitationProgress({ ...counts, issues: [...issues], total: classPassHolders.length, stopped });
+    report();
+    const worker = async () => {
+      while (next < classPassHolders.length && !stopped) {
+        const participant = classPassHolders[next++];
+        try {
+          const response = await fetch("/api/reg2026/invite", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id: participant.id, resend: true }),
+          });
+          const result = await response.json();
+          if ([401, 403, 503].includes(response.status)) {
+            stopped = result.error || "The invitation batch stopped. Please check configuration and sign in again.";
+          } else if (!response.ok) {
+            if (response.status === 409) counts.skipped++;
+            else counts.failed++;
+            issues.push(`${participant.firstname} ${participant.lastname} (#${participant.id}): ${result.error || "Request failed"}`);
+          } else if (result.status === "sent") counts.sent++;
+          else if (result.status === "completed") counts.completed++;
+          else if (result.status === "uncertain" || result.status === "sending") {
+            counts.uncertain++;
+            issues.push(`${participant.firstname} ${participant.lastname} (#${participant.id}): delivery needs review before another attempt.`);
+          } else {
+            counts.failed++;
+            issues.push(`${participant.firstname} ${participant.lastname} (#${participant.id}): unexpected response.`);
+          }
+        } catch {
+          counts.failed++;
+          issues.push(`${participant.firstname} ${participant.lastname} (#${participant.id}): network request failed.`);
+        }
+        report();
+      }
+    };
+    await Promise.all(Array.from({ length: Math.min(3, classPassHolders.length) }, worker));
+    setSendingScheduleInvitations(false);
+    report();
+  };
+  const handleSendOneScheduleInvitation = async (participant) => {
+    const name = `${participant.firstname} ${participant.lastname}`.trim();
+    if (!confirm(`Send the schedule invitation to ${name} (#${participant.id}) at ${participant.email}?`)) return;
+
+    setSendingScheduleInvitationId(participant.id);
+    setScheduleInvitationResults((previous) => ({
+      ...previous,
+      [participant.id]: { message: "Sending schedule invitation…" },
+    }));
+    try {
+      const response = await fetch("/api/reg2026/invite", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: participant.id }),
       });
-    } else {
-      console.log("no");
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "The invitation could not be sent.");
+      const messages = {
+        sent: previewMode ? "Captured in preview." : "Accepted by SendGrid.",
+        already_sent: "Already sent. No new email was sent.",
+        completed: "Registration already complete. No email was sent.",
+        uncertain: "Delivery needs review before another attempt.",
+        sending: "An invitation is already being sent.",
+      };
+      setScheduleInvitationResults((previous) => ({
+        ...previous,
+        [participant.id]: {
+          message: messages[result.status] || "Unexpected invitation response.",
+          error: !messages[result.status] || result.status === "uncertain",
+          done: ["sent", "already_sent", "completed"].includes(result.status),
+        },
+      }));
+    } catch (error) {
+      setScheduleInvitationResults((previous) => ({
+        ...previous,
+        [participant.id]: { message: error.message || "The invitation could not be sent.", error: true },
+      }));
+    } finally {
+      setSendingScheduleInvitationId(null);
     }
   };
-
   const BalanceComponent = () => {
     const getTicketAmount = (level, role) => {
       const registerAmount = users.filter(
         (user) =>
           user["level"] === level &&
           user["role"] === role &&
-          user["status"] === "registered"
+          user["status"] === "registered",
       );
       const ammount = users.filter(
         (user) =>
           user["level"] === level &&
           user["role"] === role &&
-          user["status"] === "email-sent"
+          user["status"] === "email-sent",
       );
       const ammountReminder = users.filter(
         (user) =>
           user["level"] === level &&
           user["role"] === role &&
-          user["status"] === "reminder"
+          user["status"] === "reminder",
       );
       const ammountWaiting = users.filter(
         (user) =>
           user["level"] === level &&
           user["role"] === role &&
-          user["status"] === "waitinglist"
+          user["status"] === "waitinglist",
       );
       const ammountPaid = users.filter(
         (user) =>
           user["level"] === level &&
           user["role"] === role &&
-          user["status"] === "confirmed"
+          user["status"] === "confirmed",
       );
       return {
         registered: registerAmount.length,
@@ -286,31 +387,31 @@ export default function Dashboard({ users, tickets }) {
         (user) =>
           user["level"] === level &&
           user["role"] === role &&
-          user["status"] === "registered"
+          user["status"] === "registered",
       );
       const ammount = users.filter(
         (user) =>
           user["level"] === level &&
           user["role"] === role &&
-          user["status"] === "email-sent"
+          user["status"] === "email-sent",
       );
       const ammountReminder = users.filter(
         (user) =>
           user["level"] === level &&
           user["role"] === role &&
-          user["status"] === "reminder"
+          user["status"] === "reminder",
       );
       const ammountWaiting = users.filter(
         (user) =>
           user["level"] === level &&
           user["role"] === role &&
-          user["status"] === "waitinglist"
+          user["status"] === "waitinglist",
       );
       const ammountPaid = users.filter(
         (user) =>
           user["level"] === level &&
           user["role"] === role &&
-          user["status"] === "confirmed"
+          user["status"] === "confirmed",
       );
       return {
         registered: registerAmount.length,
@@ -340,12 +441,7 @@ export default function Dashboard({ users, tickets }) {
       </div>
     );
   };
-  if (typeof window !== "undefined") {
-    const admin = localStorage.getItem("login_admin");
-    if (admin !== "true") {
-      Router.push("/login/admin");
-    }
-  }
+
 
   const handleSideBarClick = (item) => {
     if (item !== "capacity") {
@@ -364,8 +460,8 @@ export default function Dashboard({ users, tickets }) {
     } else if (item === "theme_class") {
       setUserToShow(
         users.filter(
-          (user) => user["theme_class"] !== "no" && user["theme_class"] !== ""
-        )
+          (user) => user["theme_class"] !== "no" && user["theme_class"] !== "",
+        ),
       );
     } else if (item === "email-sent") {
       setUserToShow(users.filter((user) => user["status"] === "email-sent"));
@@ -401,7 +497,7 @@ export default function Dashboard({ users, tickets }) {
   const usersForCSV = userToShow.map((user) =>
     user.lunch || user.competition === "later"
       ? { ...user, to_pay: getToPay(user.to_pay, user.lunch) }
-      : user
+      : user,
   );
 
   const renderTableHeader = () => {
@@ -418,9 +514,9 @@ export default function Dashboard({ users, tickets }) {
       "lastname",
       "ticket",
       "parent_partner",
-      "role",
       "level",
-      // "themed class",
+      "role",
+      "classes",
       "competition",
       "competitions",
       "Open MnM role",
@@ -431,6 +527,8 @@ export default function Dashboard({ users, tickets }) {
       "lunch",
       "country",
       "terms",
+      "registration link",
+      "app link",
     ];
     return header.map((key, index) => {
       return <th key={index}>{key.toUpperCase()}</th>;
@@ -439,37 +537,119 @@ export default function Dashboard({ users, tickets }) {
 
   //--------- Ticket Component
   const TicketsComponent = () => {
+    const getTicketConfirmedAmount = (ticketName) =>
+      users.filter(
+        (user) => user.level === ticketName && user.status === "confirmed",
+      ).length;
+
+    const getInitialCapacity = (ticketName) => {
+      const initalCapacity = [
+        {
+          name: "fullpass_lead",
+          capacity: 160,
+        },
+        {
+          name: "fullpass_follow",
+          capacity: 160,
+        },
+        {
+          name: "fullpass_both",
+          capacity: 50,
+        },
+      ];
+      return initalCapacity.find((ticket) => ticket.name === ticketName.name)
+        ?.capacity;
+    };
+    const getLevelAmount = (level) =>
+      users.filter((user) => user.role === level && user.status === "confirmed")
+        .length;
+
     return (
-      <div className={styles.tickets}>
-        <div className={styles.ticketRow}>
-          <p>Level</p>
-          <p>Capacity</p>
+      <div className={styles.capacityTables}>
+        <div className={styles.tickets}>
+          <div
+            className={classNames(
+              styles.ticketRow,
+              styles.capacityAvailabilityRow,
+            )}
+          >
+            <p>Level</p>
+            <p> Capacity</p>
+            <p>Remaining</p>
+          </div>
+
+          {[...tickets]
+            .sort((a, b) => a.id - b.id)
+            .map((ticket) => (
+              <div
+                key={ticket.name}
+                className={classNames(
+                  styles.infoRow,
+                  styles.capacityAvailabilityRow,
+                )}
+              >
+                <div className={styles.ticketItem}>
+                  <p>{ticket.label}</p>
+                </div>
+                <div className={styles.ticketItem}>
+                  <p>{getInitialCapacity(ticket)}</p>
+                </div>
+                <div className={styles.ticketItem}>
+                  <p>{ticket.capacity}</p>
+                </div>
+              </div>
+            ))}
         </div>
 
-        {tickets
-          .sort((a, b) => a.id - b.id)
-          .map((ticket) => (
-            <div key={ticket.name} className={styles.infoRow}>
+        <div className={styles.capacityDivider}>Sold by level</div>
+
+        <div className={styles.tickets}>
+          <div className={styles.ticketRow}>
+            <p>Level</p>
+            <p>Sold</p>
+          </div>
+
+          {levelFor2026.map((level) => (
+            <div key={level.value} className={styles.infoRow}>
               <div className={styles.ticketItem}>
-                <p>{ticket.label}</p>
+                <p>
+                  {level.label} ({level.value})
+                </p>
               </div>
               <div className={styles.ticketItem}>
-                <p>{ticket.capacity}</p>
+                <p>{getLevelAmount(level.value)}</p>
               </div>
             </div>
           ))}
+        </div>
       </div>
     );
   };
   //--------- Table Data
 
   const renderTableData = () => {
+    const searchQuery = nameSearch.trim().toLowerCase();
+
     return userToShow
-      .filter((user) =>
-        nameSearch
-          ? user.firstname.toUpperCase().includes(nameSearch.toUpperCase())
-          : true
-      )
+      .filter((user) => {
+        if (!searchQuery) {
+          return true;
+        }
+
+        return [
+          user.firstname,
+          user.lastname,
+          user.email,
+          user.ticket,
+          user.level,
+          user.status,
+          user.country,
+        ].some((value) =>
+          String(value || "")
+            .toLowerCase()
+            .includes(searchQuery),
+        );
+      })
       .sort((a, b) => a.id - b.id)
       .map(
         ({
@@ -490,6 +670,7 @@ export default function Dashboard({ users, tickets }) {
           newcomers_mixnmatch_role,
           strictly_role,
           competitions,
+          theme_class,
           tshirt,
           lunch,
           donation,
@@ -526,12 +707,26 @@ export default function Dashboard({ users, tickets }) {
               <td>{price}</td>
               <td>{date}</td>
               <td>
-                <button
-                  className={styles.button}
-                  onClick={() => handleUser(id)}
-                >
-                  Edit
-                </button>
+                <div className={styles.rowActions}>
+                  <button className={styles.button} onClick={() => handleUser(id)}>Edit</button>
+                  {status === "confirmed" && (
+                    <>
+                      <button
+                        className={styles.button}
+                        onClick={() => handleSendOneScheduleInvitation({ id, firstname, lastname, email })}
+                        disabled={sendingScheduleInvitations || sendingScheduleInvitationId !== null || scheduleInvitationResults[id]?.done}
+                        aria-label={`Send schedule invitation to ${firstname} ${lastname} (ID ${id})`}
+                      >
+                        {sendingScheduleInvitationId === id ? "Sending…" : "Send schedule invitation"}
+                      </button>
+                      {scheduleInvitationResults[id] && (
+                        <span className={styles.rowActionMessage} role={scheduleInvitationResults[id].error ? "alert" : "status"}>
+                          {scheduleInvitationResults[id].message}
+                        </span>
+                      )}
+                    </>
+                  )}
+                </div>
               </td>
               <td>{id}</td>
               <td>{email}</td>
@@ -541,7 +736,11 @@ export default function Dashboard({ users, tickets }) {
               <td>{parent_partner}</td>
               <td>{role}</td>
               <td>{level}</td>
-              {/* <td>{titleCase(theme_class)}</td> */}
+              <td>
+                {ticket !== "partyPass" && (
+                  <RegisteredClasses id={id} firstname={firstname} lastname={lastname} themeClass={theme_class} buttonClassName={styles.button} />
+                )}
+              </td>
               <td>{competition}</td>
               <td>
                 {competitions && (
@@ -587,27 +786,30 @@ export default function Dashboard({ users, tickets }) {
 
               <td>{country}</td>
               <td>Yes</td>
+              <td>
+                <RegistrationLink id={id} firstname={firstname} lastname={lastname} buttonClassName={styles.button} />
+              </td>
+              <td>
+                <RegistrationLink id={id} firstname={firstname} lastname={lastname} buttonClassName={styles.button} kind="app" />
+              </td>
             </tr>
           );
-        }
+        },
       );
   };
   return (
     <div className={styles.container}>
       <Head>
-        <title>BLUES FEVER 2025</title>
-        <link rel="icon" href="/icon.png" />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Amatic+SC&display=swap"
-          rel="stylesheet"
-        />
+        <title>BLUES FEVER 2026</title>
       </Head>
       <Header
         isAdmin
         title="BFF DASHBOARD"
         menuItems={[
+          {
+            title: "SCHEDULE",
+            link: "/dashboard/schedule",
+          },
           {
             title: "LOG OUT ",
             link: "/login/admin",
@@ -615,7 +817,7 @@ export default function Dashboard({ users, tickets }) {
         ]}
       />
       <h3 className={styles.title}>Registrations</h3>
-      <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+      <div className={styles.dashboardHeader}>
         <div className={styles.total}>
           <p>
             Total Registrations: {users?.length} = {totalAmount}
@@ -624,7 +826,7 @@ export default function Dashboard({ users, tickets }) {
             Selected List:{" "}
             {
               userToShow?.filter(
-                (user) => user.status !== "canceled" && user.status !== "out"
+                (user) => user.status !== "canceled" && user.status !== "out",
               )?.length
             }{" "}
             ={totalAmountList}
@@ -756,24 +958,38 @@ export default function Dashboard({ users, tickets }) {
         <div className={styles.content}>
           {activeSideBar !== "balance" && (
             <div className={styles.search}>
-              <select
-                onChange={(e) => setStatus(e.target.value)}
-                className={styles.select}
-              >
-                <option>registered</option>
-                <option>email-sent</option>
-                <option>reminder</option>
-                <option>waitinglist</option>
-                <option>confirmed</option>
-                <option>canceled</option>
-                <option>out</option>
-              </select>
-              <button
-                className={styles.statusButton}
-                onClick={handleStatusChange}
-              >
-                Change Status
-              </button>
+              <label className={styles.searchField}>
+                <span>Search registrations</span>
+                <input
+                  value={nameSearch}
+                  onChange={(e) => setNameSearch(e.target.value)}
+                  placeholder="Name, email, ticket, level, status..."
+                />
+              </label>
+
+              <div className={styles.bulkActions}>
+                <label className={styles.controlField}>
+                  <span>Bulk status</span>
+                  <select
+                    onChange={(e) => setStatus(e.target.value)}
+                    className={styles.select}
+                  >
+                    <option>registered</option>
+                    <option>email-sent</option>
+                    <option>reminder</option>
+                    <option>waitinglist</option>
+                    <option>confirmed</option>
+                    <option>canceled</option>
+                    <option>out</option>
+                  </select>
+                </label>
+                <button
+                  className={styles.statusButton}
+                  onClick={handleStatusChange}
+                >
+                  Change Status
+                </button>
+              </div>
 
               {/* <select
                 onChange={(e) => setStatus(e.target.value)}
@@ -807,8 +1023,8 @@ export default function Dashboard({ users, tickets }) {
             </div>
           )}
 
-          <button className={styles.statusButton} onClick={handleSendOneMail}>
-            Send Final email to specific users:
+          <button className={styles.statusButton} disabled={sendingFinalEmails || !form.values.users.length} onClick={() => handleFinalEmails(form.values.users)}>
+            Send final email to selected confirmed participants
           </button>
           {!capacityShow &&
             activeSideBar !== "balance" &&
@@ -833,13 +1049,52 @@ export default function Dashboard({ users, tickets }) {
               </CSVLink>
             </div>
           )}
-          <button
-            style={{ margin: "40px 0" }}
-            className={styles.statusButton}
-            onClick={handleSendEmail}
-          >
-            Send Email to All confirmed
-          </button>
+          <div className={styles.bulkEmailActions}>
+            <button className={styles.statusButton} disabled={sendingFinalEmails} onClick={() => handleFinalEmails()}>
+              {sendingFinalEmails ? "Preparing or sending final emails…" : "Send Email to All confirmed"}
+            </button>
+            <button className={styles.statusButton} onClick={handleSendScheduleInvitations} disabled={sendingScheduleInvitations || sendingScheduleInvitationId !== null}>
+              {sendingScheduleInvitations ? "Sending schedule invitations…" : "Send schedule invitations to confirmed Full and Parent Pass holders"}
+            </button>
+          </div>
+          {finalEmailProgress && (
+            <p className={styles.invitationProgress} role={finalEmailProgress.stopped ? "alert" : "status"}>
+              {finalEmailProgress.message ||
+                `Final emails for ${finalEmailProgress.total} confirmed registrations. ` +
+                `${finalEmailProgress.sent} ${previewMode ? "simulated" : "accepted by SendGrid"}, ${finalEmailProgress.already_sent} already sent, ` +
+                `${finalEmailProgress.skipped} skipped, ${finalEmailProgress.failed} failed, ` +
+                `${finalEmailProgress.sending} being sent in another request, ${finalEmailProgress.uncertain} require review.`}
+            </p>
+          )}
+          {finalEmailProgress?.issues?.length > 0 && (
+            <ul className={styles.invitationIssues}>
+              {finalEmailProgress.issues.map((issue) => <li key={issue}>{issue}</li>)}
+            </ul>
+          )}
+          {scheduleInvitationProgress && (
+            <p className={styles.invitationProgress} role={scheduleInvitationProgress.stopped ? "alert" : "status"}>
+              {scheduleInvitationProgress.message ||
+                `Schedule invitations: ${scheduleInvitationProgress.sent} ${previewMode ? "captured in preview" : "accepted by SendGrid"}, ` +
+                `${scheduleInvitationProgress.completed} already complete, ${scheduleInvitationProgress.skipped} otherwise skipped, ` +
+                `${scheduleInvitationProgress.failed} failed, ${scheduleInvitationProgress.uncertain} require review. ` +
+                `Total: ${scheduleInvitationProgress.total} confirmed Full and Parent Pass holders.`}
+              {scheduleInvitationProgress.stopped && ` ${scheduleInvitationProgress.stopped}`}
+            </p>
+          )}
+          {scheduleInvitationProgress?.issues?.length > 0 && (
+            <ul className={styles.invitationIssues}>
+              {scheduleInvitationProgress.issues.map((issue, index) => <li key={`${issue}-${index}`}>{issue}</li>)}
+            </ul>
+          )}
+          {previewMode && (
+            <p className={styles.invitationProgress}>
+              Preview only: captured invitations are available at{" "}
+              <a href="/api/reg2026/preview-invitations" target="_blank" rel="noreferrer">the preview mailbox</a>.
+              Registration confirmations are available at{" "}
+              <a href="/api/reg2026/preview-confirmations" target="_blank" rel="noreferrer">the confirmation mailbox</a>.
+              No email leaves this preview.
+            </p>
+          )}
         </div>
       </main>
 
@@ -857,7 +1112,9 @@ export default function Dashboard({ users, tickets }) {
   );
 }
 
-export async function getServerSideProps() {
+export async function getServerSideProps({ req, res }) {
+  const redirect = adminPageRedirect(req, res);
+  if (redirect) return redirect;
   const { getAllUsers, getTickets } = await import("../../db/db");
   const users = await getAllUsers();
 
@@ -866,6 +1123,7 @@ export async function getServerSideProps() {
     props: {
       users: users,
       tickets: tickets,
+      previewMode: process.env.BFF_PREVIEW === "true" && process.env.NODE_ENV !== "production",
     },
   };
 }

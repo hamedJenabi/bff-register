@@ -16,12 +16,7 @@ import {
 export default function Admin({ tickets }) {
   const isMobile = useMedia({ maxWidth: "768px" });
 
-  if (typeof window !== "undefined") {
-    const admin = localStorage.getItem("login_admin");
-    if (admin === "true") {
-      Router.push("/dashboard/fdjhfdskjfhdskjh");
-    }
-  }
+
 
   const form = useFormState({
     values: {
@@ -51,11 +46,10 @@ export default function Admin({ tickets }) {
       })
         .then((response) => {
           if (response.status === 200) {
-            localStorage.setItem("login_admin", true);
             Router.push("/dashboard/fdjhfdskjfhdskjh");
           }
-          if (response.status === 401) {
-            alert("Wrong username or password");
+          if (response.status !== 200) {
+            alert("Login failed. Check your credentials or contact the administrator.");
           }
         })
         .catch((error) => console.log(error));
@@ -64,19 +58,11 @@ export default function Admin({ tickets }) {
   return (
     <div className={styles.container}>
       <Head>
-        <title>BLUES FEVER 2025</title>
-        <meta name="description" content="BLUES FEVER 2025 Registration" />
-        <link rel="icon" href="/icon.png" />
-
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Amatic+SC&display=swap"
-          rel="stylesheet"
-        />
+        <title>BLUES FEVER 2026</title>
+        <meta name="description" content="BLUES FEVER 2026 Registration" />
       </Head>
       <Header
-        title="BLUES FEVER 2025"
+        title="BLUES FEVER 2026"
         menuItems={[{ title: "Home", link: "https://www.bluesfever.eu/" }]}
       />
       <main className={styles.main}>

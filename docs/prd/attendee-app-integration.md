@@ -1,0 +1,152 @@
+# Participant app integration and initial festival admin
+
+The participant app is read-only for festival registrations and class bookings. This repo remains the source of truth. The new app API projects existing data and adds access credentials/sessions, announcements, and optional Web Push subscription/delivery records. Participant registrations and bookings remain read-only.
+
+16 November checkpoint: the user selected one shared password-free volunteer link with QR scanning only. The local implementation adds a separate volunteer API/session boundary and migration 00020; announcements, notifications, roster downloads and link provisioning remain admin-only. The app's install card is removed by the latest decision. Work is paused with unfinished browser verification; see [today's record](../../../bff-app/docs/prd/session-2026-11-16.md) and the [current staff PRD](../../../bff-app/docs/prd/admin-volunteers-completion.md). The user requested commits in both repositories; no production migration or deployment is performed by this checkpoint.
+
+## Participant journey: connected and verified locally
+
+16 November update: `GET /api/app/schedule` publicly exposes the same class-detail projection and festival dates as the private participant snapshot. It includes no participant identity, bookings, capacity, signing credentials or QR. App Full Schedule uses this endpoint whether signed in or out, and shows retry/last-loaded states on failure instead of a mock program.
+
+Both registration dashboard routes now have a separate **App link** column. **Generate app link** calls the existing organizer-protected `POST /api/app/admin/link` with the stored registration ID; the dialog supports copying/opening the returned `appAccessUrl`. The final email already uses this same link generator. Generating a link creates/reuses app access only, sends no email and changes no registration, booking or payment data. The existing registration-edit link stays separate.
+
+Hosted setup: on `bff-app`, set `BFF_REGISTER_ORIGIN=https://register.bluesfever.eu`; on this backend, set `APP_ORIGIN=https://app.bluesfever.eu` and the existing app signing/expiry configuration. Deploy both changes. `package.json` selects Node `22.x`, matching verified backend tests; Node 26 reproduces a `buffer-equal-constant-time`/`jwa` module-load failure in the existing push dependency before app endpoints can run. No production configuration or database is changed by this local implementation.
+
+Requested on 27 October 2026 and implemented locally on 29 October following the user's email-to-app journey request. The registration backend projects the published Google Sheets catalog and each participant's confirmed registration data through `/api/app/me`. See the adjacent app's [current participant journey](../../../bff-app/docs/prd/participant-journey.md) and the dedicated [app-invitation email draft](../email/participant-app-invitation.md).
+
+- [x] Inspect the existing app client and verify the local `BFF_REGISTER_ORIGIN=http://localhost:3000`, reusing the current participant-access/session flow. Hosted backend/origin configuration remains a rollout step.
+- [x] Verify Full Schedule displays the published catalog: days, dates, times, rooms, teachers, descriptions, levels, class formats and bookable state, including open talks. Authenticated catalogs no longer carry the fictional preview label; Full Schedule has an explicit refresh action.
+- [x] Verify My Schedule displays the signed-in participant's confirmed classes and per-class roles, and the app displays their saved competition and lunch choices. Personal class details now include the same dates, levels, format and bookability as the catalog; intentionally blank descriptions remain blank.
+- [x] Verify a newly published schedule snapshot refreshes class details in the app and confirmed checkout refreshes the participant's choices. Pending choices remain excluded until confirmation. Publication/Google adapter behavior is covered by the backend suite; browser tests use fictional publications and no live Google calls.
+- [x] Run end-to-end checks with fictional participants, covering captured invitation emails, identity isolation, correct data, refresh behavior, persistent sessions and mobile layout.
+
+Local verification includes 18 browser journeys across mobile and desktop Chrome, 53 isolated PostgreSQL integration checks, registration unit checks, and the app's unit/type/lint/build checks. Hosted email template rendering and real-device acceptance remain rollout work. No real invitation was sent.
+
+Production class capacities remain a separate open launch task; the current 20 lead / 20 follow and 30 solo values are testing placeholders. Talks are unlimited. See [the schedule setup](./google-sheets-schedule.md).
+
+## Configuration and launch
+
+Prepare these server-side variables in ticketing:
+
+| Variable                     | Purpose                                                                                                                                                                            |
+| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `APP_SIGNING_SECRET`         | A separate random secret of at least 32 characters. Signing-secret rotation invalidates existing credentials.                                                                      |
+| `APP_ORIGIN`                 | App HTTPS origin, such as `https://app.bluesfever.eu`. Loopback HTTP origins are allowed for local development.                                                                    |
+| `APP_LINK_EXPIRES_AT`        | Explicit timestamp through the festival end, including timezone. If omitted, newly issued access expires after 90 days. Existing links retain their recorded expiry.               |
+| `APP_FESTIVAL_START_DATE`    | Reviewed Friday date in `YYYY-MM-DD` format. Supplies Friday–Sunday dates for Home's upcoming-class calculation in Vienna time. If omitted, the app shows an ordered weekend list. |
+| `APP_INVITATIONS_ENABLED`    | Enables only the separate app-invitation endpoint after migration and configuration. Defaults to disabled.                                                                         |
+| `APP_INVITATION_TEMPLATE_ID` | Required dedicated SendGrid dynamic template ID for app invitations. There is no fallback to the existing registration email template.                                             |
+
+The app server needs `BFF_REGISTER_ORIGIN` pointing to this ticketing server. It communicates server-to-server. Its host-only session cookie is HttpOnly, SameSite=Lax, Secure in production, and bounded by the backend session expiry. No database or signing secret is needed in the frontend repo.
+
+Before hosted deployment, review migrations **00011-attendee-app-access** and **00012-festival-app-admin** and apply it to the intended environment with the existing Ley migration workflow. On 14 October 2026, the requested data demonstration applied this additive migration to the configured local `localhost/bluesfever` database. It adds app access/session tables; participant, booking, and payment records are not changed by the migration. Hosted production has not been migrated by this task.
+
+For the current feature set, also review schedule publication migration `00013` and final-email delivery migration `00018`, together with intervening registration migrations required by the release. Verify which migrations are already applied in the intended environment. The latest working tree deletes the old Cuttin’ migration `00019`; it is not a launch prerequisite.
+
+Use a separate app-invitation email and template, with `firstname`, `lastname`, **`appAccessUrl`**, and `accessExpiresAt` dynamic fields. Click tracking is disabled for these authentication links. Verify that the complete fragment survives template rendering and the intended mail client. Each recipient and credential come from the server's stored registration ID, even if a caller supplies different names or email addresses. SendGrid rejections return an error to the invitation caller; acceptance by SendGrid is not proof of inbox delivery.
+
+App invitations use **`POST /api/app/admin/invite`** with body `{ "id": participantId }`, existing organizer authentication, and the dedicated template. This endpoint sends one invitation per explicit request. A separate app-invitation dashboard remains later scope. The later final-festival-email implementation now uses `/api/mailall` and selected/all-confirmed dashboard actions with personalized `appAccessUrl` values and its own delivery ledger; see [the launch PRD](./attendee-app-launch.md) and [final email setup](../email/final-festival-email.md). These are distinct email purposes. No live send is authorized by this documentation review.
+
+## API contract
+
+| Endpoint                     | Authorization                            | Result                                                                                                                                                                   |
+| ---------------------------- | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `POST /api/app/claim`        | Personal access token in JSON body       | Opaque session token and absolute expiry.                                                                                                                                |
+| `GET /api/app/me`            | `Authorization: Bearer <session>`        | Own participant projection, confirmed classes, pending-checkout flag, QR, active announcements, Vienna timezone, optional festival dates, and successful-read timestamp. |
+| `POST /api/app/logout`       | Session bearer                           | Deletes that session; returns `ok`. Other devices retain their own sessions.                                                                                             |
+| `POST /api/app/admin/link`   | Existing organizer cookie + origin check | Body `id` produces the participant's personal `appAccessUrl` and expiry. Requires confirmed admission.                                                                   |
+| `POST /api/app/admin/invite` | Existing organizer cookie + origin check | Body `id` sends a separate app invitation using the dedicated template; requires enabled invitations and confirmed admission.                                            |
+| `POST /api/app/admin/revoke` | Existing organizer cookie + origin check | Body `id` revokes the participant's access, QR, and all related sessions.                                                                                                |
+
+The app's same-origin `/api/app/claim`, `/api/app/me`, and `/api/app/logout` façade hides the session bearer from browser JavaScript. Access exchange and logout reject cross-origin browser mutations. Personal API responses use `private, no-store`. A participant cannot choose a different registration by adding an ID or email to a request.
+
+Links are opaque, purpose-bound credentials in `/claim#token=...`. GET does not consume them, and email scanners cannot create a participant session by merely following the URL. They are reusable until recorded expiry or organizer revocation, allowing a participant to open their email on another device. Recovery is reopening a valid link or having an organizer reissue an expired/revoked link through the link endpoint or separate app-invitation endpoint. Reissuing valid access keeps the existing link stable; reissuing expired/revoked access generates a new credential and QR and retires old sessions.
+
+Sessions use random secrets; only SHA-256 hashes are stored. Access records contain a random public UUID and nonce, linked to `registrations_26`. Access and QR signatures use distinct purposes; a QR cannot be exchanged for a login session. The QR contains no name, email, or class list. Its actual door verification endpoint and staff authorization are milestone 5.
+
+## Class-door verification and roster API
+
+Reviewed 16 November 2026. All three manage operations below require the dedicated Festival Admin bearer. Participant and volunteer sessions are rejected there. A separate volunteer namespace now provides session listing and QR verification only as an unfinished local checkpoint; it never provides full rosters. See [Admin and Volunteers](../../../bff-app/docs/prd/admin-volunteers-completion.md) for the agreed policy and remaining verification.
+
+| Endpoint | Authorization today | Contract |
+| --- | --- | --- |
+| `GET /api/app/manage/door-sessions` | Festival Admin bearer | Eligible class sessions and open talks, with stable ID, day/date, time, room and admission mode. |
+| `POST /api/app/manage/door-verify` | Festival Admin bearer | Body `sessionId` and `qr`; returns eligible with name/role, ineligible or invalid. Request failure is presented by the app as unavailable verification. |
+| `POST /api/app/manage/door-roster` | Festival Admin bearer | Body `sessionId`; returns selected session, roster names/roles and `generatedAt`. App supports organizer download for offline fallback. |
+
+Ordinary classes use current confirmed bookings and the shared legacy projection. Talks are open to confirmed passes. Invalid, expired, revoked or wrong-purpose QR credentials cannot grant access. Verification is online and does not record attendance or enforce duplicate entry. Cuttin’ special-roster management and its migration `00019` were removed in the earlier 16 November commits; do not restore the old editing endpoints. Participant competition information is separate from scanner eligibility.
+
+## Shared volunteer access checkpoint
+
+The user chose one shared link and QR scanning only. `/bff-admin` keeps the existing username/password login. Authenticated admins generate/show, replace or disable the shared link; volunteers use `/bff-volunteer#token=…` and press **Open scanner**, without a password.
+
+| Endpoint | Authorization | Contract |
+| --- | --- | --- |
+| `POST /api/app/manage/volunteer-link` | Festival Admin bearer | Creates the shared link or returns the current valid link and expiry. Sends no email. |
+| `POST /api/app/manage/volunteer-replace` | Festival Admin bearer | Changes the shared credential and invalidates all volunteer sessions. |
+| `POST /api/app/manage/volunteer-revoke` | Festival Admin bearer | Disables shared access and invalidates all volunteer sessions. |
+| `POST /api/app/volunteer/claim` | Shared purpose-bound link token in JSON | Creates an independent device session capped by link expiry. |
+| `GET /api/app/volunteer/me` | Volunteer bearer | Returns volunteer role and session expiry. |
+| `POST /api/app/volunteer/logout` | Volunteer bearer | Revokes this device's session. |
+| `GET /api/app/volunteer/door-sessions` | Volunteer bearer | Lists the same eligible door sessions as the admin scanner. |
+| `POST /api/app/volunteer/door-verify` | Volunteer bearer | Verifies the selected session and QR through the existing eligibility store. |
+
+Migration **00020** creates the singleton shared credential and hashed volunteer-session tables; it is unrelated to the deleted Cuttin' migration. It has run only in disposable test databases, not the operational database or production. Links default to 30 days; session creation is limited to 500 successful exchanges per 15-minute shared-link window. Replacement, revocation, expiry and signing-secret rotation invalidate volunteer access. Independent logout leaves other devices working.
+
+The app facade uses its own host-only HttpOnly volunteer cookie, separate from participant and admin cookies. It enforces same-origin mutations and keeps the bearer out of browser JavaScript. The backend independently rejects volunteer bearers for admin communication, provisioning and roster operations.
+
+Verification: four new volunteer database subtests pass, and both builds/lint checks pass with existing backend lint warnings. The final browser run is 26 passed / 2 failed; both volunteer variants stop at an ambiguous alert assertion that also matches Next.js's route announcer. Later logout/disable browser steps require a passing rerun. The full backend suite has one unrelated checkout subtest failure, reproduced on the unchanged baseline. See the linked daily record for exact counts. Deploy both repositories and apply migration 00020 only after completing review; then generate the actual production volunteer link from the authenticated admin screen.
+
+## Booking projection
+
+- Current confirmed `class_bookings_26` rows are authoritative; deduplicate by stable session ID and preserve the per-class role.
+- Provisional bookings do not grant class admission. Active provisional/payment-pending orders produce a separate pending-registration notice; expired provisional holds are excluded from that notice.
+- Legacy versioned `theme_class` choices can be shown for confirmed Full/Parent passes when there are **no booking rows and no supplemental-order history**. App reads do not create bookings or mutate payment/registration data.
+- When modern history exists, saved legacy choices cannot override its lack of confirmation. Ambiguous historical records require organizer reconciliation rather than automatic admission.
+- Personal metadata comes from the effective registration catalog, including database overrides. Missing catalog entries stay explicit instead of inventing room/time details.
+- `role` maps to proficiency and `level` to the registration dance role; legacy values such as `fullpass_lead` are decoded to `lead`. Each class's role is read independently. Project only participant-facing fields, excluding raw stored selections, price/payment internals, and secrets.
+- The authenticated snapshot also includes the effective class catalog, so signed-in Full Schedule and personal classes share organizer overrides.
+
+## Verification and safe preview
+
+`yarn test:integration` now runs the existing registration tests and the app suite against a disposable PostgreSQL cluster. The app suite uses a separate schema and captures substituted email messages; it covers identity isolation, legacy projection, payment-pending exclusion, schedule refresh, hashing, credential-purpose separation, logout, expiry, revocation, organizer authorization, and distinct recipient links with send failures. Invitation checks also verify that a dedicated template is required, disabled invitations cannot send, and unconfirmed participants are rejected.
+
+`node tests/preview-app.cjs` starts a loopback-only app backend at port 31026 with fictional Daria/Noah registrations. Its `/__fixtures` endpoint returns their personal links for local browser QA. This test-only server never imports `db/db`, reads operational `.env`, or uses email/payment services. Stop it to remove the cluster.
+
+The adjacent app's `yarn test:e2e` starts that fixture server and a production-built app and runs phone-size and desktop Chrome journeys. Real-device installation/offline QA is deferred to milestone 4; real camera/door checks are deferred to milestone 5.
+
+## Initial festival admin and push configuration
+
+The adjacent app hosts `/bff-admin`. It uses the dedicated fixed account `bff2026-admin`; this is separate from the existing ticketing organizer login. The admin can manage app announcements and notifications, and has no implicit access to the existing ticketing dashboard or email actions.
+
+| Backend variable          | Purpose                                                                                                                                                                                                                                               |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `APP_ADMIN_PASSWORD_HASH` | `scrypt:<16-byte salt in hex>:<64-byte derived key in hex>`, using N=32768 and a 64 MB memory limit. Generate with `hashAdminPassword` in `lib/app/admin-security.js`; store only in server configuration. Rotation invalidates prior admin sessions. |
+| `APP_PUSH_PUBLIC_KEY`     | Stable VAPID public key from `web-push.generateVAPIDKeys()`. This public value is returned only to signed-in participants for subscribing.                                                                                                            |
+| `APP_PUSH_PRIVATE_KEY`    | Matching VAPID private key; keep server-only and preserve across deployments.                                                                                                                                                                         |
+| `APP_PUSH_SUBJECT`        | Contact URI, e.g. `mailto:registration@bluesfever.eu`.                                                                                                                                                                                                |
+
+Migration 00012 was applied on 14 October only to the verified local `localhost/bluesfever` database. It adds app admin/content/subscription/job tables and does not modify registration or payment records. Local password/hash and VAPID keys were generated in ignored configuration; no credentials belong in source control. Hosted production still needs reviewed migration/configuration.
+
+Admin sessions use random bearers, SHA-256 token hashes, a fixed 30-day expiry, and the current password-hash fingerprint. The app keeps the bearer in `bff_festival_admin`, a host-only HttpOnly/SameSite=Lax cookie with Secure in production. Passwords use scrypt with a random salt. Failed attempts are persisted and limited to ten per 15-minute window for this single admin account. The app façade enforces same-origin mutations and never returns the admin bearer to JavaScript.
+
+| Backend endpoint                    | Authorization          | Behavior                                                                                                                                                                                                           |
+| ----------------------------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `POST /api/app/manage/login`        | Username/password JSON | Returns admin bearer and 30-day expiry to the app server.                                                                                                                                                          |
+| `GET /api/app/manage/me`            | Admin bearer           | Session, announcements/history, subscriber counts, and recent notification delivery summaries.                                                                                                                     |
+| `POST /api/app/manage/logout`       | Admin bearer           | Revokes current admin session.                                                                                                                                                                                     |
+| `POST /api/app/manage/announcement` | Admin bearer           | Create/edit title, description, optional `expiresOn`; optional `id` edits an existing unarchived announcement.                                                                                                     |
+| `POST /api/app/manage/archive`      | Admin bearer           | Soft archive body `id`; removes from Home while retaining admin history.                                                                                                                                           |
+| `POST /api/app/manage/push`         | Admin bearer           | Queues title/description to currently subscribed confirmed participants; UUID `requestId` makes repeated requests idempotent.                                                                                      |
+| `POST /api/app/manage/dispatch`     | Admin bearer           | Sends up to 20 pending deliveries for body `id` and returns current counts.                                                                                                                                        |
+| `GET /api/app/updates/config`       | Participant bearer     | Public VAPID key, or null when unconfigured.                                                                                                                                                                       |
+| `POST /api/app/updates/subscribe`   | Participant bearer     | Saves the authenticated participant’s device subscription (`endpoint`, `keys.p256dh`, `keys.auth`). Validates HTTPS push-provider destinations and keys; cannot transfer an endpoint owned by another participant. |
+| `POST /api/app/updates/unsubscribe` | Participant bearer     | Removes only that participant’s subscription matching body `endpoint`.                                                                                                                                             |
+
+Announcement expiry is a date inclusive through the end of that day in `Europe/Vienna`; null means it remains published until archived. Text is rendered as plain text. Public participant snapshots contain only active announcements; Home also removes expired entries using its minute clock.
+
+Notification consent is explicit in Profile. The permission dialog opens only from the Enable action. Disable and sign-out remove the device’s server subscription. The notification-only service worker displays the supplied title/description and opens participant Home; it does not cache app pages or private data. The manifest/icons provide the Home Screen entry required for [iPhone/iPad Web Push](https://developer.apple.com/documentation/usernotifications/sending-web-push-notifications-in-web-apps-and-browsers). Actual device acceptance and HTTPS deployment are still required. Offline reopening remains a later slice.
+
+Delivery records persist across requests. The admin browser drives batches; if it closes mid-send, reopen history and use Resume for pending delivery. A lost in-flight request becomes uncertain after two minutes, and is not automatically resent. Failed sends remain failed; 404/410 push-service responses remove expired subscriptions. Counts report push-service acceptance, not proof of display/read. There is no scheduler or automatic broadcast on announcement creation.
+
+Verification: 31 isolated database checks cover the existing registration/app behavior plus admin password/session/expiry/throttling, announcement lifecycle, subscription ownership/destination validation, idempotent broadcasts, captured sends, failed/expired cleanup, and uncertain delivery. Browser fixtures also configure a fictional admin and capture push; they never load operational credentials or contact push providers. A notification-worker behavior test covers title/body display and safe Home navigation.

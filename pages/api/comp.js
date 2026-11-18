@@ -1,3 +1,4 @@
+import { registrationStore } from "../../db/reg2026";
 import {
   getConfirmedUserByEmailAndName,
   setUserLunchById,
@@ -5,6 +6,11 @@ import {
 } from "../../db/db";
 
 export default async function comp(req, response) {
+  response.setHeader("Cache-Control", "no-store");
+  if (req.method !== "POST") { response.setHeader("Allow", "POST"); return response.status(405).end(); }
+  if (process.env.REG2026_ENABLED === "true") {
+    return response.status(410).json({ error: "Use your signed 2026 registration invitation to book festival choices." });
+  }
   const requestData = {
     email: req.body.email,
     firstname: req.body.firstname,
@@ -29,6 +35,9 @@ export default async function comp(req, response) {
       ? req.body.competitions.length * 10 - 10
       : req.body.competitions.length * 10;
 
+  if (await registrationStore.hasOrders(userToUpdate.id)) {
+    return response.status(410).json({ error: "Use your signed 2026 registration link to edit these choices." });
+  }
   if (userToUpdate) {
     await setUserCompById(
       userToUpdate.id,

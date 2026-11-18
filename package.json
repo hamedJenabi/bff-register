@@ -1,13 +1,19 @@
 {
   "name": "vsb-register",
   "private": true,
+  "engines": {
+    "node": "22.x"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start -p ${PORT:-\"3000\"}",
     "lint": "next lint",
     "migrate": "dotenv ley",
-    "heroku-postbuild": "yarn migrate up && yarn build"
+    "heroku-postbuild": "yarn migrate up && yarn build",
+    "test": "node -r ./tests/register.cjs --test tests/*.test.cjs",
+    "test:integration": "node tests/run-integration.cjs",
+    "preview:test": "node tests/preview.cjs"
   },
   "dependencies": {
     "@emotion/react": "^11.10.6",
@@ -31,6 +37,7 @@
     "sass": "^1.62.0",
     "stripe": "^17.7.0",
     "use-media": "^1.4.0",
+    "web-push": "^3.6.7",
     "yarn-upgrade-all": "^0.7.2"
   },
   "devDependencies": {
