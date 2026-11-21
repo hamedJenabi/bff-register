@@ -37,7 +37,7 @@ const withEnv = async (updates, action) => {
   }
 };
 
-test("only intern=true enables the submission override and signed access is still required", async () => withEnv({
+test("only intern=true can submit festival choices and signed access is still required", async () => withEnv({
   REG2026_ENABLED: "true", REG2026_SIGNING_SECRET: "intern-test-secret", REG2026_CLOSES_AT: "2099-01-01T00:00:00Z",
 }, async () => {
   const participant = { id: 1, email: "a+b@example.com", firstname: "Dancer", ticket: "fullpass" };
@@ -57,9 +57,11 @@ test("only intern=true enables the submission override and signed access is stil
     for (const intern of [undefined, "false", "", "1", "TRUE", true, ["true"], "true"]) {
       const res = response();
       await submit({ method: "POST", body: { ...body, intern } }, res);
-      assert.equal(res.code, 200);
-      assert.deepEqual(submissions.at(-1)[4], { intern: intern === "true" });
+      assert.equal(res.code, intern === "true" ? 200 : 403);
+      if (intern !== "true") assert.match(res.body.error, /view-only/);
     }
+    assert.equal(submissions.length, 1);
+    assert.deepEqual(submissions[0][4], { intern: true });
     const count = submissions.length;
     const denied = response();
     await submit({ method: "POST", body: { ...body, intern: "true", sig: "invalid" } }, denied);
@@ -120,6 +122,7 @@ test("registration refresh only enables sold-out classes when the flag and URL p
         await handler({ method: "GET", query: { user, sig: signIdentity(user), intern } }, res);
         assert.equal(res.code, 200);
         assert.equal(res.body.internEnabled, enabled && intern === "true");
+        assert.equal(res.body.open, intern === "true");
       }
     }
   });

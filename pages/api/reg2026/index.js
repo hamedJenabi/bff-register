@@ -17,7 +17,9 @@ export default async function handler(req, res) {
       ({ order, completed, edit } = await loadRegistrationState(store, participant, String(order.id)));
     }
     if (completed && order?.status === "confirmed") await deliverConfirmation(store, order.id);
-    const open = completed ? !!edit : isRegistrationOpen();
+    const readOnly = req.query.intern !== "true";
+    if (readOnly) edit = null;
+    const open = !readOnly && (completed ? !!edit : isRegistrationOpen());
     return res.json({ participant: publicParticipant(participant), choices: choicesFromParticipant(participant),
       internEnabled: req.query.intern === "true" && await store.internalRegistrationEnabled(),
       availability: await store.availability(participant.id), schedule: await store.schedule(), order: publicOrder(order), open, completed, edit,

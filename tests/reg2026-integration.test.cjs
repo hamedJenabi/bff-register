@@ -1321,7 +1321,7 @@ test(
           const [savedPerson] =
             await sql`SELECT * FROM registrations_26 WHERE firstname = 'SavedClasses'`;
           const savedUser = savedPerson.email + "+" + savedPerson.firstname;
-          const savedAccess = { user: savedUser, sig: signIdentity(savedUser) };
+          const savedAccess = { user: savedUser, sig: signIdentity(savedUser), intern: "true" };
           const savedState = res();
           await load({ method: "GET", query: savedAccess }, savedState);
           assert.equal(savedState.code, 200);
@@ -1352,7 +1352,7 @@ test(
             await sql`INSERT INTO registrations_26 (date,status,role,ticket,firstname,lastname,email,country,lunch)
         VALUES ('2026','confirmed','advanced','partyPass','HTTP','Participant','http+test@example.com','Austria','saturday') RETURNING *`;
           const user = person.email + "+" + person.firstname;
-          const access = { user, sig: signIdentity(user) };
+          const access = { user, sig: signIdentity(user), intern: "true" };
           const rejected = res();
           await load(
             { method: "GET", query: { user, sig: "tampered" } },
@@ -1385,7 +1385,7 @@ test(
             await sql`INSERT INTO registrations_26 (date,status,role,ticket,firstname,lastname,email,country,lunch)
         VALUES ('2026','confirmed','advanced','fullpass','Limit','Participant','limit@example.com','Austria','saturday,sunday') RETURNING *`;
           const fullUser = fullPass.email + "+" + fullPass.firstname;
-          const fullAccess = { user: fullUser, sig: signIdentity(fullUser) };
+          const fullAccess = { user: fullUser, sig: signIdentity(fullUser), intern: "true" };
           const slots = new Set();
           const { conflictsWithSolo } = require("../lib/reg2026/competitions");
           const tooMany = require("../lib/reg2026/catalog")
@@ -1685,6 +1685,7 @@ test(
               const signedLink = {
                 user: identity,
                 sig: signIdentity(identity),
+                intern: "true",
               };
               const draft = {
                 ...empty(),
@@ -1902,7 +1903,7 @@ test(
           });
           const signed = (person) => {
             const user = person.email + "+" + person.firstname;
-            return { user, sig: signIdentity(user) };
+            return { user, sig: signIdentity(user), intern: "true" };
           };
           const state = async (person) => {
             const response = res();

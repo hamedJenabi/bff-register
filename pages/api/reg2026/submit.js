@@ -1,5 +1,5 @@
 import { registrationStore as store } from "../../../db/reg2026";
-import { assertRegistrationOpen, canEditConfirmedRegistration, resolveParticipant } from "../../../lib/reg2026/access";
+import { assertRegistrationEditable, assertRegistrationOpen, canEditConfirmedRegistration, resolveParticipant } from "../../../lib/reg2026/access";
 import { checkoutForOrder, reconcileOrder, getStripe, canonicalOrigin } from "../../../lib/reg2026/payments";
 import { choicesFromParticipant, hasRegisteredClasses } from "../../../lib/reg2026/serialization";
 import { requiredClassesError, validateDraft } from "../../../lib/reg2026/validation";
@@ -13,6 +13,7 @@ export default async function handler(req, res) {
   if (!allowMethod(req, res, "POST")) return;
   try {
     let participant = await resolveParticipant(req.body, store);
+    assertRegistrationEditable(req.body);
     if (typeof req.body.requestKey !== "string" || !/^[a-zA-Z0-9_-]{16,100}$/.test(req.body.requestKey)) {
       throw new RegistrationError(422, "A valid submission key is required.");
     }

@@ -57,6 +57,8 @@ const http = require('node:http');
       ('2026','confirmed','advanced','partyPass','Pending','Dancer','demo+pending@example.com','Austria'),
       ('2026','confirmed','advanced','partyPass','Complete','Dancer','demo+complete@example.com','Austria'),
       ('2026','confirmed','advanced','fullpass','Hamed','Demo','demo+classes@example.com','Austria') RETURNING *`;
+    // Lunch is sold out; these checkout examples keep an existing meal booking.
+    await sql`UPDATE registrations_26 SET lunch = 'saturday' WHERE id IN (${people[2].id}, ${people[3].id})`;
     const store = require('../lib/reg2026/store').createRegistrationStore(sql);
     // Reproduce saved classes without a completed supplemental order.
     await store.editClasses(people[4].id, [{ sessionId: 'fri-1330-kantine', role: 'lead' },
