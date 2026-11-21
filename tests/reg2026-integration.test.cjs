@@ -43,6 +43,7 @@ test(
         "00015-reg2026-switch-role",
         "00016-reg2026-competition-capacities",
         "00017-reg2026-showcase-capacity",
+        "00021-reg2026-internal-registration",
       ]) {
         await sql.begin((tx) => require(`../migrations/${file}`).up(tx));
       }

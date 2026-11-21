@@ -85,7 +85,7 @@ test(
         "00007-create-reg2026-bookings",
         "00008-reg2026-order-safety",
         "00009-create-schedule-overrides-2026",
-        "00010-reg2026-reopen-registration", "00013-reg2026-sheet-schedule", "00015-reg2026-switch-role", "00016-reg2026-competition-capacities", "00017-reg2026-showcase-capacity",
+        "00010-reg2026-reopen-registration", "00013-reg2026-sheet-schedule", "00015-reg2026-switch-role", "00016-reg2026-competition-capacities", "00017-reg2026-showcase-capacity", "00021-reg2026-internal-registration",
         "00011-attendee-app-access",
         "00012-festival-app-admin",
         "00018-reg2026-final-emails",

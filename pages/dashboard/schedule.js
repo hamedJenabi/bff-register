@@ -156,13 +156,16 @@ function ClassPreview({ session, source, onSave, disabled, onBusyChange }) {
   </section>;
 }
 
-export default function ScheduleAdmin({ initial, source: initialSource, inventory: initialInventory, competitionInventory: initialCompetitionInventory, classRegistrantCount: initialClassRegistrantCount, competitionRegistrantCount: initialCompetitionRegistrantCount, loadError }) {
+export default function ScheduleAdmin({ initial, source: initialSource, inventory: initialInventory, competitionInventory: initialCompetitionInventory, classRegistrantCount: initialClassRegistrantCount, competitionRegistrantCount: initialCompetitionRegistrantCount, internEnabled: initialInternEnabled, loadError }) {
   const [sessions, setSessions] = useState(initial || []);
   const [source, setSource] = useState(initialSource || null);
   const [inventory, setInventory] = useState(initialInventory || {});
   const [competitionInventory, setCompetitionInventory] = useState(initialCompetitionInventory || {});
   const [classRegistrantCount, setClassRegistrantCount] = useState(initialClassRegistrantCount ?? 0);
   const [competitionRegistrantCount, setCompetitionRegistrantCount] = useState(initialCompetitionRegistrantCount ?? 0);
+  const [internEnabled, setInternEnabled] = useState(initialInternEnabled ?? null);
+  const [savingIntern, setSavingIntern] = useState(false);
+  const [internError, setInternError] = useState("");
   const tabs = useTabState({ baseId: "schedule-view", selectedId: "schedule-details-tab" });
   const [selected, setSelected] = useState(initial?.[0]?.id || "");
   const [query, setQuery] = useState("");
@@ -184,6 +187,7 @@ export default function ScheduleAdmin({ initial, source: initialSource, inventor
     setCompetitionInventory(result.competitionInventory || {});
     setClassRegistrantCount(result.classRegistrantCount ?? 0);
     setCompetitionRegistrantCount(result.competitionRegistrantCount ?? 0);
+    if (typeof result.internEnabled === "boolean") setInternEnabled(result.internEnabled);
     setSelected((current) => result.schedule?.some((session) => session.id === current)
       ? current : result.schedule?.[0]?.id || "");
   };
@@ -194,6 +198,22 @@ export default function ScheduleAdmin({ initial, source: initialSource, inventor
   const competitionCapacitySaved = (result) => {
     updatePublished(result); setSyncError(""); setDiagnostics([]);
     setMessage(result.unchanged ? "Competition capacity is already up to date." : "Competition capacity saved.");
+  };
+  const toggleInternalRegistration = async () => {
+    setSavingIntern(true); setInternError("");
+    try {
+      const response = await fetch("/api/reg2026/schedule", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "internal-registration", enabled: !internEnabled }),
+      });
+      const result = await response.json();
+      if (!response.ok || typeof result.internEnabled !== "boolean") {
+        throw new Error(result.error || "Could not confirm the setting. Reload the dashboard to check it.");
+      }
+      setInternEnabled(result.internEnabled);
+    } catch (error) {
+      setInternError(error.message || "Could not confirm the setting. Reload the dashboard to check it.");
+    } finally { setSavingIntern(false); }
   };
   const refreshCounts = async () => {
     setRefreshing(true); setMessage("");
@@ -237,6 +257,21 @@ export default function ScheduleAdmin({ initial, source: initialSource, inventor
     <header className={styles.header}><h1>Schedule</h1><p>{sheetsMode
       ? "Manage class and competition capacities here. Update the schedule in Google Sheets and sync it to publish class details."
       : "Edit class details for the registration form. Mock classes appear until you save changes."}</p></header>
+    <section className={styles.featureFlag} aria-labelledby="internal-registration-title" aria-busy={savingIntern}>
+      <div>
+        <h2 id="internal-registration-title">Internal registration</h2>
+        <p id="internal-registration-description">Allow links with <code>intern=true</code> to book sold-out classes and dance roles. Participants still choose exactly 5 classes.</p>
+        <p className={styles.hint}>When off, these links follow normal class capacity limits.</p>
+      </div>
+      <button type="button" role="switch" aria-checked={internEnabled === true}
+        aria-labelledby="internal-registration-title" aria-describedby="internal-registration-description"
+        className={styles.featureSwitch} disabled={savingIntern || internEnabled === null || syncing || savingCapacity || refreshing}
+        onClick={toggleInternalRegistration}>
+        <span className={styles.switchTrack} aria-hidden="true" />
+        <span>{savingIntern ? "Saving…" : internEnabled === null ? "Unavailable" : internEnabled ? "On" : "Off"}</span>
+      </button>
+      {internError && <p role="alert" className={styles.switchError}>{internError}</p>}
+    </section>
     <TabList {...tabs} className={styles.viewTabs} aria-label="Schedule views">
       <Tab {...tabs} id="schedule-details-tab" disabled={syncing || savingCapacity || refreshing}>Class details</Tab>
       <Tab {...tabs} id="schedule-capacity-tab" disabled={syncing || savingCapacity || refreshing}>Capacity overview</Tab>
@@ -310,8 +345,8 @@ export async function getServerSideProps({ req, res }) {
   try {
     const { registrationStore: store } = await import("../../db/reg2026");
     const { getScheduleAdminState } = await import("../../lib/reg2026/google-sheets");
-    const { schedule, source, inventory, competitionInventory, classRegistrantCount, competitionRegistrantCount } = await getScheduleAdminState(store);
-    return { props: { initial: schedule, source, inventory, competitionInventory, classRegistrantCount, competitionRegistrantCount, loadError: null } };
+    const { schedule, source, inventory, competitionInventory, classRegistrantCount, competitionRegistrantCount, internEnabled } = await getScheduleAdminState(store);
+    return { props: { initial: schedule, source, inventory, competitionInventory, classRegistrantCount, competitionRegistrantCount, internEnabled, loadError: null } };
   } catch {
     return { props: { initial: null, loadError: "Schedule is temporarily unavailable. Please try again." } };
   }

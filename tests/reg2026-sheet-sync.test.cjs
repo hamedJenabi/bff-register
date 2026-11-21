@@ -241,6 +241,7 @@ test("sync publishes the validated source and returns accurate new and unchanged
     classInventory: async () => ({}),
     classRegistrantCount: async () => 2,
     competitionInventory: async () => ({}),
+    internalRegistrationEnabled: async () => false,
     competitionRegistrantCount: async () => 1,
     publishSchedule: async (actual, version) => {
       assert.deepEqual(actual, snapshot);
@@ -272,6 +273,7 @@ test("dashboard remains accessible before first publication and preserves the pu
   const store = {
     schedulePublication: async () => null,
     competitionInventory: async () => ({}),
+    internalRegistrationEnabled: async () => false,
     competitionRegistrantCount: async () => 2,
     schedule: async () => { scheduleReads += 1; throw new Error("Do not load unpublished mocks"); },
   };
@@ -318,6 +320,7 @@ test("schedule HTTP endpoint requires organizer authentication and same-origin w
   const store = {
     schedulePublication: async () => { reads += 1; return null; },
     competitionInventory: async () => ({}),
+    internalRegistrationEnabled: async () => false,
     competitionRegistrantCount: async () => 0,
     schedule: async () => { throw new Error("Unpublished schedule should not be read"); },
   };

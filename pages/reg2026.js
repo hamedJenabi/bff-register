@@ -42,7 +42,7 @@ const passLabel = {
 
 export default function Registration({ initial, access, loadError }) {
   const router = useRouter();
-  const { user, sig } = access;
+  const { user, sig, intern } = access;
   const [data, setData] = useState(initial);
   const [requestKey, setRequestKey] = useState("");
   const [hydrated, setHydrated] = useState(false);
@@ -242,7 +242,7 @@ export default function Registration({ initial, access, loadError }) {
       if (document.visibilityState === "hidden" || refreshing) return;
       refreshing = true;
       try {
-        const query = new URLSearchParams({ user, sig });
+        const query = new URLSearchParams({ user, sig, ...(intern === "true" ? { intern } : {}) });
         const response = await fetch(`/api/reg2026?${query}`, {
           cache: "no-store",
           signal: controller.signal,
@@ -255,6 +255,7 @@ export default function Registration({ initial, access, loadError }) {
               ? {
                   ...current,
                   availability: result.availability,
+                  internEnabled: result.internEnabled,
                   open: result.open,
                   // Keep the draft's original version so a stale tab can't overwrite newer choices.
                   edit: result.edit ? current.edit : null,
@@ -279,7 +280,7 @@ export default function Registration({ initial, access, loadError }) {
       window.removeEventListener("focus", refreshAvailability);
       document.removeEventListener("visibilitychange", refreshAvailability);
     };
-  }, [hydrated, completed, pending, user, sig]);
+  }, [hydrated, completed, pending, user, sig, intern]);
   const checkoutAction = async (cancel) => {
     setBusy(true);
     setMessage("");
@@ -495,7 +496,7 @@ export default function Registration({ initial, access, loadError }) {
                       savedClasses={
                         editingChoices ? data.choices.classes : undefined
                       }
-                      allowSoldOutClasses={access.intern === "true"}
+                      allowSoldOutClasses={data.internEnabled === true}
                       disabled={busy || pending || !data.open}
                     />
                   )}
@@ -639,6 +640,7 @@ export async function getServerSideProps({ query, res }) {
     );
     const initial = {
       participant: publicParticipant(participant),
+      internEnabled: access.intern === "true" && await store.internalRegistrationEnabled(),
       choices: choicesFromParticipant(participant),
       availability: await store.availability(participant.id),
       schedule: await store.schedule(),

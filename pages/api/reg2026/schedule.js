@@ -13,6 +13,10 @@ export default async function handler(req, res) {
   if (!requireAdmin(req, res)) return;
   try {
     if (req.method === "GET") return res.json(await getScheduleAdminState(store));
+    if (req.body?.action === "internal-registration") {
+      const internEnabled = await store.setInternalRegistrationEnabled(req.body.enabled);
+      return res.json({ internEnabled });
+    }
     if (req.body?.action === "competition-capacity") {
       const result = await store.editCompetitionCapacity(req.body);
       return res.json({ ...(await getScheduleAdminState(store)), ...result });

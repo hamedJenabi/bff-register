@@ -90,7 +90,7 @@ test('write failures and concurrent Sheet changes preserve actionable errors wit
 
 test('capacity save orchestration retains Google Sheets authority and rejects unconfigured source switches',async()=>withEnv({REG2026_SCHEDULE_SHEET_ID:id,REG2026_SCHEDULE_SHEET_NAME:"Teacher's Schedule"},async()=>{
   let published=publication(); const requests=[]; const writer=async()=>{};
-  const store={schedulePublication:async()=>published,schedule:async()=>expected(),classInventory:async()=>({}),classRegistrantCount:async()=>0,competitionInventory:async()=>({}),competitionRegistrantCount:async()=>0,editPublishedCapacity:async(...args)=>{
+  const store={internalRegistrationEnabled:async()=>false,schedulePublication:async()=>published,schedule:async()=>expected(),classInventory:async()=>({}),classRegistrantCount:async()=>0,competitionInventory:async()=>({}),competitionRegistrantCount:async()=>0,editPublishedCapacity:async(...args)=>{
     requests.push(args); published={...published,id:2}; return published;
   }};
   const saved=await saveScheduleCapacity(store,{id:'partner-test',capacity:{total:25},version:1},writer);
@@ -108,7 +108,7 @@ test('capacity HTTP saves require organizer authentication, same origin and a pu
   const previousDb=require.cache[dbPath],previousEndpoint=require.cache[endpointPath]; let writes=0;
   const pub=publication();
   const inventory={'partner-test':{registered:4,held:1,remaining:20,followRemaining:10,roles:{}}};
-  const store={schedulePublication:async()=>pub,schedule:async()=>expected(),classInventory:async()=>inventory,classRegistrantCount:async()=>3,competitionInventory:async()=>({}),competitionRegistrantCount:async()=>0,editPublishedCapacity:async(sessionId,capacity,version)=>{
+  const store={internalRegistrationEnabled:async()=>false,schedulePublication:async()=>pub,schedule:async()=>expected(),classInventory:async()=>inventory,classRegistrantCount:async()=>3,competitionInventory:async()=>({}),competitionRegistrantCount:async()=>0,editPublishedCapacity:async(sessionId,capacity,version)=>{
     writes+=1; assert.equal(sessionId,'partner-test'); assert.deepEqual(capacity,{total:25}); assert.equal(version,1); return pub;
   }};
   const res=()=>({headers:{},code:200,setHeader(k,v){this.headers[k]=v;},status(v){this.code=v;return this;},json(v){this.body=v;return this;},end(){return this;}});
@@ -133,7 +133,7 @@ test('competition capacity HTTP saves require organizer authentication and same 
   const previousDb=require.cache[dbPath],previousEndpoint=require.cache[endpointPath];let writes=0;
   const competitionInventory={solo_battle:{total:{capacity:20,registered:4,held:1,remaining:15,version:1}}};
   const body={action:'competition-capacity',id:'solo_battle',pool:'total',capacity:'20',version:0};
-  const store={schedulePublication:async()=>null,competitionInventory:async()=>competitionInventory,competitionRegistrantCount:async()=>3,editCompetitionCapacity:async(actual)=>{
+  const store={internalRegistrationEnabled:async()=>false,schedulePublication:async()=>null,competitionInventory:async()=>competitionInventory,competitionRegistrantCount:async()=>3,editCompetitionCapacity:async(actual)=>{
     assert.deepEqual(actual,body);writes+=1;return{unchanged:false};
   }};
   const res=()=>({headers:{},code:200,setHeader(k,v){this.headers[k]=v;},status(v){this.code=v;return this;},json(v){this.body=v;return this;},end(){return this;}});

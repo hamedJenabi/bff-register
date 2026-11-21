@@ -19,6 +19,7 @@ export default async function handler(req, res) {
     if (completed && order?.status === "confirmed") await deliverConfirmation(store, order.id);
     const open = completed ? !!edit : isRegistrationOpen();
     return res.json({ participant: publicParticipant(participant), choices: choicesFromParticipant(participant),
+      internEnabled: req.query.intern === "true" && await store.internalRegistrationEnabled(),
       availability: await store.availability(participant.id), schedule: await store.schedule(), order: publicOrder(order), open, completed, edit,
       pendingDraft: ["provisional", "payment_pending"].includes(order?.status) ? order.draft : null });
   } catch (error) { return apiError(res, error); }

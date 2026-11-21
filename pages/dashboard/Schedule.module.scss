@@ -3,6 +3,20 @@
   a { color: #225a55; font-size: 15px; } [aria-current] { font-weight: 700; text-decoration: underline; text-underline-offset: 5px; }
 }
 .header { margin: 24px 0 0; h1 { font-size: 34px; line-height: 1.2; } p { margin-top: 12px; font-size: 15px; line-height: 1.5; } }
+.featureFlag { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 16px; margin-top: 24px; padding: 24px; border: 1px solid #dce6e5; border-radius: 12px; background: white;
+  h2 { font-size: 20px; line-height: 1.3; }
+  p { margin-top: 8px; font-size: 14px; line-height: 1.5; }
+  .hint { font-size: 13px; }
+}
+.featureSwitch { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; padding: 8px; border: 0; border-radius: 6px; background: transparent; color: #172023; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer;
+  &:focus-visible { outline: 3px solid #2f766f; outline-offset: 3px; }
+  &:disabled { opacity: .5; cursor: default; }
+  &[aria-checked="true"] .switchTrack { background: #2f766f; &::after { transform: translateX(20px); } }
+}
+.switchTrack { position: relative; display: block; width: 46px; height: 26px; border-radius: 13px; background: #62716f;
+  &::after { content: ""; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: white; }
+}
+.switchError { grid-column: 1 / -1; color: #a12625; }
 .message { min-height: 24px; margin: 16px 0; font-size: 14px; color: #225a55; }
 .message:empty { display: none; }
 .layout { display: grid; grid-template-columns: minmax(240px, 340px) minmax(0, 1fr); gap: 24px; align-items: start; }
@@ -129,6 +143,8 @@
 .srOnly { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
 @media (max-width: 900px) {
   .page { padding: 16px; }
+  .featureFlag { grid-template-columns: minmax(0, 1fr); padding: 20px; }
+  .featureSwitch { justify-self: start; }
   .page p { letter-spacing: normal; }
   .viewTabs button { flex: 1 1 0; min-width: 0; min-height: 44px; padding: 8px 4px; font-size: 13px; line-height: 1.35; }
   .layout { grid-template-columns: minmax(0, 1fr); gap: 16px; }

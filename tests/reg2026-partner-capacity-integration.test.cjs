@@ -16,7 +16,7 @@ test("partner roles share capacity and serialize competing bookings on isolated 
   const previousSheet = process.env.REG2026_SCHEDULE_SHEET_ID;
   delete process.env.REG2026_SCHEDULE_SHEET_ID;
   try {
-    for (const file of ["00004-CREAT-registraion-2026", "00006-create-class-capacities-2026", "00007-create-reg2026-bookings", "00008-reg2026-order-safety", "00009-create-schedule-overrides-2026", "00010-reg2026-reopen-registration", "00013-reg2026-sheet-schedule", "00015-reg2026-switch-role", "00016-reg2026-competition-capacities", "00017-reg2026-showcase-capacity"]) {
+    for (const file of ["00004-CREAT-registraion-2026", "00006-create-class-capacities-2026", "00007-create-reg2026-bookings", "00008-reg2026-order-safety", "00009-create-schedule-overrides-2026", "00010-reg2026-reopen-registration", "00013-reg2026-sheet-schedule", "00015-reg2026-switch-role", "00016-reg2026-competition-capacities", "00017-reg2026-showcase-capacity", "00021-reg2026-internal-registration"]) {
       await sql.begin((tx) => require(`../migrations/${file}`).up(tx));
     }
     const store = createRegistrationStore(sql);
@@ -33,7 +33,10 @@ test("partner roles share capacity and serialize competing bookings on isolated 
           VALUES (${attendee.id},${sessionId},${role},${status},${expiresAt})`;
       }
     };
-    const reset = () => sql`TRUNCATE registrations_26, class_bookings_26, reg2026_orders, registration_email_retries_26 RESTART IDENTITY CASCADE`;
+    const reset = async () => {
+      await sql`TRUNCATE registrations_26, class_bookings_26, reg2026_orders, registration_email_retries_26 RESTART IDENTITY CASCADE`;
+      await store.setInternalRegistrationEnabled(false);
+    };
     const places = async () => (await store.availability()).classes[sessionId];
 
     await t.test("the 20th follower succeeds, the 21st is rejected, and Switch persists in choices and confirmation", async () => {
@@ -71,7 +74,25 @@ test("partner roles share capacity and serialize competing bookings on isolated 
       await reset();
     });
 
+    await t.test("the internal registration switch defaults off, persists across stores, and disables previously enabled links", async () => {
+      assert.equal(await store.internalRegistrationEnabled(), false);
+      await seed(20, "follow");
+      const attendee = await person();
+      await assert.rejects(store.submit(attendee, draft("follow"), "intern-switch-off-01", undefined, { intern: true }), (error) => error.status === 409);
+      await store.setInternalRegistrationEnabled(true);
+      assert.equal(await createRegistrationStore(sql).internalRegistrationEnabled(), true);
+      for (const enabled of ["true", "false", 1, null, undefined]) {
+        await assert.rejects(store.setInternalRegistrationEnabled(enabled), (error) => error.status === 422);
+      }
+      assert.equal(await store.internalRegistrationEnabled(), true);
+      await store.setInternalRegistrationEnabled(false);
+      await assert.rejects(store.submit(attendee, draft("follow"), "intern-switch-off-02", undefined, { intern: true }), (error) => error.status === 409);
+      assert.equal((await sql`SELECT id FROM reg2026_orders WHERE registration_id = ${attendee.id}`).length, 0);
+      await reset();
+    });
+
     await t.test("internal registration can exceed the follower limit and keeps the booking in capacity counts", async () => {
+      await store.setInternalRegistrationEnabled(true);
       await seed(20, "follow");
       const attendee = await person();
       await assert.rejects(store.submit(attendee, draft("follow"), "intern-follow-normal"), (error) => error.status === 409);
@@ -86,6 +107,7 @@ test("partner roles share capacity and serialize competing bookings on isolated 
     });
 
     await t.test("internal registration can select any role in a full class while regular registration stays blocked", async () => {
+      await store.setInternalRegistrationEnabled(true);
       await seed(40, "lead");
       for (const role of ["lead", "follow", "switch"]) {
         const attendee = await person();
@@ -99,6 +121,7 @@ test("partner roles share capacity and serialize competing bookings on isolated 
     });
 
     await t.test("internal registration can book a sold-out solo class", async () => {
+      await store.setInternalRegistrationEnabled(true);
       const soloId = "fri-1330-ankersaal";
       await sql`INSERT INTO class_capacities_26 (session_id, pool, capacity) VALUES (${soloId}, 'total', 0)`;
       try {
@@ -115,6 +138,7 @@ test("partner roles share capacity and serialize competing bookings on isolated 
     });
 
     await t.test("internal registration still requires exactly five classes and rejects overlaps, invalid roles and sold-out lunch", async () => {
+      await store.setInternalRegistrationEnabled(true);
       const { schedule, scheduleById } = require("../lib/reg2026/catalog");
       const choice = draft("lead");
       const slots = new Set(choice.classes.map(({ sessionId }) => scheduleById[sessionId].slotId));
