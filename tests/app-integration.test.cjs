@@ -8,6 +8,8 @@ const { createScheduleHandler } = require("../lib/app/schedule");
 const { createContentHandlers } = require("../lib/app/content-http");
 const { createContentStore } = require("../lib/app/content-store");
 const { createDoorStore } = require("../lib/app/door-store");
+const { createArrivalHandlers } = require("../lib/app/arrival-http");
+const { createArrivalStore } = require("../lib/app/arrival-store");
 const { hashAdminPassword } = require("../lib/app/admin-security");
 const { createAppInvitationHandler } = require("../lib/app/invitations");
 const { createFinalEmailHandler, createFinalEmailStore } = require("../lib/app/final-email");
@@ -89,6 +91,7 @@ test(
         "00011-attendee-app-access",
         "00012-festival-app-admin",
         "00018-reg2026-final-emails",
+        "00022-festival-arrivals",
       ]) {
         await sql.begin((tx) => require(`../migrations/${migration}`).up(tx));
       }
@@ -689,6 +692,93 @@ test(
           );
         },
       );
+      await t.test("the public scanner submits valid QR codes and only organizers can confirm arrivals", async () => {
+        const parent = await createPerson("Check-in Parent", "parentPass");
+        const next = await createPerson("Check-in Party", "partyPass");
+        await sql`UPDATE registrations_26 SET tshirt = 'Curvy M (W)' WHERE id = ${parent.id}`;
+        await sql`UPDATE registrations_26 SET lunch = '', tshirt = 'No T-shirt', competitions = '' WHERE id = ${next.id}`;
+        const parentLink = await store.issueAccess(parent.id);
+        const nextLink = await store.issueAccess(next.id);
+        const session = await store.claim(linkToken(parentLink.url));
+        const parentQr = credentialToken(parentLink.access, "qr");
+        const nextQr = credentialToken(nextLink.access, "qr");
+        const arrivalApi = createArrivalHandlers(createArrivalStore(sql));
+        const scannerHeaders = { host: organizerHeaders.host, origin: organizerHeaders.origin };
+        const call = async (action, body, headers = scannerHeaders) => {
+          const res = response();
+          await arrivalApi[action]({
+            method: action === "dashboard" ? "GET" : "POST",
+            headers,
+            body,
+          }, res);
+          return res;
+        };
+        const status = async () => {
+          const res = response();
+          await api.me({ method: "GET", headers: sessionHeaders(session.sessionToken), query: { checkIn: "1" } }, res);
+          assert.equal(res.code, 200);
+          return res.body;
+        };
+
+        assert.equal((await call("dashboard")).code, 401);
+        assert.equal((await call("resolve", { id: 1, action: "confirm" })).code, 401);
+        assert.equal((await call("undo", { registrationId: parent.id })).code, 401);
+        assert.equal((await call("scan", { qr: parentQr }, { ...scannerHeaders, origin: "https://elsewhere.example.com" })).code, 403);
+        assert.deepEqual((await call("scan", { qr: linkToken(parentLink.url) })).body, { status: "invalid" });
+        assert.deepEqual((await call("scan", { qr: credentialToken(bobLink.access, "qr") })).body, { status: "invalid" });
+
+        const duplicates = await Promise.all([call("scan", { qr: parentQr }), call("scan", { qr: parentQr })]);
+        assert.ok(duplicates.every(({ body }) => body.status === "queued"));
+        assert.deepEqual((await call("scan", { qr: nextQr })).body, { status: "queued" });
+        assert.deepEqual(await status(), { festivalCheckedIn: false });
+        const [{ body: firstLaptop }, { body: secondLaptop }] = await Promise.all([
+          call("dashboard", undefined, organizerHeaders), call("dashboard", undefined, organizerHeaders),
+        ]);
+        assert.deepEqual(firstLaptop, secondLaptop);
+        assert.deepEqual(firstLaptop.scan, {
+          id: firstLaptop.scan.id, name: "Check-in Parent Dancer", pass: "Parent Pass",
+          lunch: ["Saturday"], tshirt: "Curvy M (W)", competitions: ["Solo Battle"],
+        });
+        assert.deepEqual(firstLaptop.checkedInIds, []);
+        const confirmation = { id: firstLaptop.scan.id, action: "confirm" };
+        const results = await Promise.all([
+          call("resolve", confirmation, organizerHeaders), call("resolve", confirmation, organizerHeaders),
+        ]);
+        for (const { body } of results) {
+          assert.deepEqual(body.checkedInIds, [parent.id]);
+          assert.equal(body.scan.name, "Check-in Party Dancer");
+          assert.equal(body.scan.pass, "Party Pass");
+          assert.equal(body.scan.tshirt, null);
+          assert.deepEqual(body.scan.lunch, []);
+          assert.deepEqual(body.scan.competitions, []);
+        }
+        assert.deepEqual(await status(), { festivalCheckedIn: true });
+        assert.equal((await store.snapshot(session.sessionToken)).festivalCheckedIn, true);
+        assert.deepEqual((await call("scan", { qr: parentQr })).body, { status: "alreadyCheckedIn" });
+        const [before] = await sql`SELECT checked_in_at FROM festival_arrivals_26 WHERE registration_id = ${parent.id}`;
+        await call("resolve", confirmation, organizerHeaders);
+        const [after] = await sql`SELECT checked_in_at FROM festival_arrivals_26 WHERE registration_id = ${parent.id}`;
+        assert.deepEqual(before, after);
+
+        const registrationBeforeUndo = await store.participant(parent.id);
+        const undo = { registrationId: parent.id };
+        assert.equal((await call("undo", undo, organizerHeaders)).code, 200);
+        assert.equal((await call("undo", undo, organizerHeaders)).code, 200);
+        assert.deepEqual(await store.participant(parent.id), registrationBeforeUndo);
+        assert.deepEqual(await status(), { festivalCheckedIn: false });
+        assert.equal((await store.snapshot(session.sessionToken)).festivalCheckedIn, false);
+        await call("undo", { registrationId: next.id }, organizerHeaders);
+        const staleConfirmation = await call("resolve", confirmation, organizerHeaders);
+        assert.deepEqual(staleConfirmation.body, { checkedInIds: [], scan: results[0].body.scan });
+        const dismissed = await call("resolve", { id: results[0].body.scan.id, action: "dismiss" }, organizerHeaders);
+        assert.deepEqual(dismissed.body, { checkedInIds: [], scan: null });
+        assert.deepEqual((await call("scan", { qr: parentQr })).body, { status: "queued" });
+        const rescanned = (await call("dashboard", undefined, organizerHeaders)).body.scan;
+        assert.notEqual(rescanned.id, confirmation.id);
+        await call("resolve", { id: rescanned.id, action: "confirm" }, organizerHeaders);
+        assert.deepEqual(await status(), { festivalCheckedIn: true });
+        assert.deepEqual((await call("scan", { qr: nextQr })).body, { status: "queued" });
+      });
     } finally {
       for (const key of keys) {
         if (previous[key] === undefined) delete process.env[key];

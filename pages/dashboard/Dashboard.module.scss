@@ -450,6 +450,11 @@
   background: #5b2423;
 }
 
+.table tr.checkedIn:not(:first-child) td {
+  background: #e1f5e5;
+  color: #184528;
+}
+
 .tickets,
 .balanceComponent {
   min-width: 760px;

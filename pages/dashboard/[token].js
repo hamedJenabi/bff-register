@@ -1,6 +1,8 @@
 import RegisteredClasses from "../../components/Reg2026/RegisteredClasses";
 import RegistrationLink from "../../components/Reg2026/RegistrationLink";
+import ArrivalCheckIn from "../../components/ArrivalCheckIn/ArrivalCheckIn";
 import { adminPageRedirect } from "../../lib/admin/session";
+import { arrivalRequest } from "../../lib/app/arrival-client";
 import { isClassPass } from "../../lib/reg2026/catalog";
 import Head from "next/head";
 import useMedia from "use-media";
@@ -19,7 +21,8 @@ import {
 import { unstable_FormCheckbox as FormCheckbox } from "reakit/Form";
 import { unstable_useFormState as useFormState } from "reakit/Form";
 
-export default function Dashboard({ users, tickets, previewMode }) {
+export default function Dashboard({ users, tickets, previewMode, scannerPath }) {
+  const [checkedInIds, setCheckedInIds] = useState(() => new Set());
   const [nameSearch, setNameSearch] = useState("");
   const [activeSideBar, setActiveSideBar] = useState("all");
   const [capacityShow, setCapacityShow] = useState(false);
@@ -72,42 +75,39 @@ export default function Dashboard({ users, tickets, previewMode }) {
     },
   });
   const [status, setStatus] = useState("");
+  const [updatingStatus, setUpdatingStatus] = useState(false);
+  const [statusError, setStatusError] = useState("");
   const [groupLevel, setGroupLevel] = useState("int1");
   const [usersToChange, setUsersToChange] = useState([]);
 
   const handleStatusChange = async () => {
-    const idsToChange = form.values.users;
-    let array = [];
-    idsToChange.map((id) => {
-      array.push(users.find((userinfo) => userinfo.id === id));
-    });
+    const selectedIds = new Set(form.values.users.map(Number));
+    const selected = users.filter(({ id }) => selectedIds.has(id));
+    if (updatingStatus || !status || !selected.length) return;
+    setUpdatingStatus(true);
+    setStatusError("");
 
-    array.map((item) => {
-      const toEdit = {
-        ...item,
-        firstname: item.firstname,
-        lastname: item.lastname,
-        status: status,
-      };
-      fetch("/api/edituser", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Cache-Control": "no-cache, no-store",
-        },
-        body: JSON.stringify(toEdit),
-      })
-        .then((response) => {
-          if (response.status === 200) {
-            router.reload(window.location.pathname);
-          }
-          if (response.status === 401) {
-            alert("Please write a valid status");
-          }
-        })
-        .catch((error) => console.log(error));
-    });
-    alert("done");
+    const outcomes = await Promise.allSettled(
+      selected.map(async (participant) => {
+        if (status === "confirmed" && participant.status === "confirmed") {
+          await arrivalRequest("undo", { registrationId: participant.id });
+          return;
+        }
+        const response = await fetch("/api/edituser", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ...participant, status }),
+        });
+        if (!response.ok) throw new Error("Could not update the registration status.");
+      }),
+    );
+    const failure = outcomes.find(({ status }) => status === "rejected");
+    if (failure) {
+      setStatusError(failure.reason.message || "Could not change the selected registrations.");
+      setUpdatingStatus(false);
+      return;
+    }
+    router.reload();
   };
   const handleGroupChange = async () => {
     const idsToChange = form.values.users;
@@ -676,6 +676,7 @@ export default function Dashboard({ users, tickets, previewMode }) {
           donation,
           email,
         }) => {
+          const checkedIn = status === "confirmed" && checkedInIds.has(id);
           // const getToPay = (to_pay, lunch) => {
           //   const lunchMoney = lunch?.split(",").length * 12.5 || 0;
           //   return Number(to_pay) + lunchMoney;
@@ -684,6 +685,7 @@ export default function Dashboard({ users, tickets, previewMode }) {
             <tr
               key={id}
               className={classNames(styles.normal, {
+                [styles.checkedIn]: checkedIn,
                 [styles.confirmed]: status === "confirmed",
                 [styles.canceled]: status === "canceled",
                 [styles.out]: status === "out",
@@ -702,7 +704,7 @@ export default function Dashboard({ users, tickets, previewMode }) {
                 </label>
               </td>
               {/* <td>{getToPay(to_pay, lunch)}</td> */}
-              <td>{status}</td>
+              <td>{checkedIn ? "Checked in" : status}</td>
               <td>{to_pay}</td>
               <td>{price}</td>
               <td>{date}</td>
@@ -833,6 +835,7 @@ export default function Dashboard({ users, tickets, previewMode }) {
           </p>
           <p>Donation: {totalDonation}</p>
         </div>
+        <ArrivalCheckIn scannerPath={scannerPath} setCheckedInIds={setCheckedInIds} />
       </div>
       <main className={styles.main}>
         <div className={styles.sideBar}>
@@ -971,9 +974,11 @@ export default function Dashboard({ users, tickets, previewMode }) {
                 <label className={styles.controlField}>
                   <span>Bulk status</span>
                   <select
+                    value={status}
                     onChange={(e) => setStatus(e.target.value)}
                     className={styles.select}
                   >
+                    <option value="" disabled>Select a status</option>
                     <option>registered</option>
                     <option>email-sent</option>
                     <option>reminder</option>
@@ -986,10 +991,12 @@ export default function Dashboard({ users, tickets, previewMode }) {
                 <button
                   className={styles.statusButton}
                   onClick={handleStatusChange}
+                  disabled={updatingStatus || !status || !form.values.users.length}
                 >
-                  Change Status
+                  {updatingStatus ? "Changing status…" : "Change Status"}
                 </button>
               </div>
+              {statusError && <p role="alert">{statusError}</p>}
 
               {/* <select
                 onChange={(e) => setStatus(e.target.value)}
@@ -1112,7 +1119,7 @@ export default function Dashboard({ users, tickets, previewMode }) {
   );
 }
 
-export async function getServerSideProps({ req, res }) {
+export async function getServerSideProps({ req, res, params }) {
   const redirect = adminPageRedirect(req, res);
   if (redirect) return redirect;
   const { getAllUsers, getTickets } = await import("../../db/db");
@@ -1123,6 +1130,7 @@ export async function getServerSideProps({ req, res }) {
     props: {
       users: users,
       tickets: tickets,
+      scannerPath: `/dashboard/${encodeURIComponent(params.token)}/scan`,
       previewMode: process.env.BFF_PREVIEW === "true" && process.env.NODE_ENV !== "production",
     },
   };

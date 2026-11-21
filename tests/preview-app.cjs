@@ -88,6 +88,7 @@ const webpush = require("web-push");
       "00011-attendee-app-access",
       "00012-festival-app-admin",
       "00020-festival-volunteer-access",
+      "00022-festival-arrivals",
     ]) {
       await sql.begin((tx) => require(`../migrations/${file}`).up(tx));
     }
@@ -253,6 +254,7 @@ const webpush = require("web-push");
             return res.status(413).json({ error: "Too large" });
         }
         req.body = body ? JSON.parse(body) : {};
+        req.query = Object.fromEntries(url.searchParams);
         await handler(req, res);
       } catch {
         if (!res.headersSent)

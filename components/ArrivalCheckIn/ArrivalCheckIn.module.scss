@@ -1,0 +1,54 @@
+.control {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-block: 12px;
+  color: #244544;
+}
+
+.details {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 10px 20px;
+  margin: 0;
+
+  dt {
+    font-weight: 700;
+  }
+  dd {
+    margin: 0;
+  }
+}
+
+.desk {
+  margin-top: 16px;
+  padding: 10px 12px;
+  border-radius: 4px;
+  background: #fff2d3;
+  color: #553800;
+  font-weight: 700;
+}
+
+.scanner {
+  display: grid;
+  gap: 14px;
+  width: min(calc(100% - 32px), 480px);
+  margin: 32px auto;
+
+  h1 {
+    margin: 0;
+  }
+  p {
+    margin: 0;
+  }
+  button {
+    min-height: 48px;
+  }
+  video {
+    width: 100%;
+    max-height: 52dvh;
+    background: #172521;
+    border-radius: 8px;
+  }
+}
