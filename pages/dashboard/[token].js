@@ -5,13 +5,12 @@ import { adminPageRedirect } from "../../lib/admin/session";
 import { arrivalRequest } from "../../lib/app/arrival-client";
 import { isClassPass } from "../../lib/reg2026/catalog";
 import Head from "next/head";
-import useMedia from "use-media";
+import Link from "next/link";
 import Router from "next/router";
 import { useRouter } from "next/router";
-import { CSVLink, CSVDownload } from "react-csv";
+import { CSVLink } from "react-csv";
 import React, { useState } from "react";
 import styles from "./Dashboard.module.scss";
-import Header from "../../components/Header/Header.js";
 import classNames from "classnames";
 import {
   finalLevelsToShow,
@@ -33,7 +32,6 @@ export default function Dashboard({ users, tickets, previewMode, scannerPath }) 
   const [scheduleInvitationResults, setScheduleInvitationResults] = useState({});
   const [sendingFinalEmails, setSendingFinalEmails] = useState(false);
   const [finalEmailProgress, setFinalEmailProgress] = useState(null);
-  const isMobile = useMedia({ maxWidth: "768px" });
   const today = new Date().toISOString().split("T")[0];
   const totalAmount = users.reduce((acc, user) => {
     return (
@@ -502,37 +500,13 @@ export default function Dashboard({ users, tickets, previewMode, scannerPath }) 
 
   const renderTableHeader = () => {
     const header = [
-      "select",
-      "status",
-      "to_pay",
-      "price",
-      "date",
-      "actions",
-      "id",
-      "email",
-      "firstname",
-      "lastname",
-      "ticket",
-      "parent_partner",
-      "level",
-      "role",
-      "classes",
-      "competition",
-      "competitions",
-      "Open MnM role",
-      "Newcom. role",
-      "Strictly role",
-      "donation",
-      "tshirt",
-      "lunch",
-      "country",
-      "terms",
-      "registration link",
-      "app link",
+      "Select", "Status", "First name", "Last name", "Actions", "Ticket", "Email",
+      "To pay", "Price", "Date", "ID", "Parent partner", "Level", "Role",
+      "Classes", "Competition", "Competitions", "Open MnM role", "Newcom. role",
+      "Strictly role", "Donation", "T-shirt", "Lunch", "Country", "Terms",
+      "Registration link", "App link",
     ];
-    return header.map((key, index) => {
-      return <th key={index}>{key.toUpperCase()}</th>;
-    });
+    return header.map((column) => <th key={column} scope="col">{column}</th>);
   };
 
   //--------- Ticket Component
@@ -684,7 +658,7 @@ export default function Dashboard({ users, tickets, previewMode, scannerPath }) 
           return (
             <tr
               key={id}
-              className={classNames(styles.normal, {
+              className={classNames({
                 [styles.checkedIn]: checkedIn,
                 [styles.confirmed]: status === "confirmed",
                 [styles.canceled]: status === "canceled",
@@ -696,45 +670,42 @@ export default function Dashboard({ users, tickets, previewMode, scannerPath }) 
               <td>
                 <label>
                   <FormCheckbox
-                    style={{ width: "60px" }}
                     {...form}
                     name="users"
                     value={id}
+                    aria-label={`Select ${firstname} ${lastname} (ID ${id})`}
                   />
                 </label>
               </td>
-              {/* <td>{getToPay(to_pay, lunch)}</td> */}
-              <td>{checkedIn ? "Checked in" : status}</td>
-              <td>{to_pay}</td>
-              <td>{price}</td>
-              <td>{date}</td>
+              <td><span className={styles.statusBadge}>{checkedIn ? "Checked in" : status}</span></td>
+              <td>{firstname}</td>
+              <td>{lastname}</td>
               <td>
                 <div className={styles.rowActions}>
                   <button className={styles.button} onClick={() => handleUser(id)}>Edit</button>
                   {status === "confirmed" && (
-                    <>
-                      <button
-                        className={styles.button}
-                        onClick={() => handleSendOneScheduleInvitation({ id, firstname, lastname, email })}
-                        disabled={sendingScheduleInvitations || sendingScheduleInvitationId !== null || scheduleInvitationResults[id]?.done}
-                        aria-label={`Send schedule invitation to ${firstname} ${lastname} (ID ${id})`}
-                      >
-                        {sendingScheduleInvitationId === id ? "Sending…" : "Send schedule invitation"}
-                      </button>
-                      {scheduleInvitationResults[id] && (
-                        <span className={styles.rowActionMessage} role={scheduleInvitationResults[id].error ? "alert" : "status"}>
-                          {scheduleInvitationResults[id].message}
-                        </span>
-                      )}
-                    </>
+                    <button
+                      className={styles.button}
+                      onClick={() => handleSendOneScheduleInvitation({ id, firstname, lastname, email })}
+                      disabled={sendingScheduleInvitations || sendingScheduleInvitationId !== null || scheduleInvitationResults[id]?.done}
+                      aria-label={`Send schedule invitation to ${firstname} ${lastname} (ID ${id})`}
+                    >
+                      {sendingScheduleInvitationId === id ? "Sending…" : "Send schedule invitation"}
+                    </button>
                   )}
                 </div>
+                {status === "confirmed" && scheduleInvitationResults[id] && (
+                  <p className={styles.rowActionMessage} role={scheduleInvitationResults[id].error ? "alert" : "status"}>
+                    {scheduleInvitationResults[id].message}
+                  </p>
+                )}
               </td>
-              <td>{id}</td>
-              <td>{email}</td>
-              <td>{firstname}</td>
-              <td>{lastname}</td>
               <td>{ticket}</td>
+              <td>{email}</td>
+              <td>{to_pay}</td>
+              <td>{price}</td>
+              <td>{date}</td>
+              <td>{id}</td>
               <td>{parent_partner}</td>
               <td>{role}</td>
               <td>{level}</td>
@@ -746,18 +717,9 @@ export default function Dashboard({ users, tickets, previewMode, scannerPath }) 
               <td>{competition}</td>
               <td>
                 {competitions && (
-                  <div style={{ display: "flex", gap: "10px" }}>
+                  <div className={styles.tags}>
                     {competitions.split(",").map((comp) => (
-                      <p
-                        key={comp}
-                        style={{
-                          border: "1px solid blue",
-                          padding: "1px 2px",
-                          fontSize: "12px",
-                        }}
-                      >
-                        {titleCase(comp)}
-                      </p>
+                      <span key={comp}>{titleCase(comp)}</span>
                     ))}
                   </div>
                 )}
@@ -769,18 +731,9 @@ export default function Dashboard({ users, tickets, previewMode, scannerPath }) 
               <td>{tshirt}</td>
               <td>
                 {lunch && (
-                  <div style={{ display: "flex", gap: "10px" }}>
+                  <div className={styles.tags}>
                     {lunch.split(",").map((lunch) => (
-                      <p
-                        key={lunch}
-                        style={{
-                          border: "1px solid blue",
-                          padding: "1px 2px",
-                          fontSize: "12px",
-                        }}
-                      >
-                        {titleCase(lunch)}
-                      </p>
+                      <span key={lunch}>{titleCase(lunch)}</span>
                     ))}
                   </div>
                 )}
@@ -802,161 +755,61 @@ export default function Dashboard({ users, tickets, previewMode, scannerPath }) 
   return (
     <div className={styles.container}>
       <Head>
-        <title>BLUES FEVER 2026</title>
+        <title>Registrations · Blues Fever dashboard</title>
       </Head>
-      <Header
-        isAdmin
-        title="BFF DASHBOARD"
-        menuItems={[
-          {
-            title: "SCHEDULE",
-            link: "/dashboard/schedule",
-          },
-          {
-            title: "LOG OUT ",
-            link: "/login/admin",
-          },
-        ]}
-      />
-      <h3 className={styles.title}>Registrations</h3>
-      <div className={styles.dashboardHeader}>
-        <div className={styles.total}>
-          <p>
-            Total Registrations: {users?.length} = {totalAmount}
-          </p>
-          <p>
-            Selected List:{" "}
-            {
-              userToShow?.filter(
-                (user) => user.status !== "canceled" && user.status !== "out",
-              )?.length
-            }{" "}
-            ={totalAmountList}
-          </p>
-          <p>Donation: {totalDonation}</p>
+      <nav className={styles.navigation} aria-label="Dashboard pages">
+        <span aria-current="page">Registrations</span>
+        <Link href="/dashboard/schedule">Schedule</Link>
+        <Link
+          className={styles.logout}
+          href="/login/admin"
+          onClick={() => window.localStorage.removeItem("login_admin")}
+        >
+          Log out
+        </Link>
+      </nav>
+      <main>
+        <h1 className={styles.title}>Registrations</h1>
+        <div className={styles.dashboardHeader}>
+          <dl className={styles.totals}>
+            <div>
+              <dt>Total registrations</dt>
+              <dd>{users?.length}</dd>
+              <dd className={styles.metricDetail}>Total value {Number.isFinite(totalAmount) ? `€${totalAmount}` : "—"}</dd>
+            </div>
+            <div>
+              <dt>Selected list</dt>
+              <dd>{userToShow?.filter((user) => user.status !== "canceled" && user.status !== "out")?.length}</dd>
+              <dd className={styles.metricDetail}>Total value {Number.isFinite(totalAmountList) ? `€${totalAmountList}` : "—"}</dd>
+            </div>
+            <div>
+              <dt>Donation</dt>
+              <dd>€{totalDonation}</dd>
+            </div>
+          </dl>
+          <div className={styles.checkIn}>
+            <ArrivalCheckIn scannerPath={scannerPath} setCheckedInIds={setCheckedInIds} />
+          </div>
         </div>
-        <ArrivalCheckIn scannerPath={scannerPath} setCheckedInIds={setCheckedInIds} />
-      </div>
-      <main className={styles.main}>
-        <div className={styles.sideBar}>
-          <div
-            onClick={() => handleSideBarClick("all")}
-            className={classNames(styles.sideBarItem, {
-              [styles.active]: activeSideBar === "all",
-            })}
-          >
-            <p>All</p>
-          </div>
-          {/* <div
-            onClick={() => handleSideBarClick("registered")}
-            className={classNames(styles.sideBarItem, {
-              [styles.active]: activeSideBar === "registered",
-            })}
-          >
-            <p>registered</p>
-          </div>
-          <div
-            onClick={() => handleSideBarClick("email-sent")}
-            className={classNames(styles.sideBarItem, {
-              [styles.active]: activeSideBar === "email-sent",
-            })}
-          >
-            <p>email-sent</p>
-          </div>
-          <div
-            onClick={() => handleSideBarClick("reminder")}
-            className={classNames(styles.sideBarItem, {
-              [styles.active]: activeSideBar === "reminder",
-            })}
-          >
-            <p>Reminder</p>
-          </div>
-          <div
-            onClick={() => handleSideBarClick("waitinglist")}
-            className={classNames(styles.sideBarItem, {
-              [styles.active]: activeSideBar === "waitinglist",
-            })}
-          >
-            <p>waitinglist</p>
-          </div> */}
-          <div
-            onClick={() => handleSideBarClick("confirmed")}
-            className={classNames(styles.sideBarItem, {
-              [styles.active]: activeSideBar === "confirmed",
-            })}
-          >
-            <p>confirmed</p>
-          </div>
-          {tickets
-            .sort((a, b) => a.id - b.id)
-            .map((level) => (
-              <div
-                key={level.value}
-                onClick={() => handleSideBarClick(level.name)}
-                className={classNames(styles.sideBarItem, {
-                  [styles.active]: activeSideBar === level.name,
-                })}
-              >
-                <p>{level.name}</p>
-              </div>
-            ))}
-          <div
-            onClick={() => handleSideBarClick("partyPass")}
-            className={classNames(styles.sideBarItem, {
-              [styles.active]: activeSideBar === "partyPass",
-            })}
-          >
-            <p>Partypass</p>
-          </div>
-          <div
-            onClick={() => handleSideBarClick("lunch")}
-            className={classNames(styles.sideBarItem, {
-              [styles.active]: activeSideBar === "lunch",
-            })}
-          >
-            <p>Lunch</p>
-          </div>
-
-          {/* <div
-            onClick={() => handleSideBarClick("theme_class")}
-            className={classNames(styles.sideBarItem, {
-              [styles.active]: activeSideBar === "theme_class",
-            })}
-          >
-            <p>Themed Classes</p>
-          </div> */}
-          <div
-            onClick={() => handleSideBarClick("canceled")}
-            className={classNames(styles.sideBarItem, {
-              [styles.active]: activeSideBar === "canceled",
-            })}
-          >
-            <p>Canceled</p>
-          </div>
-          <div
-            onClick={() => handleSideBarClick("capacity")}
-            className={classNames(styles.sideBarItem, {
-              [styles.active]: activeSideBar === "capacity",
-            })}
-          >
-            <p>Capacity</p>
-          </div>
-          {/* <div
-            onClick={() => handleSideBarClick("balance")}
-            className={classNames(styles.sideBarItem, {
-              [styles.active]: activeSideBar === "balance",
-            })}
-          >
-            <p>Balance</p>
-          </div>
-          <div
-            onClick={() => handleSideBarClick("lastbalance")}
-            className={classNames(styles.sideBarItem, {
-              [styles.active]: activeSideBar === "lastbalance",
-            })}
-          >
-            <p>Final Balance</p>
-          </div> */}
+        <div className={styles.filters} role="group" aria-label="Registration views">
+          {[
+            { value: "all", label: "All" },
+            { value: "confirmed", label: "Confirmed" },
+            ...[...tickets].sort((a, b) => a.id - b.id).map(({ name, label }) => ({ value: name, label: label || name })),
+            { value: "partyPass", label: "Party Pass" },
+            { value: "lunch", label: "Lunch" },
+            { value: "canceled", label: "Canceled" },
+            { value: "capacity", label: "Capacity" },
+          ].map(({ value, label }) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => handleSideBarClick(value)}
+              aria-pressed={activeSideBar === value}
+            >
+              {label}
+            </button>
+          ))}
         </div>
         <div className={styles.content}>
           {activeSideBar !== "balance" && (
@@ -996,7 +849,7 @@ export default function Dashboard({ users, tickets, previewMode, scannerPath }) 
                   {updatingStatus ? "Changing status…" : "Change Status"}
                 </button>
               </div>
-              {statusError && <p role="alert">{statusError}</p>}
+              {statusError && <p className={styles.statusError} role="alert">{statusError}</p>}
 
               {/* <select
                 onChange={(e) => setStatus(e.target.value)}
@@ -1036,12 +889,12 @@ export default function Dashboard({ users, tickets, previewMode, scannerPath }) 
           {!capacityShow &&
             activeSideBar !== "balance" &&
             activeSideBar !== "lastbalance" && (
-              <table className={styles.table}>
-                <tbody>
-                  <tr>{renderTableHeader()}</tr>
-                  {renderTableData()}
-                </tbody>
-              </table>
+              <div className={styles.tableScroll} role="region" aria-label="Registrations table" tabIndex={0}>
+                <table className={styles.table}>
+                  <thead><tr>{renderTableHeader()}</tr></thead>
+                  <tbody>{renderTableData()}</tbody>
+                </table>
+              </div>
             )}
           {capacityShow && <TicketsComponent />}
           {activeSideBar === "balance" && <BalanceComponent />}
