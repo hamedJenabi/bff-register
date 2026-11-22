@@ -14,12 +14,12 @@ Current email scope: the older 2026 registration email panel remains removed. A 
 
 ## Environment
 
-The flow is closed until `REG2026_ENABLED=true`. Signed participants can still view completion or check pending payment status after closing. Production also requires a valid future `REG2026_CLOSES_AT` to accept new submissions.
+Signed participants can register through their personal links regardless of the invitation cutoff.
 
 | Variable | Purpose |
 | --- | --- |
-| `REG2026_ENABLED` | Explicitly open the new choices flow (`true`) |
-| `REG2026_CLOSES_AT` | ISO timestamp with timezone; mandatory in production |
+| `REG2026_ENABLED` | Enable organizer-triggered schedule invitations and retire the legacy add-on write routes (`true`) |
+| `REG2026_CLOSES_AT` | ISO timestamp with timezone for schedule invitations, required in production |
 | `REG2026_ORIGIN` | Canonical HTTPS origin for generated participant links and checkout return URLs (never derived from browser headers) |
 | `REG2026_SIGNING_SECRET` | Strong random HMAC secret for reusable participant links; rotating it invalidates existing links |
 | `ADMIN_USER`, `HASHED_PASS` | Existing organizer username and credential comparison; the existing credential format is preserved |
@@ -44,17 +44,15 @@ Audit legacy lunch/competition records before launch: the first registration cre
 
 The legacy lunch/competition write APIs return 410 while the new flow is enabled and for participants who already have a new-flow order, preventing those routes from overwriting verified choices. Changing structured `theme_class` through the old dashboard field editor does not reconcile class booking rows. Use the class dialog for organizer replacements and Schedule for catalog/capacity changes. Refunds remain separate work.
 
-## Registration and the edit window
+## Class and competition registration
 
-New Full Pass and Parent Pass submissions require exactly five distinct classes with no time conflicts. The form enables submission after five are selected, and the server checks the count and availability before reserving places or starting payment. Party Pass holders do not select classes. Existing confirmed registrations and pending checkouts can still be viewed or finished.
+Full Pass and Parent Pass holders register for five distinct classes with no time conflicts. They can also leave classes blank and enter competitions separately, then return to choose classes. Party Pass holders can enter competitions. The server checks class and competition capacity before reserving places.
 
-A confirmed `reg2026_orders` row with no `reopened_at` marks the participant as registered, including an empty or class-only submission. Saved structured class selections in `theme_class` also mark registration complete when no confirmed order exists, including choices saved by an organizer. Older pass-purchase fields alone do not mark completion. Identical submission-key retries return the same order.
+Confirmed class registrations appear as a read-only list with organizer contact details, including choices saved by an organizer in `theme_class`. Identical submission-key retries return the same order.
 
-Through November 20, 2026 in Vienna, confirmed Full, Parent, and Party Pass holders can choose **Edit festival choices** on their existing personal link when `REG2026_ENABLED=true`. This window closes at midnight on November 21 Vienna time, independently of the cutoff for first submissions. Full and Parent Pass holders can change their schedule under the same five-class and capacity rules. All three passes can add competitions and Saturday/Sunday lunch. Existing competition entries, roles, and booked meals stay as booked. Only new competition entries and meals are charged through the existing checkout (€10 per competition and €15 per meal, plus the Stripe fee). Confirmed choices stay in place until the new payment succeeds. Cancelling checkout leaves them intact. Stale saves are rejected. After the deadline, the link shows confirmation and organizer contact, and checkout started in time can still finish.
+All three passes can add available competition entries through the same link for €10 per entry plus the Stripe fee. Checkout charges for new entries and preserves existing competition entries, roles, class bookings and booked meals. Participants can finish or cancel an unfinished checkout from their link. Lunch is sold out.
 
 In either dashboard, use **Actions → Edit → Remove all classes and reopen registration** for a confirmed Full/Parent pass. This clears class selections and bookings, releases their places, and retires existing completion locks. The same participant link then opens the form again. Paid competition/lunch choices and historical orders remain intact and are credited on the new submission. Pending checkout must be finished or cancelled first; stale edits are rejected. Retired orders cannot be replayed to restore classes. Resetting classes sends no email and issues no refund.
-
-Completed links show “Registration confirmed” and “Thank you! Your festival choices have been saved.” after submission and on return visits, with a link back to the festival website and `registration@bluesfever.eu` for organizer help. Legacy add-ons alone do not mark the supplemental form complete; their purchases remain credited. Unfinished checkout stays accessible. Browser storage remains disabled.
 
 Each new confirmed order also queues the [registration confirmation email](../email/registration-confirmation.md) in the same database transaction as its saved choices. Free, empty Party Pass, and voucher submissions attempt delivery after confirmation; paid submissions attempt it only after verified Stripe payment. The message includes the confirmed classes, competitions, and lunch as a snapshot, including optional dance roles. Duplicate form requests, webhook events, and status checks do not resend an accepted email. Failed provider acceptance leaves the booking confirmed and can retry on a later confirmed-status request or verified webhook replay. A send interrupted after provider acceptance remains in `sending` for manual review rather than risking an automatic duplicate. The result records SendGrid acceptance, not inbox delivery. The preview captures confirmations without contacting SendGrid at `/api/reg2026/preview-confirmations` for an authenticated organizer.
 

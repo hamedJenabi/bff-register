@@ -23,19 +23,17 @@ export function CompetitionSection({
   sessions = [],
   disabled,
   editing,
+  classesLocked,
 }) {
   const soloDialog = useDialogState({ baseId: "reg2026-solo-conflict-dialog" });
   const [soloDialogMounted, setSoloDialogMounted] = useState(false);
   const soloFocusRef = useRef(null);
-  const soloConflict =
-    form.values.competitions.includes("solo_battle") &&
-    form.values.classes.some((choice) =>
-      conflictsWithSolo(
-        sessions.find((session) => session.id === choice.sessionId),
-      ),
-    );
+  const soloConflict = form.values.classes.some((choice) =>
+    conflictsWithSolo(sessions.find((session) => session.id === choice.sessionId)),
+  );
+  const soloBlocked = classesLocked && soloConflict && !saved.competitions.includes("solo_battle");
   const selectSolo = (event) => {
-    if (!event.currentTarget.checked) return;
+    if (!event.currentTarget.checked || classesLocked) return;
     const conflictingChoices = form.values.classes.filter((choice) =>
       conflictsWithSolo(
         sessions.find((session) => session.id === choice.sessionId),
@@ -122,6 +120,7 @@ export function CompetitionSection({
               !paid &&
               pools.every((pool) => remainingPlaces(places?.[pool]) <= 0);
             const roleName = ["competitionRoles", competition.id];
+            const isSolo = competition.id === "solo_battle";
             return (
               <div key={competition.id}>
                 <label>
@@ -129,9 +128,9 @@ export function CompetitionSection({
                     {...form}
                     name="competitions"
                     value={competition.id}
-                    disabled={disabled || paid || (full && !selected)}
+                    disabled={disabled || paid || (full && !selected) || (isSolo && soloBlocked)}
                     onChange={
-                      competition.id === "solo_battle" ? selectSolo : undefined
+                      isSolo ? selectSolo : undefined
                     }
                   />
                   {competition.label} · €10{full ? " · Sold out" : ""}
@@ -141,15 +140,17 @@ export function CompetitionSection({
                     {competition.description}
                   </p>
                 )}
-                {competition.id === "solo_battle" && (
+                {isSolo && (
                   <p
                     className={styles.informationText}
-                    role={soloConflict ? "alert" : undefined}
+                    role={soloBlocked || (selected && soloConflict && !paid) ? "alert" : undefined}
                   >
                     {SOLO_COMPETITION_NOTICE}
-                    {soloConflict
-                      ? " Remove the conflicting class before submitting."
-                      : ""}
+                    {soloBlocked
+                      ? " This overlaps with one of your confirmed classes. Contact the organizers for help."
+                      : selected && soloConflict && !paid
+                        ? " Remove the conflicting class before submitting."
+                        : ""}
                   </p>
                 )}
                 {competition.roleRequired &&

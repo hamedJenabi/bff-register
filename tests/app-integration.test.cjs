@@ -196,8 +196,16 @@ test(
       );
 
       await t.test(
-        "legacy choices are projected without creating bookings or changing registration",
+        "legacy classes stay eligible after competition registration without creating class bookings",
         async () => {
+          const competitionOrder = await registration.submit(bob, {
+            classes: [{ sessionId: "sat-1130-superar-1" }],
+            competitions: ["solo_battle", "strictly"],
+            competitionRoles: { strictly: "follow" },
+            lunch: ["saturday"],
+            voucher: "freepass26",
+          }, "bob-competition-add");
+          assert.equal(competitionOrder.status, "confirmed");
           const before = await store.participant(bob.id);
           const snapshot = await store.snapshot(bobSession.sessionToken);
           assert.equal(snapshot.classes[0].sessionId, "sat-1130-superar-1");
@@ -591,7 +599,7 @@ test(
             assert.equal(message.to, alice.email);
             assert.equal(message.template_id, "d-faecb94e7a544674883c69bc2421b9ec");
             assert.equal(message.dynamic_template_data.firstname, person.firstname);
-            assert.equal(message.dynamic_template_data.competitions, "Solo Battle");
+            assert.equal(message.dynamic_template_data.competitions, person.id === bob.id ? "Solo Battle,Strictly" : "Solo Battle");
             assert.deepEqual(message.tracking_settings.click_tracking, { enable: false, enable_text: false });
             assert.equal(link.origin, process.env.APP_ORIGIN);
             assert.equal(link.pathname, "/claim");

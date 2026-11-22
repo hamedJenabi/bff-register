@@ -78,7 +78,7 @@ test("partner roles share capacity and serialize competing bookings on isolated 
       assert.equal(await store.internalRegistrationEnabled(), false);
       await seed(20, "follow");
       const attendee = await person();
-      await assert.rejects(store.submit(attendee, draft("follow"), "intern-switch-off-01", undefined, { intern: true }), (error) => error.status === 409);
+      await assert.rejects(store.submit(attendee, draft("follow"), "intern-switch-off-01", { intern: true }), (error) => error.status === 409);
       await store.setInternalRegistrationEnabled(true);
       assert.equal(await createRegistrationStore(sql).internalRegistrationEnabled(), true);
       for (const enabled of ["true", "false", 1, null, undefined]) {
@@ -86,7 +86,7 @@ test("partner roles share capacity and serialize competing bookings on isolated 
       }
       assert.equal(await store.internalRegistrationEnabled(), true);
       await store.setInternalRegistrationEnabled(false);
-      await assert.rejects(store.submit(attendee, draft("follow"), "intern-switch-off-02", undefined, { intern: true }), (error) => error.status === 409);
+      await assert.rejects(store.submit(attendee, draft("follow"), "intern-switch-off-02", { intern: true }), (error) => error.status === 409);
       assert.equal((await sql`SELECT id FROM reg2026_orders WHERE registration_id = ${attendee.id}`).length, 0);
       await reset();
     });
@@ -96,7 +96,7 @@ test("partner roles share capacity and serialize competing bookings on isolated 
       await seed(20, "follow");
       const attendee = await person();
       await assert.rejects(store.submit(attendee, draft("follow"), "intern-follow-normal"), (error) => error.status === 409);
-      const order = await store.submit(attendee, draft("follow"), "intern-follow-override", undefined, { intern: true });
+      const order = await store.submit(attendee, draft("follow"), "intern-follow-override", { intern: true });
       assert.equal(order.status, "confirmed");
       const [saved] = await sql`SELECT * FROM registrations_26 WHERE id = ${attendee.id}`;
       assert.deepEqual(choicesFromParticipant(saved).classes, draft("follow").classes);
@@ -112,7 +112,7 @@ test("partner roles share capacity and serialize competing bookings on isolated 
       for (const role of ["lead", "follow", "switch"]) {
         const attendee = await person();
         await assert.rejects(store.submit(attendee, draft(role), `intern-full-normal-${role}`), (error) => error.status === 409);
-        const order = await store.submit(attendee, draft(role), `intern-full-override-${role}`, undefined, { intern: true });
+        const order = await store.submit(attendee, draft(role), `intern-full-override-${role}`, { intern: true });
         assert.equal(order.status, "confirmed");
       }
       assert.equal((await store.classInventory())[sessionId].registered, 43);
@@ -128,7 +128,7 @@ test("partner roles share capacity and serialize competing bookings on isolated 
         const attendee = await person();
         const choice = { ...draft("lead"), classes: fiveClasses({ sessionId: soloId }) };
         await assert.rejects(store.submit(attendee, choice, "intern-solo-normal"), (error) => error.status === 409);
-        const order = await store.submit(attendee, choice, "intern-solo-override", undefined, { intern: true });
+        const order = await store.submit(attendee, choice, "intern-solo-override", { intern: true });
         assert.equal(order.status, "confirmed");
         assert.equal((await store.classInventory())[soloId].registered, 1);
       } finally {
@@ -152,7 +152,7 @@ test("partner roles share capacity and serialize competing bookings on isolated 
         { ...choice, lunch: ["saturday"] },
       ];
       for (let i = 0; i < invalid.length; i += 1) {
-        await assert.rejects(store.submit(attendee, invalid[i], `intern-invalid-${i}`, undefined, { intern: true }), (error) => error.status === 422);
+        await assert.rejects(store.submit(attendee, invalid[i], `intern-invalid-${i}`, { intern: true }), (error) => error.status === 422);
       }
       assert.equal((await sql`SELECT id FROM reg2026_orders WHERE registration_id = ${attendee.id}`).length, 0);
       await reset();

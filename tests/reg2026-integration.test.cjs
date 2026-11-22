@@ -1352,7 +1352,7 @@ test(
             await sql`INSERT INTO registrations_26 (date,status,role,ticket,firstname,lastname,email,country,lunch)
         VALUES ('2026','confirmed','advanced','partyPass','HTTP','Participant','http+test@example.com','Austria','saturday') RETURNING *`;
           const user = person.email + "+" + person.firstname;
-          const access = { user, sig: signIdentity(user), intern: "true" };
+          const access = { user, sig: signIdentity(user) };
           const rejected = res();
           await load(
             { method: "GET", query: { user, sig: "tampered" } },
@@ -1444,21 +1444,6 @@ test(
             ).length,
             0,
           );
-          const closed = res();
-          process.env.REG2026_ENABLED = "false";
-          await submit(
-            {
-              method: "POST",
-              body: {
-                ...access,
-                requestKey: "http-closed-0001",
-                draft: empty(),
-              },
-            },
-            closed,
-          );
-          assert.equal(closed.code, 403);
-          process.env.REG2026_ENABLED = "true";
           const fiveClasses = tooMany.slice(0, 5);
           const invalidVoucher = res();
           await submit(
@@ -1685,7 +1670,6 @@ test(
               const signedLink = {
                 user: identity,
                 sig: signIdentity(identity),
-                intern: "true",
               };
               const draft = {
                 ...empty(),
@@ -1877,361 +1861,108 @@ test(
         },
       );
       await t.test(
-        "confirmed Full, Parent, and Party Pass holders can edit eligible choices through November 20 in Vienna",
+        "signed links accept competition entries and first-time classes after the old cutoff",
         async () => {
-          const now = Date.now;
-          const previousEnabled = process.env.REG2026_ENABLED;
           const previousClose = process.env.REG2026_CLOSES_AT;
-          process.env.REG2026_ENABLED = "true";
-          process.env.REG2026_CLOSES_AT = "2026-11-19T23:00:00+01:00";
-          Date.now = () => Date.parse("2026-11-20T23:59:59+01:00");
+          const previousEnabled = process.env.REG2026_ENABLED;
+          process.env.REG2026_ENABLED = "false";
+          process.env.REG2026_CLOSES_AT = "2026-01-01T00:00:00+01:00";
           const { loadRegistrationState } = require("../lib/reg2026/state");
           const { signIdentity } = require("../lib/reg2026/security");
           const submit = require("../pages/api/reg2026/submit").default;
-          const load = require("../pages/api/reg2026/index").default;
-          const res = () => ({
-            code: 200,
-            setHeader() {},
-            status(c) {
-              this.code = c;
-              return this;
-            },
-            json(body) {
-              this.body = body;
-              return this;
-            },
-          });
           const signed = (person) => {
             const user = person.email + "+" + person.firstname;
-            return { user, sig: signIdentity(user), intern: "true" };
+            return { user, sig: signIdentity(user) };
           };
-          const state = async (person) => {
-            const response = res();
-            await load({ method: "GET", query: signed(person) }, response);
-            assert.equal(response.code, 200);
-            return response.body;
-          };
-          const save = async (person, requestKey, editVersion, draft) => {
-            const response = res();
-            await submit(
-              {
-                method: "POST",
-                body: { ...signed(person), requestKey, editVersion, draft },
-              },
-              response,
-            );
+          const save = async (person, requestKey, draft, extra = {}) => {
+            const response = {
+              code: 200,
+              setHeader() {},
+              status(code) { this.code = code; return this; },
+              json(body) { this.body = body; return this; },
+            };
+            await submit({ method: "POST", body: { ...signed(person), requestKey, draft, ...extra } }, response);
             return response;
           };
+          const state = async (person) => loadRegistrationState(
+            store, (await store.findParticipants(signed(person).user))[0],
+          );
+          const confirm = async (person, order) => {
+            const id = `cs_competition_add_${order.id}`;
+            await store.attachSession(order.id, id);
+            return store.applyPayment({
+              id, currency: "eur", amount_total: order.total_cents,
+              client_reference_id: String(person.id),
+              metadata: { reg2026OrderId: String(order.id) },
+              status: "complete", payment_status: "paid",
+            }, "checkout.session.completed");
+          };
+
           try {
-            const full = await createPerson("EditFull", "fullpass", "saturday");
-            const slots = new Set();
-            const classes = (await store.schedule())
-              .filter((s) => !slots.has(s.slotId) && slots.add(s.slotId))
-              .slice(0, 5)
-              .map((s) => ({
-                sessionId: s.id,
-                ...(s.partnerClass ? { role: "lead" } : {}),
-              }));
-            const fullDraft = { ...empty(), classes, lunch: ["saturday"] };
-            const initialFull = await store.submit(
-              full,
-              { ...fullDraft, voucher: "freepass26" },
-              "before-full-edit-01",
-            );
-            const initialState = await state(full);
-            assert.equal(initialState.completed, true);
-            assert.equal(initialState.open, true);
-            assert.equal(
-              initialState.edit.closesAt,
-              Date.parse("2026-11-20T23:00:00Z"),
-            );
-            const replacement = [
-              { sessionId: "fri-1330-lot", role: "lead" },
-              ...classes.slice(1),
-            ];
-            const update = { ...fullDraft, classes: replacement };
-            assert.equal(
-              (
-                await save(
-                  full,
-                  "edit-full-short-01",
-                  initialState.edit.version,
-                  { ...update, classes: replacement.slice(1) },
-                )
-              ).body.errors.classes,
-              "Choose your 5 classes before submitting.",
-            );
-            const replaced = await save(
-              full,
-              "edit-full-classes-01",
-              initialState.edit.version,
-              update,
-            );
-            assert.equal(replaced.code, 200);
-            assert.equal(replaced.body.order.totalCents, 0);
-            assert.equal(
-              (
-                await save(
-                  full,
-                  "edit-full-classes-01",
-                  initialState.edit.version,
-                  update,
-                )
-              ).body.order.id,
-              replaced.body.order.id,
-            );
-            assert.equal(
-              (
-                await save(
-                  full,
-                  "edit-full-stale-01",
-                  initialState.edit.version,
-                  fullDraft,
-                )
-              ).code,
-              409,
-            );
-            assert.equal(
-              (await store.order(initialFull.id, full.id)).status,
-              "confirmed",
-            );
-            assert.deepEqual((await state(full)).choices.classes, replacement);
-            assert.equal(
-              (
-                await sql`SELECT count(*)::int AS count FROM class_bookings_26 WHERE registration_id = ${full.id} AND session_id = ${classes[0].sessionId}`
-              )[0].count,
-              0,
-            );
-            const roleChange = {
-              ...update,
-              classes: [
-                { ...replacement[0], role: "follow" },
-                ...replacement.slice(1),
-              ],
-              competitions: ["strictly"],
-              competitionRoles: { strictly: "lead" },
-            };
-            const beforeHold = (await store.availability()).classes[
-              replacement[0].sessionId
-            ];
-            const tentative = await store.submit(
-              full,
-              roleChange,
-              "edit-full-pending-01",
-              (await state(full)).edit.version,
-            );
-            await store.attachSession(tentative.id, "cs_edit_full");
-            const hold = {
-              id: "cs_edit_full",
-              currency: "eur",
-              amount_total: tentative.total_cents,
-              client_reference_id: String(full.id),
-              metadata: { reg2026OrderId: String(tentative.id) },
-              status: "complete",
-              payment_status: "unpaid",
-            };
-            await store.applyPayment(hold, "checkout.session.completed");
-            const duringHold = (await store.availability()).classes[
-              replacement[0].sessionId
-            ];
-            assert.equal(
-              duringHold.total.remaining,
-              beforeHold.total.remaining,
-            );
-            assert.equal(
-              duringHold.follow.remaining,
-              beforeHold.follow.remaining - 1,
-            );
-            await store.applyPayment(
-              hold,
-              "checkout.session.async_payment_failed",
-            );
-            assert.deepEqual((await state(full)).choices.classes, replacement);
-            assert.deepEqual(
-              (await state(full)).choices.lunch,
-              fullDraft.lunch,
-            );
-            assert.deepEqual(
-              (await store.availability()).classes[replacement[0].sessionId],
-              beforeHold,
-            );
-
-            const lunchDraft = { ...update, lunch: ["saturday", "sunday"] };
-            const lunchVersion = (await state(full)).edit.version;
-            for (const voucher of [undefined, "freepass26"]) {
-              const soldOut = await save(
-                full,
-                `edit-full-lunch-${voucher || "paid"}`,
-                lunchVersion,
-                { ...lunchDraft, ...(voucher ? { voucher } : {}) },
-              );
-              assert.equal(soldOut.code, 422);
-              assert.match(soldOut.body.errors.lunch, /sold out/);
-              assert.equal(await store.activeOrder(full.id), undefined);
-            }
-            const lunchState = await state(full);
-            assert.deepEqual(lunchState.choices.lunch, fullDraft.lunch);
-            assert.deepEqual(lunchState.choices.classes, replacement);
-            assert.equal(lunchState.edit.version, lunchVersion);
-            const unchangedLunch = await save(
-              full,
-              "edit-full-lunch-unchanged",
-              lunchVersion,
-              update,
-            );
-            assert.equal(unchangedLunch.code, 200);
-            assert.equal(unchangedLunch.body.order.id, replaced.body.order.id);
-
-            const party = await createPerson(
-              "EditParty",
-              "partyPass",
-              "saturday",
-            );
-            const partyDraft = {
-              ...empty(),
-              lunch: ["saturday"],
-              competitions: ["strictly"],
-              competitionRoles: { strictly: "lead" },
-            };
-            const prior = await store.submit(
-              party,
-              { ...partyDraft, voucher: "freepass26" },
-              "before-party-edit-01",
-            );
-            const partyVersion = (await state(party)).edit.version;
-            for (const [key, field, change] of [
-              ["lunch-add", "lunch", { lunch: ["saturday", "sunday"] }],
-              ["lunch-remove", "lunch", { lunch: [] }],
-              ["comp-remove", "competitions", { competitions: [] }],
-              [
-                "role-change",
-                "competitions",
-                { competitionRoles: { strictly: "follow" } },
-              ],
-              ["class-add", "classes", { classes: [classes[0]] }],
-            ]) {
-              const response = await save(
-                party,
-                `edit-party-${key}`,
-                partyVersion,
-                { ...partyDraft, ...change },
-              );
-              assert.equal(response.code, 422);
-              assert.ok(response.body.errors[field]);
-            }
-            const addComp = {
-              ...partyDraft,
-              competitions: ["strictly", "open_mixnmatch"],
-              competitionRoles: { strictly: "lead", open_mixnmatch: "follow" },
-            };
-            const newOrder = await store.submit(
-              party,
-              addComp,
-              "edit-party-add-paid-01",
-              partyVersion,
-            );
-            assert.equal(newOrder.status, "provisional");
-            assert.equal(newOrder.subtotal_cents, 1000);
-            assert.equal((await store.completedOrder(party.id)).id, prior.id);
-            assert.equal(
-              (await loadRegistrationState(store, party)).order.id,
-              newOrder.id,
-            );
-            assert.equal(
-              (await loadRegistrationState(store, party)).edit,
-              null,
-            );
-            await store.attachSession(newOrder.id, "cs_edit_party");
-            const payment = {
-              id: "cs_edit_party",
-              currency: "eur",
-              amount_total: newOrder.total_cents,
-              client_reference_id: String(party.id),
-              metadata: { reg2026OrderId: String(newOrder.id) },
-              status: "complete",
-              payment_status: "paid",
-            };
-
-            const parent = await createPerson("EditParent", "parentPass");
-            const partialParent = { ...empty(), classes: classes.slice(0, 4) };
-            await assert.rejects(
-              store.submit(parent, partialParent, "parent-first-too-short"),
-              (error) =>
-                error.status === 422 &&
-                error.errors.classes ===
-                  "Choose your 5 classes before submitting.",
-            );
-            await store.editClasses(parent.id, partialParent.classes, "");
-            const parentState = await state(parent);
-            assert.equal(parentState.open, true);
-            assert.equal(parentState.edit.closesAt, initialState.edit.closesAt);
-            const parentEdit = {
-              ...empty(),
-              classes: replacement,
-              competitions: ["fever_showcase"],
+            const first = await createPerson("CompetitionFirst", "fullpass");
+            const competitionDraft = {
+              ...empty(), competitions: ["strictly"], competitionRoles: { strictly: "lead" },
               voucher: "freepass26",
             };
-            assert.equal(
-              (
-                await save(
-                  parent,
-                  "edit-parent-choices-01",
-                  parentState.edit.version,
-                  parentEdit,
-                )
-              ).code,
-              200,
-            );
-            const editedParent = await state(parent);
-            assert.deepEqual(editedParent.choices.classes, replacement);
-            assert.deepEqual(
-              editedParent.choices.competitions,
-              parentEdit.competitions,
-            );
-            assert.deepEqual(editedParent.choices.lunch, parentEdit.lunch);
-            assert.equal(editedParent.order.totalCents, 0);
-            const fullVersion = (await state(full)).edit.version;
-            Date.now = () => Date.parse("2026-11-21T00:00:00+01:00");
-            assert.equal((await state(full)).edit, null);
-            assert.equal(
-              (
-                await save(
-                  full,
-                  "edit-full-after-close",
-                  fullVersion,
-                  fullDraft,
-                )
-              ).code,
-              409,
-            );
-            assert.equal((await state(parent)).edit, null);
-            assert.equal(
-              (
-                await save(
-                  parent,
-                  "edit-parent-after-close",
-                  editedParent.edit.version,
-                  parentEdit,
-                )
-              ).code,
-              409,
-            );
-            await store.applyPayment(payment, "checkout.session.completed");
-            await store.applyPayment(payment, "checkout.session.completed");
-            const final = await state(party);
-            assert.equal(final.order.id, String(newOrder.id));
-            assert.equal(final.edit, null);
-            assert.deepEqual(final.choices.competitions, addComp.competitions);
-            assert.deepEqual(final.choices.lunch, addComp.lunch);
-            assert.equal(final.choices.competitionRoles.strictly, "lead");
+            assert.equal((await save(first, "first-competition-01", competitionDraft)).code, 200);
+            const competitionConfirmed = await state(first);
+            assert.equal(competitionConfirmed.open, true);
+            assert.equal(competitionConfirmed.classesLocked, false);
+            assert.equal((await store.organizerClasses(first.id)).reopenable, false);
+
+            const slots = new Set();
+            const classes = (await store.schedule())
+              .filter((entry) => !slots.has(entry.slotId) && slots.add(entry.slotId))
+              .slice(0, 5)
+              .map((entry) => ({ sessionId: entry.id, ...(entry.partnerClass ? { role: "lead" } : {}) }));
+            const registered = { ...competitionDraft, classes };
+            assert.equal((await save(first, "first-classes-0001", registered)).code, 200);
+            assert.equal((await state(first)).classesLocked, true);
+            const bookings = () => sql`SELECT * FROM class_bookings_26 WHERE registration_id = ${first.id} ORDER BY id`;
+            const confirmedBookings = await bookings();
+            assert.equal(confirmedBookings.length, 5);
+            const additional = {
+              ...registered, competitions: ["strictly", "open_mixnmatch"],
+              competitionRoles: { strictly: "lead", open_mixnmatch: "follow" },
+            };
+            for (const intern of [undefined, "true"]) {
+              const edit = await save(first, `locked-classes-${intern}`, { ...additional, classes: classes.slice(1) }, { intern });
+              assert.equal(edit.code, 409);
+              assert.match(edit.body.errors.classes, /confirmed/);
+            }
+            assert.equal((await save(first, "locked-change-role", {
+              ...additional, competitionRoles: { ...additional.competitionRoles, strictly: "follow" },
+            })).code, 422);
+
+            const paidDraft = { ...additional };
+            delete paidDraft.voucher;
+            const pending = await store.submit(first, paidDraft, "add-competition-01");
+            assert.equal(pending.status, "provisional");
+            assert.equal(pending.subtotal_cents, 1000);
+            assert.deepEqual(await bookings(), confirmedBookings);
+            assert.equal((await confirm(first, pending)).status, "confirmed");
+            assert.deepEqual(await bookings(), confirmedBookings);
+            assert.equal((await store.submit(first, paidDraft, "add-competition-01")).id, pending.id);
+            const [saved] = await store.findParticipants(signed(first).user);
+            assert.equal(saved.competitions, "strictly,open_mixnmatch");
+            assert.equal(saved.open_mixnmatch_role, "follow");
+            assert.equal((await state(first)).classesLocked, true);
+
+            const partial = await createPerson("OrganizerClasses", "parentPass");
+            await store.editClasses(partial.id, classes.slice(0, 2), "");
+            const added = await save(partial, "partial-competition", { ...competitionDraft, classes: classes.slice(0, 2) });
+            assert.equal(added.code, 200);
+            assert.deepEqual((await store.organizerClasses(partial.id)).classes, classes.slice(0, 2));
+
+            const party = await createPerson("AdditionalParty", "partyPass");
+            await store.submit(party, empty(), "party-registration");
+            assert.equal((await save(party, "party-add-competition", competitionDraft)).code, 200);
+            assert.equal((await state(party)).classesLocked, false);
           } finally {
-            Date.now = now;
-            if (previousEnabled === undefined)
-              delete process.env.REG2026_ENABLED;
-            else process.env.REG2026_ENABLED = previousEnabled;
-            if (previousClose === undefined)
-              delete process.env.REG2026_CLOSES_AT;
+            if (previousClose === undefined) delete process.env.REG2026_CLOSES_AT;
             else process.env.REG2026_CLOSES_AT = previousClose;
+            if (previousEnabled === undefined) delete process.env.REG2026_ENABLED;
+            else process.env.REG2026_ENABLED = previousEnabled;
           }
         },
       );
