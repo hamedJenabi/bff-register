@@ -1,6 +1,7 @@
 import RegisteredClasses from "../../components/Reg2026/RegisteredClasses";
 import RegistrationLink from "../../components/Reg2026/RegistrationLink";
 import ArrivalCheckIn from "../../components/ArrivalCheckIn/ArrivalCheckIn";
+import { registrationsCsv } from "../../lib/admin/registrations-csv";
 import { adminPageRedirect } from "../../lib/admin/session";
 import { arrivalRequest } from "../../lib/app/arrival-client";
 import { isClassPass } from "../../lib/reg2026/catalog";
@@ -8,7 +9,6 @@ import Head from "next/head";
 import Link from "next/link";
 import Router from "next/router";
 import { useRouter } from "next/router";
-import { CSVLink } from "react-csv";
 import React, { useState } from "react";
 import styles from "./Dashboard.module.scss";
 import classNames from "classnames";
@@ -32,7 +32,6 @@ export default function Dashboard({ users, tickets, previewMode, scannerPath }) 
   const [scheduleInvitationResults, setScheduleInvitationResults] = useState({});
   const [sendingFinalEmails, setSendingFinalEmails] = useState(false);
   const [finalEmailProgress, setFinalEmailProgress] = useState(null);
-  const today = new Date().toISOString().split("T")[0];
   const totalAmount = users.reduce((acc, user) => {
     return (
       acc +
@@ -488,15 +487,25 @@ export default function Dashboard({ users, tickets, previewMode, scannerPath }) 
     Router.push(`/dashboard/user/${id}`);
   };
 
-  const getToPay = (to_pay, lunch) => {
-    const lunchMoney = lunch?.split(",").length * 12.5 || 0;
-    return Number(to_pay) + lunchMoney;
+  const searchQuery = nameSearch.trim().toLowerCase();
+  const visibleUsers = userToShow
+    .filter((user) => !searchQuery || [
+      user.firstname, user.lastname, user.email, user.ticket, user.level, user.status, user.country,
+    ].some((value) => String(value || "").toLowerCase().includes(searchQuery)))
+    .sort((a, b) => a.id - b.id);
+  const showRegistrations = !capacityShow && activeSideBar !== "balance" && activeSideBar !== "lastbalance";
+
+  const downloadCsv = () => {
+    const blob = new Blob([registrationsCsv(visibleUsers)], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `registration-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
   };
-  const usersForCSV = userToShow.map((user) =>
-    user.lunch || user.competition === "later"
-      ? { ...user, to_pay: getToPay(user.to_pay, user.lunch) }
-      : user,
-  );
 
   const renderTableHeader = () => {
     const header = [
@@ -602,29 +611,7 @@ export default function Dashboard({ users, tickets, previewMode, scannerPath }) 
   //--------- Table Data
 
   const renderTableData = () => {
-    const searchQuery = nameSearch.trim().toLowerCase();
-
-    return userToShow
-      .filter((user) => {
-        if (!searchQuery) {
-          return true;
-        }
-
-        return [
-          user.firstname,
-          user.lastname,
-          user.email,
-          user.ticket,
-          user.level,
-          user.status,
-          user.country,
-        ].some((value) =>
-          String(value || "")
-            .toLowerCase()
-            .includes(searchQuery),
-        );
-      })
-      .sort((a, b) => a.id - b.id)
+    return visibleUsers
       .map(
         ({
           id,
@@ -651,10 +638,6 @@ export default function Dashboard({ users, tickets, previewMode, scannerPath }) 
           email,
         }) => {
           const checkedIn = status === "confirmed" && checkedInIds.has(id);
-          // const getToPay = (to_pay, lunch) => {
-          //   const lunchMoney = lunch?.split(",").length * 12.5 || 0;
-          //   return Number(to_pay) + lunchMoney;
-          // };
           return (
             <tr
               key={id}
@@ -886,27 +869,22 @@ export default function Dashboard({ users, tickets, previewMode, scannerPath }) 
           <button className={styles.statusButton} disabled={sendingFinalEmails || !form.values.users.length} onClick={() => handleFinalEmails(form.values.users)}>
             Send final email to selected confirmed participants
           </button>
-          {!capacityShow &&
-            activeSideBar !== "balance" &&
-            activeSideBar !== "lastbalance" && (
-              <div className={styles.tableScroll} role="region" aria-label="Registrations table" tabIndex={0}>
-                <table className={styles.table}>
-                  <thead><tr>{renderTableHeader()}</tr></thead>
-                  <tbody>{renderTableData()}</tbody>
-                </table>
-              </div>
-            )}
+          {showRegistrations && (
+            <div className={styles.tableScroll} role="region" aria-label="Registrations table" tabIndex={0}>
+              <table className={styles.table}>
+                <thead><tr>{renderTableHeader()}</tr></thead>
+                <tbody>{renderTableData()}</tbody>
+              </table>
+            </div>
+          )}
           {capacityShow && <TicketsComponent />}
           {activeSideBar === "balance" && <BalanceComponent />}
           {activeSideBar === "lastbalance" && <FinalBalanceComponent />}
-          {activeSideBar !== "balance" && (
+          {showRegistrations && (
             <div className={styles.downloadButton}>
-              <CSVLink
-                data={usersForCSV}
-                filename={`registration-${today}.csv`}
-              >
+              <button type="button" className={styles.statusButton} onClick={downloadCsv}>
                 Download CSV
-              </CSVLink>
+              </button>
             </div>
           )}
           <div className={styles.bulkEmailActions}>
