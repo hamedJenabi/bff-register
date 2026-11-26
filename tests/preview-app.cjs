@@ -240,6 +240,8 @@ const webpush = require("web-push");
       const handler =
         (grouped && contentHandlers[grouped[1]][grouped[2]]) ||
         {
+          "/api/app/bff-volunteer-door-26/door-sessions": contentHandlers.openScanner["door-sessions"],
+          "/api/app/bff-volunteer-door-26/door-verify": contentHandlers.openScanner["door-verify"],
           "/api/app/claim": handlers.claim,
           "/api/app/me": handlers.me,
           "/api/app/logout": handlers.logout,
