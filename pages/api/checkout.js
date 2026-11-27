@@ -1,11 +1,15 @@
 import Stripe from "stripe";
 import { getUserByEmailAndName } from "../../db/db";
+import { isTicketRegistrationClosed } from "../../lib/ticket-registration";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method Not Allowed" });
+  }
+  if (isTicketRegistrationClosed()) {
+    return res.status(409).json({ error: "Festival ticket registration is closed." });
   }
   const price = req.body.price;
   let grossPrice;

@@ -4,6 +4,8 @@ import Router from "next/router";
 import { useRouter } from "next/router";
 import React, { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
+import SoldOut from "../components/SoldOut/SoldOut";
+import { ticketRegistrationTimeLeft } from "../lib/ticket-registration";
 import { emailRegex } from "../utils/validate";
 import styles from "../styles/Home.module.scss";
 const RegistrationForm = dynamic(
@@ -18,8 +20,47 @@ import {
 import { unstable_useFormState as useFormState } from "reakit/Form";
 
 const REGISTRATION_DRAFT_STORAGE_KEY = "bff_registration_draft";
+const MAX_TIMEOUT_MS = 2_147_483_647;
 
-export default function Home({ tickets, users }) {
+export default function Home({ tickets, users, registrationTimeLeft }) {
+  const [registrationClosed, setRegistrationClosed] = useState(false);
+
+  useEffect(() => {
+    if (registrationTimeLeft === 0 || registrationClosed) return;
+
+    // Calibrate the deadline using the remaining time sent by the server.
+    const deadline = Date.now() + registrationTimeLeft;
+    let timeout;
+    const scheduleClosure = () => {
+      window.clearTimeout(timeout);
+      const remaining = deadline - Date.now();
+      if (remaining <= 0) {
+        setRegistrationClosed(true);
+      } else {
+        timeout = window.setTimeout(scheduleClosure, Math.min(remaining, MAX_TIMEOUT_MS));
+      }
+    };
+    scheduleClosure();
+    window.addEventListener("focus", scheduleClosure);
+    return () => {
+      window.clearTimeout(timeout);
+      window.removeEventListener("focus", scheduleClosure);
+    };
+  }, [registrationTimeLeft, registrationClosed]);
+
+  if (registrationTimeLeft === 0 || registrationClosed) {
+    return <SoldOut registrationClosed />;
+  }
+  return (
+    <TicketRegistration
+      tickets={tickets}
+      users={users}
+      onRegistrationClosed={() => setRegistrationClosed(true)}
+    />
+  );
+}
+
+function TicketRegistration({ tickets, users, onRegistrationClosed }) {
   const [isClicked, setIsClicked] = useState(false);
   const [loading, setLoading] = useState(false);
   const isPartypassSoldout =
@@ -158,6 +199,10 @@ export default function Home({ tickets, users }) {
         voucher: voucher || "",
       }),
     });
+    if (res.status === 409) {
+      onRegistrationClosed();
+      return;
+    }
     if (res.status === 302) {
       Router.push("/alreadyRegistered");
       return;
@@ -261,15 +306,24 @@ export default function Home({ tickets, users }) {
 }
 
 export async function getServerSideProps() {
+  if (ticketRegistrationTimeLeft() === 0) {
+    return { props: { registrationTimeLeft: 0 } };
+  }
+
   const { getTickets, getAllUsers } = await import("../db/db");
 
   const tickets = await getTickets();
   const users = await getAllUsers();
+  const registrationTimeLeft = ticketRegistrationTimeLeft();
+  if (registrationTimeLeft === 0) {
+    return { props: { registrationTimeLeft } };
+  }
 
   return {
     props: {
-      tickets: tickets,
-      users: users,
+      tickets,
+      users,
+      registrationTimeLeft,
     },
   };
 }
