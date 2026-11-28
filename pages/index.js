@@ -1,3 +1,4 @@
+import FooterCredit from "../components/FooterCredit/FooterCredit";
 import Head from "next/head";
 import { CountdownCircleTimer } from "react-countdown-circle-timer";
 import Router from "next/router";
@@ -292,14 +293,7 @@ function TicketRegistration({ tickets, users, onRegistrationClosed }) {
       </main>
 
       <footer className={styles.footer}>
-        <a
-          style={{ width: "auto" }}
-          href="https://hamedjenabi.me"
-          target="_blank"
-          rel="noreferrer"
-        >
-          Made with love by Hamed
-        </a>
+        <FooterCredit />
       </footer>
     </div>
   );

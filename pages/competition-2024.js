@@ -1,3 +1,4 @@
+import FooterCredit from "../components/FooterCredit/FooterCredit";
 import Head from "next/head";
 import useMedia from "use-media";
 import Router from "next/router";
@@ -139,14 +140,7 @@ export default function Home({ tickets, clientID }) {
         )}
       </main>
       <footer className={styles.footer}>
-        <a
-          style={{ width: "auto" }}
-          href="https://hamedjenabi.me"
-          target="_blank"
-          rel="noreferrer"
-        >
-          Made with love by Hamed
-        </a>
+        <FooterCredit />
       </footer>
     </div>
   );

@@ -1,3 +1,4 @@
+import FooterCredit from "../../components/FooterCredit/FooterCredit";
 import RegisteredClasses from "../../components/Reg2026/RegisteredClasses";
 import RegistrationLink from "../../components/Reg2026/RegistrationLink";
 import ArrivalCheckIn from "../../components/ArrivalCheckIn/ArrivalCheckIn";
@@ -937,14 +938,7 @@ export default function Dashboard({ users, tickets, previewMode, scannerPath }) 
       </main>
 
       <footer className={styles.footer}>
-        <a
-          style={{ width: "auto" }}
-          href="https://hamedjenabi.me"
-          target="_blank"
-          rel="noreferrer"
-        >
-          Powered with love by Hamed
-        </a>
+        <FooterCredit />
       </footer>
     </div>
   );

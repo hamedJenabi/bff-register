@@ -1,0 +1,19 @@
+.footerCredit {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px 12px;
+  padding-inline: 12px;
+  text-align: center;
+}
+
+.footerCredit a {
+  width: auto;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.note {
+  flex-basis: 100%;
+}

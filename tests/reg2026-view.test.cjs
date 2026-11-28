@@ -14,6 +14,7 @@ const { serializeThemeClass } = require("../lib/reg2026/serialization");
 const originalJs = require.extensions[".js"];
 require.extensions[".js"] = (module, filename) => {
   if (filename !== path.resolve(__dirname, "../pages/reg2026.js") &&
+      filename !== path.resolve(__dirname, "../components/FooterCredit/FooterCredit.js") &&
       !filename.startsWith(path.resolve(__dirname, "../components/Reg2026") + path.sep)) {
     return originalJs(module, filename);
   }
@@ -81,6 +82,8 @@ test("links show confirmed classes without a class picker and still offer compet
     assert.match(html, /Competition registration/);
     assert.match(html, /Open MixMatch/);
     assert.match(html, /Saturday lunch/);
+    assert.match(html, /Made with love by Hamed/);
+    assert.match(html, /href="https:\/\/bluesinvienna\.com\/dance-app">Want this for your event\?<\/a>/);
     assert.doesNotMatch(html, /Your class schedule|Edit festival choices/);
   }
 });

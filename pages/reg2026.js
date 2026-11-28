@@ -1,3 +1,4 @@
+import FooterCredit from "../components/FooterCredit/FooterCredit";
 import Head from "next/head";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
@@ -518,7 +519,7 @@ export default function Registration({ initial, access, loadError }) {
         )}
       </main>
       <footer className={styles.footer}>
-        Blues Fever 2026 · See you in Vienna
+        <FooterCredit>Blues Fever 2026 · See you in Vienna</FooterCredit>
       </footer>
     </div>
   );
